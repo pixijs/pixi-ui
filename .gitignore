@@ -10,6 +10,8 @@ npm-debug.log
 
 # project files
 .project
+*.sln
+.vs/
 
 # vim swap files
 *.sw*
@@ -26,3 +28,4 @@ docs/
 
 # jetBrains IDE ignores
 .idea
+
