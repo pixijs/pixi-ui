@@ -1,0 +1,36 @@
+{"frames": {
+
+"UI/ui-box-1.png":
+{
+	"frame": {"x":1,"y":1,"w":15,"h":15},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":15},
+	"sourceSize": {"w":15,"h":15}
+},
+"UI/ui-box-2.png":
+{
+	"frame": {"x":18,"y":1,"w":15,"h":15},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":15},
+	"sourceSize": {"w":15,"h":15}
+},
+"UI/ui-dot-border.png":
+{
+	"frame": {"x":35,"y":1,"w":5,"h":3},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":5,"h":3},
+	"sourceSize": {"w":5,"h":3}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "UISprites.png",
+	"format": "RGBA8888",
+	"size": {"w":41,"h":17},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:51f5ad9fa083463092544ee48b63dbf6:c63ee07c0138e881f0be5dc3efd718e0:1a4b9dce9e084a51b4415f1145cee46f$"
+}
+}

@@ -77,40 +77,44 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
     if (vs && hs) st.x = sb.x = sl.y = sr.y = stl.width = str.width = sbl.width = sbr.width = stl.height = str.height = sbl.height = sbr.height = bw;
     if (hs) sf.x = sl.width = sr.width = bw;
     if (vs) sf.y = st.height = sb.height = bw;
+
+
+    /**
+ * Updates the sliced sprites position and size
+ *
+ * @private
+ */
+
+    this.update = function () {
+        if (vs && hs) {
+            str.x = sbr.x = sr.x = this.width - bw;
+            sbl.y = sbr.y = sb.y = this.height - bw;
+            sf.width = st.width = sb.width = this.width - bw * 2;
+            sf.height = sl.height = sr.height = this.height - bw * 2;
+        }
+        else if (hs) {
+            sr.x = this.width - bw;
+            sl.height = sr.height = sf.height = this.height;
+            sf.width = this.width - bw * 2;
+        }
+        else { //vs
+            sb.y = this.height - bw;
+            st.width = sb.width = sf.width = this.width;
+            sf.height = this.height - bw * 2;
+        }
+
+        if (this.tint != null) {
+            sf.tint = this.tint;
+            if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
+            if (hs) sl.tint = sr.tint = this.tint;
+            if (vs) st.tint = sb.tint = this.tint;
+        }
+    };
 }
 
 SliceSprite.prototype = Object.create(UIBase.prototype);
 SliceSprite.prototype.constructor = SliceSprite;
 module.exports = SliceSprite;
 
-/**
- * Updates the sliced sprites position and size
- *
- * @private
- */
-SliceSprite.prototype.update = function () {
-    if (vs && hs) {
-        str.x = sbr.x = sr.x = this.width - bw;
-        sbl.y = sbr.y = sb.y = this.height - bw;
-        sf.width = st.width = sb.width = this.width - bw * 2;
-        sf.height = sl.height = sr.height = this.height - bw * 2;
-    }
-    else if (hs) {
-        sr.x = this.width - bw;
-        sl.height = sr.height = sf.height = this.height;
-        sf.width = this.width - bw * 2;
-    }
-    else { //vs
-        sb.y = this.height - bw;
-        st.width = sb.width = sf.width = this.width;
-        sf.height = this.height - bw * 2;
-    }
 
-    if (this.tint != null) {
-        sf.tint = this.tint;
-        if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
-        if (hs) sl.tint = sr.tint = this.tint;
-        if (vs) st.tint = sb.tint = this.tint;
-    }
-};
 

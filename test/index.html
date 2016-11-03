@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; }
+        canvas { position: fixed; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.0.0/pixi.min.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <script type="text/javascript">
+        var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+        var stage = new PIXI.Container();
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.view);
+        stage.addChild(uiStage);
+
+        window.addEventListener("resize", function () {
+            renderer.resize(window.innerWidth, window.innerHeight);
+            uiStage.resize(window.innerWidth, window.innerHeight);
+        });
+
+        PIXI.loader.add('UISprites.json').load(function () {
+            init();
+        });
+
+        function init() {
+            var whiteBG = PIXI.Sprite.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Sprite.fromFrame("UI/ui-box-2.png");
+            var lineSprite = PIXI.Sprite.fromFrame("UI/ui-dot-border.png");
+
+
+            var container = new PIXI.UI.SliceSprite(whiteBG, 5);
+            container.height = 600;
+            container.width = '80%';
+            container.maxWidth = 1200;
+            container.minWidth = 700;
+            container.maxHeight = "100%";
+            container.horizontalAlign = "center";
+            container.verticalAlign = "middle";
+            uiStage.addChild(container);
+
+            for (var i = 0; i < 2; i++) {
+                var section = new PIXI.UI.Container();
+                if (i == 1) section.anchorRight = 0;
+                section.anchorBottom = 0;
+                section.anchorTop = 0;
+                section.width = "50%";
+                container.addChild(section);
+
+                innerContainer = new PIXI.UI.SliceSprite(innerBG, 5);
+                innerContainer.anchorTop = innerContainer.anchorBottom = 6;
+                innerContainer.anchorRight = i == 1 ? 6 : 3;
+                innerContainer.anchorLeft = i == 1 ? 3 : 6;
+
+                innerContainer.tint = 0x252934;
+                section.addChild(innerContainer);
+
+                var headlineStyle = { fill: ['#5ebef2', '#26aff1'], fontSize: 18, fontFamily: 'Calibri', fontWeight: 'bold' };
+                var HeadlinePlayer = new PIXI.UI.Text("PLAYER", headlineStyle);
+                var HeadlineScore = new PIXI.UI.Text("SCORE", headlineStyle);
+                var HeadlineKDA = new PIXI.UI.Text("K/D/A", headlineStyle);
+                var HeadlinePing = new PIXI.UI.Text("PING", headlineStyle);
+                HeadlinePlayer.anchorTop = HeadlineScore.anchorTop = HeadlineKDA.anchorTop = HeadlinePing.anchorTop = 19;
+                HeadlinePlayer.anchorLeft = 13;
+                HeadlineScore.right = 257;
+                HeadlineKDA.right = 157;
+                HeadlinePing.right = 57;
+
+                var headlineStroke = new PIXI.UI.SliceSprite(lineSprite, 2, true, false);
+                headlineStroke.tint = 0x76c3f2;
+                headlineStroke.anchorLeft = headlineStroke.anchorRight = 8;
+                headlineStroke.anchorTop = 37;
+
+                innerContainer.addChild(HeadlinePlayer, HeadlineScore, HeadlineKDA, HeadlinePing, headlineStroke);
+            }
+            Update();
+        }
+
+        function Update() {
+            renderer.render(stage);
+            requestAnimationFrame(Update);
+        }
+
+    </script>
+</body>
+</html>

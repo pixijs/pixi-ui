@@ -1,13 +1,10 @@
-var UI = {
-    UISettings: require('./UISettings'),
-    UIBase: require('./UIBase'),
-    Container: require('./Container'),
-    SliceSprite: require('./SliceSprite'),
-    Text: require('./Text')
+
+var Library = {
+    UI: require('./UI')
 };
 
 //dump everything into extras
 
-Object.assign(PIXI, UI);
+Object.assign(PIXI, Library);
 
-module.exports = UI;
+module.exports = Library;

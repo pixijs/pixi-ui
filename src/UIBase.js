@@ -1,4 +1,5 @@
-var UISettings = require('./UISettings');
+var UISettings = require('./UISettings'),
+    UI = require('./UI');
 
 /**
  * Base class of all UIObjects
@@ -26,7 +27,7 @@ module.exports = UIBase;
  * @private
  */
 UIBase.prototype.updatesettings = function () {
-    this.baseUpdate();
+    this.baseupdate();
     this.update();
     this.updateChildren();
 };
@@ -44,9 +45,9 @@ UIBase.prototype.update = function () {
  *
  * @private
  */
-UIBase.prototype.baseUpdate = function () {
-    var parentWidth = this.parent != null ? this.parent.width : window.innerWidth;
-    var parentHeight = this.parent != null ? this.parent.height : window.innerHeight;
+UIBase.prototype.baseupdate = function () {
+    var parentWidth = this.parent != null ? this.parent.width : 0;
+    var parentHeight = this.parent != null ? this.parent.height : 0;
     this.setting.height = this.setting._height;
     this.setting.width = this.setting._width;
 
@@ -227,11 +228,19 @@ UIBase.prototype.addChild = function (UIObject) {
 }
 
 UIBase.prototype.removeChild = function (UIObject) {
-    var i = this.children.indexOf(UIObject);
-    if (i != -1) {
-        this.container.removeChild(UIObject.container);
-        this.children.splice(i, 1);
-        UIObject.parent = null;
+    var argumentLenght = arguments.length;
+    if (argumentLenght > 1) {
+        for (var i = 0; i < argumentLenght; i++) {
+            this.removeChild(arguments[i]);
+        }
+    }
+    else {
+        var i = this.children.indexOf(UIObject);
+        if (i != -1) {
+            this.container.removeChild(UIObject.container);
+            this.children.splice(i, 1);
+            UIObject.parent = null;
+        }
     }
 }
 

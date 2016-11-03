@@ -14,12 +14,14 @@ function Container(width, height) {
     UIBase.call(this, width, height);
 }
 
+
+
 Container.prototype = Object.create(UIBase.prototype);
 Container.prototype.constructor = Container;
 module.exports = Container;
 
 
-},{"./UIBase":4}],2:[function(require,module,exports){
+},{"./UIBase":6}],2:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -99,45 +101,138 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
     if (vs && hs) st.x = sb.x = sl.y = sr.y = stl.width = str.width = sbl.width = sbr.width = stl.height = str.height = sbl.height = sbr.height = bw;
     if (hs) sf.x = sl.width = sr.width = bw;
     if (vs) sf.y = st.height = sb.height = bw;
+
+
+    /**
+ * Updates the sliced sprites position and size
+ *
+ * @private
+ */
+
+    this.update = function () {
+        if (vs && hs) {
+            str.x = sbr.x = sr.x = this.width - bw;
+            sbl.y = sbr.y = sb.y = this.height - bw;
+            sf.width = st.width = sb.width = this.width - bw * 2;
+            sf.height = sl.height = sr.height = this.height - bw * 2;
+        }
+        else if (hs) {
+            sr.x = this.width - bw;
+            sl.height = sr.height = sf.height = this.height;
+            sf.width = this.width - bw * 2;
+        }
+        else { //vs
+            sb.y = this.height - bw;
+            st.width = sb.width = sf.width = this.width;
+            sf.height = this.height - bw * 2;
+        }
+
+        if (this.tint != null) {
+            sf.tint = this.tint;
+            if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
+            if (hs) sl.tint = sr.tint = this.tint;
+            if (vs) st.tint = sb.tint = this.tint;
+        }
+    };
 }
 
 SliceSprite.prototype = Object.create(UIBase.prototype);
 SliceSprite.prototype.constructor = SliceSprite;
 module.exports = SliceSprite;
 
+
+
+
+},{"./UIBase":6}],3:[function(require,module,exports){
+var UIBase = require('./UIBase');
+
 /**
- * Updates the sliced sprites position and size
+ * A Stage for UIObjects
  *
- * @private
+ * @class
+ * @extends PIXI.UI.Container
+ * @memberof PIXI.UI
+ * @param width {Number} Width of the Stage
+ * @param height {Number} Height of the Stage
  */
-SliceSprite.prototype.update = function () {
-    if (vs && hs) {
-        str.x = sbr.x = sr.x = this.width - bw;
-        sbl.y = sbr.y = sb.y = this.height - bw;
-        sf.width = st.width = sb.width = this.width - bw * 2;
-        sf.height = sl.height = sr.height = this.height - bw * 2;
-    }
-    else if (hs) {
-        sr.x = this.width - bw;
-        sl.height = sr.height = sf.height = this.height;
-        sf.width = this.width - bw * 2;
-    }
-    else { //vs
-        sb.y = this.height - bw;
-        st.width = sb.width = sf.width = this.width;
-        sf.height = this.height - bw * 2;
-    }
+function Stage(width, height) {
+    this._width = width;
+    this._height = height;
+    PIXI.Container.call(this);
+    this.UIChildren = [];
+}
 
-    if (this.tint != null) {
-        sf.tint = this.tint;
-        if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
-        if (hs) sl.tint = sr.tint = this.tint;
-        if (vs) st.tint = sb.tint = this.tint;
+Stage.prototype = Object.create(PIXI.Container.prototype);
+Stage.prototype.constructor = Stage;
+module.exports = Stage;
+
+Stage.prototype.addChild = function (UIObject) {
+    var argumentLenght = arguments.length;
+    if (argumentLenght > 1) {
+        for (var i = 0; i < argumentLenght; i++) {
+            this.addChild(arguments[i]);
+        }
     }
-};
+    else {
+        if (UIObject.parent != null)
+            UIObject.parent.removeChild(UIObject);
 
+        UIObject.parent = this;
+        this.UIChildren.push(UIObject);
+        PIXI.Container.prototype.addChild.call(this, UIObject.container);
+    }
+}
 
-},{"./UIBase":4}],3:[function(require,module,exports){
+Stage.prototype.removeChild = function (UIObject) {
+    var argumentLenght = arguments.length;
+    if (argumentLenght > 1) {
+        for (var i = 0; i < argumentLenght; i++) {
+            this.removeChild(arguments[i]);
+        }
+    }
+    else {
+        var i = this.UIChildren.indexOf(UIObject);
+        if (i != -1) {
+            this.UIChildren.splice(i, 1);
+            UIObject.parent = null;
+        }
+        PIXI.Container.prototype.addChild.call(this, UIObject.container);
+    }
+}
+
+Stage.prototype.resize = function (width, height) {   
+    if (!isNaN(height)) this._height = height;
+    if (!isNaN(width)) this._width = width;
+
+    for (var i = 0; i < this.UIChildren.length; i++)
+        this.UIChildren[i].updatesettings();
+}
+
+Object.defineProperties(Stage.prototype, {
+    width: {
+        get: function () {
+            return this._width;
+        },
+        set: function (val) {
+            if (!isNaN(val)) {
+                this._width = val;
+                this.resize();
+            }
+        }
+    },
+    height: {
+        get: function () {
+            return this._height;
+        },
+        set: function (val) {
+            if (!isNaN(val)) {
+                this._height = val;
+                this.resize();
+            }
+        }
+    }
+});
+},{"./UIBase":6}],4:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -170,8 +265,20 @@ Text.prototype.update = function () {
 };
 
 
-},{"./UIBase":4}],4:[function(require,module,exports){
-var UISettings = require('./UISettings');
+},{"./UIBase":6}],5:[function(require,module,exports){
+var UI = {
+    UISettings: require('./UISettings'),
+    UIBase: require('./UIBase'),
+    Stage: require('./Stage'),
+    Container: require('./Container'),
+    SliceSprite: require('./SliceSprite'),
+    Text: require('./Text')
+};
+
+module.exports = UI;
+},{"./Container":1,"./SliceSprite":2,"./Stage":3,"./Text":4,"./UIBase":6,"./UISettings":7}],6:[function(require,module,exports){
+var UISettings = require('./UISettings'),
+    UI = require('./UI');
 
 /**
  * Base class of all UIObjects
@@ -199,7 +306,7 @@ module.exports = UIBase;
  * @private
  */
 UIBase.prototype.updatesettings = function () {
-    this.baseUpdate();
+    this.baseupdate();
     this.update();
     this.updateChildren();
 };
@@ -217,9 +324,9 @@ UIBase.prototype.update = function () {
  *
  * @private
  */
-UIBase.prototype.baseUpdate = function () {
-    var parentWidth = this.parent != null ? this.parent.width : window.innerWidth;
-    var parentHeight = this.parent != null ? this.parent.height : window.innerHeight;
+UIBase.prototype.baseupdate = function () {
+    var parentWidth = this.parent != null ? this.parent.width : 0;
+    var parentHeight = this.parent != null ? this.parent.height : 0;
     this.setting.height = this.setting._height;
     this.setting.width = this.setting._width;
 
@@ -400,11 +507,19 @@ UIBase.prototype.addChild = function (UIObject) {
 }
 
 UIBase.prototype.removeChild = function (UIObject) {
-    var i = this.children.indexOf(UIObject);
-    if (i != -1) {
-        this.container.removeChild(UIObject.container);
-        this.children.splice(i, 1);
-        UIObject.parent = null;
+    var argumentLenght = arguments.length;
+    if (argumentLenght > 1) {
+        for (var i = 0; i < argumentLenght; i++) {
+            this.removeChild(arguments[i]);
+        }
+    }
+    else {
+        var i = this.children.indexOf(UIObject);
+        if (i != -1) {
+            this.container.removeChild(UIObject.container);
+            this.children.splice(i, 1);
+            UIObject.parent = null;
+        }
     }
 }
 
@@ -728,7 +843,7 @@ Object.defineProperties(UIBase.prototype, {
     },
 });
 
-},{"./UISettings":5}],5:[function(require,module,exports){
+},{"./UI":5,"./UISettings":7}],7:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -780,22 +895,19 @@ module.exports = UISettings;
 
 
 
-},{}],6:[function(require,module,exports){
-var UI = {
-    UISettings: require('./UISettings'),
-    UIBase: require('./UIBase'),
-    Container: require('./Container'),
-    SliceSprite: require('./SliceSprite'),
-    Text: require('./Text')
+},{}],8:[function(require,module,exports){
+
+var Library = {
+    UI: require('./UI')
 };
 
 //dump everything into extras
 
-Object.assign(PIXI, UI);
+Object.assign(PIXI, Library);
 
-module.exports = UI;
+module.exports = Library;
 
-},{"./Container":1,"./SliceSprite":2,"./Text":3,"./UIBase":4,"./UISettings":5}]},{},[6])
+},{"./UI":5}]},{},[8])
 
 
 //# sourceMappingURL=pixi-ui.js.map
