@@ -25,7 +25,7 @@ module.exports = Text;
  * @private
  */
 Text.prototype.update = function () {
-    if (this.tint != null)
+    if (this.tint !== null)
         text.tint = this.tint;
 };
 

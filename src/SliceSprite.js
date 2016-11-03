@@ -80,11 +80,10 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
 
 
     /**
- * Updates the sliced sprites position and size
- *
- * @private
- */
-
+     * Updates the sliced sprites position and size
+     *
+     * @private
+     */
     this.update = function () {
         if (vs && hs) {
             str.x = sbr.x = sr.x = this.width - bw;
@@ -103,7 +102,7 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
             sf.height = this.height - bw * 2;
         }
 
-        if (this.tint != null) {
+        if (this.tint !== null) {
             sf.tint = this.tint;
             if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
             if (hs) sl.tint = sr.tint = this.tint;

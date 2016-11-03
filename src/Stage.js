@@ -28,14 +28,14 @@ Stage.prototype.addChild = function (UIObject) {
         }
     }
     else {
-        if (UIObject.parent != null)
+        if (UIObject.parent !== null)
             UIObject.parent.removeChild(UIObject);
 
         UIObject.parent = this;
         this.UIChildren.push(UIObject);
         PIXI.Container.prototype.addChild.call(this, UIObject.container);
     }
-}
+};
 
 Stage.prototype.removeChild = function (UIObject) {
     var argumentLenght = arguments.length;
@@ -45,22 +45,22 @@ Stage.prototype.removeChild = function (UIObject) {
         }
     }
     else {
-        var i = this.UIChildren.indexOf(UIObject);
-        if (i != -1) {
-            this.UIChildren.splice(i, 1);
+        var index = this.UIChildren.indexOf(UIObject);
+        if (index != -1) {
+            this.UIChildren.splice(index, 1);
             UIObject.parent = null;
         }
         PIXI.Container.prototype.addChild.call(this, UIObject.container);
     }
-}
+};
 
-Stage.prototype.resize = function (width, height) {   
+Stage.prototype.resize = function (width, height) {
     if (!isNaN(height)) this._height = height;
     if (!isNaN(width)) this._width = width;
 
     for (var i = 0; i < this.UIChildren.length; i++)
         this.UIChildren[i].updatesettings();
-}
+};
 
 Object.defineProperties(Stage.prototype, {
     width: {

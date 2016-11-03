@@ -1,4 +1,11 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*!
+ * pixi-ui - v1.0.0
+ * Compiled Thu, 03 Nov 2016 20:15:42 UTC
+ *
+ * pixi-ui is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.pixiUi = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -104,11 +111,10 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
 
 
     /**
- * Updates the sliced sprites position and size
- *
- * @private
- */
-
+     * Updates the sliced sprites position and size
+     *
+     * @private
+     */
     this.update = function () {
         if (vs && hs) {
             str.x = sbr.x = sr.x = this.width - bw;
@@ -127,7 +133,7 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
             sf.height = this.height - bw * 2;
         }
 
-        if (this.tint != null) {
+        if (this.tint !== null) {
             sf.tint = this.tint;
             if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
             if (hs) sl.tint = sr.tint = this.tint;
@@ -174,14 +180,14 @@ Stage.prototype.addChild = function (UIObject) {
         }
     }
     else {
-        if (UIObject.parent != null)
+        if (UIObject.parent !== null)
             UIObject.parent.removeChild(UIObject);
 
         UIObject.parent = this;
         this.UIChildren.push(UIObject);
         PIXI.Container.prototype.addChild.call(this, UIObject.container);
     }
-}
+};
 
 Stage.prototype.removeChild = function (UIObject) {
     var argumentLenght = arguments.length;
@@ -191,22 +197,22 @@ Stage.prototype.removeChild = function (UIObject) {
         }
     }
     else {
-        var i = this.UIChildren.indexOf(UIObject);
-        if (i != -1) {
-            this.UIChildren.splice(i, 1);
+        var index = this.UIChildren.indexOf(UIObject);
+        if (index != -1) {
+            this.UIChildren.splice(index, 1);
             UIObject.parent = null;
         }
         PIXI.Container.prototype.addChild.call(this, UIObject.container);
     }
-}
+};
 
-Stage.prototype.resize = function (width, height) {   
+Stage.prototype.resize = function (width, height) {
     if (!isNaN(height)) this._height = height;
     if (!isNaN(width)) this._width = width;
 
     for (var i = 0; i < this.UIChildren.length; i++)
         this.UIChildren[i].updatesettings();
-}
+};
 
 Object.defineProperties(Stage.prototype, {
     width: {
@@ -260,7 +266,7 @@ module.exports = Text;
  * @private
  */
 Text.prototype.update = function () {
-    if (this.tint != null)
+    if (this.tint !== null)
         text.tint = this.tint;
 };
 
@@ -325,69 +331,69 @@ UIBase.prototype.update = function () {
  * @private
  */
 UIBase.prototype.baseupdate = function () {
-    var parentWidth = this.parent != null ? this.parent.width : 0;
-    var parentHeight = this.parent != null ? this.parent.height : 0;
+    var parentWidth = this.parent !== null ? this.parent.width : 0;
+    var parentHeight = this.parent !== null ? this.parent.height : 0;
     this.setting.height = this.setting._height;
     this.setting.width = this.setting._width;
 
     //percentage convertions
-    if (this.setting.widthPct != null)
+    if (this.setting.widthPct !== null)
         this.setting.width = parentWidth * this.setting.widthPct;
-    if (this.setting.heightPct != null)
+    if (this.setting.heightPct !== null)
         this.setting.height = parentHeight * this.setting.heightPct;
-    if (this.setting.minWidthPct != null)
+    if (this.setting.minWidthPct !== null)
         this.setting.minWidth = parentWidth * this.setting.minWidthPct;
-    if (this.setting.minHeightPct != null)
+    if (this.setting.minHeightPct !== null)
         this.setting.minHeight = parentHeight * this.setting.minHeightPct;
-    if (this.setting.maxWidthPct != null)
+    if (this.setting.maxWidthPct !== null)
         this.setting.maxWidth = parentWidth * this.setting.maxWidthPct;
-    if (this.setting.maxHeightPct != null)
+    if (this.setting.maxHeightPct !== null)
         this.setting.maxHeight = parentHeight * this.setting.maxHeightPct;
-    if (this.setting.leftPct != null)
+    if (this.setting.leftPct !== null)
         this.setting.left = parentWidth * this.setting.leftPct;
-    if (this.setting.rightPct != null)
+    if (this.setting.rightPct !== null)
         this.setting.right = parentWidth * this.setting.rightPct;
-    if (this.setting.topPct != null)
+    if (this.setting.topPct !== null)
         this.setting.top = parentHeight * this.setting.topPct;
-    if (this.setting.bottomPct != null)
+    if (this.setting.bottomPct !== null)
         this.setting.bottom = parentHeight * this.setting.bottomPct;
-    if (this.setting.anchorLeftPct != null)
+    if (this.setting.anchorLeftPct !== null)
         this.setting.anchorLeft = parentWidth * this.setting.anchorLeftPct;
-    if (this.setting.anchorRightPct != null)
+    if (this.setting.anchorRightPct !== null)
         this.setting.anchorRight = parentWidth * this.setting.anchorRightPct;
-    if (this.setting.anchorTopPct != null)
+    if (this.setting.anchorTopPct !== null)
         this.setting.anchorTop = parentHeight * this.setting.anchorTopPct;
-    if (this.setting.anchorBottomPct != null)
+    if (this.setting.anchorBottomPct !== null)
         this.setting.anchorBottom = parentHeight * this.setting.anchorBottomPct;
 
-    if (this.horizontalAlign == null) {
+    if (this.horizontalAlign === null) {
         //get anchors (use left right if conflict)
         var anchorLeft = this.anchorLeft;
         var anchorRight = this.anchorRight;
-        if (anchorLeft != null && anchorRight == null && this.right != null)
+        if (anchorLeft !== null && anchorRight === null && this.right !== null)
             anchorRight = this.right;
-        else if (anchorLeft == null && anchorRight != null && this.left != null)
+        else if (anchorLeft === null && anchorRight !== null && this.left !== null)
             anchorLeft = this.left;
-        else if (anchorLeft == null && anchorRight == null && this.left != null && this.right != null) {
+        else if (anchorLeft === null && anchorRight === null && this.left !== null && this.right !== null) {
             anchorLeft = this.left;
             anchorRight = this.right;
         }
 
-        var useHorizontalAnchor = anchorLeft != null || anchorRight != null;
-        var useLeftRight = !useHorizontalAnchor && (this.left != null || this.right != null);
+        var useHorizontalAnchor = anchorLeft !== null || anchorRight !== null;
+        var useLeftRight = !useHorizontalAnchor && (this.left !== null || this.right !== null);
 
         if (useLeftRight) {
-            if (this.left != null)
+            if (this.left !== null)
                 this.container.position.x = this.left;
-            else if (this.right != null)
+            else if (this.right !== null)
                 this.container.position.x = parentWidth - this.right;
         }
         else if (useHorizontalAnchor) {
-            if (anchorLeft != null && anchorRight == null)
+            if (anchorLeft !== null && anchorRight === null)
                 this.container.position.x = anchorLeft;
-            else if (anchorLeft == null && anchorRight != null)
+            else if (anchorLeft === null && anchorRight !== null)
                 this.container.position.x = parentWidth - this.width - anchorRight;
-            else if (anchorLeft != null && anchorRight != null) {
+            else if (anchorLeft !== null && anchorRight !== null) {
                 this.container.position.x = anchorLeft;
                 this.setting.width = parentWidth - anchorLeft - anchorRight;
             }
@@ -398,30 +404,30 @@ UIBase.prototype.baseupdate = function () {
         }
     }
 
-    if (this.verticalAlign == null) {
+    if (this.verticalAlign === null) {
         //get anchors (use top bottom if conflict)
         var anchorTop = this.anchorTop;
         var anchorBottom = this.anchorBottom;
-        if (anchorTop != null && anchorBottom == null && this.bottom != null)
+        if (anchorTop !== null && anchorBottom === null && this.bottom !== null)
             anchorBottom = this.bottom;
-        if (anchorTop == null && anchorBottom != null && this.top != null)
+        if (anchorTop === null && anchorBottom !== null && this.top !== null)
             anchorTop = this.top;
 
-        var useVerticalAnchor = anchorTop != null || anchorBottom != null;
-        var useTopBottom = !useVerticalAnchor && (this.top != null || this.bottom != null);
+        var useVerticalAnchor = anchorTop !== null || anchorBottom !== null;
+        var useTopBottom = !useVerticalAnchor && (this.top !== null || this.bottom !== null);
 
         if (useTopBottom) {
-            if (this.top != null)
+            if (this.top !== null)
                 this.container.position.y = this.top;
-            else if (this.bottom != null)
+            else if (this.bottom !== null)
                 this.container.position.y = parentHeight - this.bottom;
         }
         else if (useVerticalAnchor) {
-            if (anchorTop != null && anchorBottom == null)
+            if (anchorTop !== null && anchorBottom === null)
                 this.container.position.y = anchorTop;
-            else if (anchorTop == null && anchorBottom != null)
+            else if (anchorTop === null && anchorBottom !== null)
                 this.container.position.y = parentHeight - this.height - anchorBottom;
-            else if (anchorTop != null && anchorBottom != null) {
+            else if (anchorTop !== null && anchorBottom !== null) {
                 this.container.position.y = anchorTop;
                 this.setting.height = parentHeight - anchorTop - anchorBottom;
             }
@@ -433,15 +439,15 @@ UIBase.prototype.baseupdate = function () {
     }
 
     //min/max sizes
-    if (this.setting.maxWidth != null && this.setting.width > this.setting.maxWidth) this.setting.width = this.setting.maxWidth;
+    if (this.setting.maxWidth !== null && this.setting.width > this.setting.maxWidth) this.setting.width = this.setting.maxWidth;
     if (this.setting.width < this.setting.minWidth) this.setting.width = this.setting.minWidth;
 
-    if (this.setting.maxHeight != null && this.setting.height > this.setting.maxHeight) this.setting.height = this.setting.maxHeight;
+    if (this.setting.maxHeight !== null && this.setting.height > this.setting.maxHeight) this.setting.height = this.setting.maxHeight;
     if (this.setting.height < this.setting.minHeight) this.setting.height = this.setting.minHeight;
 
 
     //pure vertical/horizontal align
-    if (this.horizontalAlign != null) {
+    if (this.horizontalAlign !== null) {
         if (this.horizontalAlign == "center")
             this.container.position.x = parentWidth * 0.5 - this.width * 0.5;
         else if (this.horizontalAlign == "right")
@@ -450,7 +456,7 @@ UIBase.prototype.baseupdate = function () {
             this.container.position.x = 0;
         this.container.position.x += this.width * this.pivotX;
     }
-    if (this.verticalAlign != null) {
+    if (this.verticalAlign !== null) {
         if (this.verticalAlign == "middle")
             this.container.position.y = parentHeight * 0.5 - this.height * 0.5;
         else if (this.verticalAlign == "bottom")
@@ -463,12 +469,12 @@ UIBase.prototype.baseupdate = function () {
 
 
     //scale
-    if (this.setting.scaleX != null) this.container.scale.x = this.setting.scaleX;
-    if (this.setting.scaleY != null) this.container.scale.y = this.setting.scaleY;
+    if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
+    if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
 
     //pivot
-    if (this.setting.pivotX != null) this.container.pivot.x = this.setting.width * this.setting.pivotX;
-    if (this.setting.pivotY != null) this.container.pivot.y = this.setting.height * this.setting.pivotY;
+    if (this.setting.pivotX !== null) this.container.pivot.x = this.setting.width * this.setting.pivotX;
+    if (this.setting.pivotY !== null) this.container.pivot.y = this.setting.height * this.setting.pivotY;
 
     this.container.position.x = Math.round(this.container.position.x);
     this.container.position.y = Math.round(this.container.position.y);
@@ -504,7 +510,7 @@ UIBase.prototype.addChild = function (UIObject) {
     }
 
     return UIObject;
-}
+};
 
 UIBase.prototype.removeChild = function (UIObject) {
     var argumentLenght = arguments.length;
@@ -514,14 +520,14 @@ UIBase.prototype.removeChild = function (UIObject) {
         }
     }
     else {
-        var i = this.children.indexOf(UIObject);
-        if (i != -1) {
+        var index = this.children.indexOf(UIObject);
+        if (index !== -1) {
             this.container.removeChild(UIObject.container);
-            this.children.splice(i, 1);
+            this.children.splice(index, 1);
             UIObject.parent = null;
         }
     }
-}
+};
 
 Object.defineProperties(UIBase.prototype, {
     width: {
@@ -529,7 +535,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.width;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.widthPct = parseFloat(val) * 0.01;
             }
@@ -545,7 +551,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.height;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.heightPct = parseFloat(val) * 0.01;
             }
@@ -561,7 +567,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.minWidth;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.percentageMinWidth = parseFloat(val) * 0.01;
             }
@@ -577,7 +583,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.minHeight;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.percentageMinHeight = parseFloat(val) * 0.01;
             }
@@ -593,7 +599,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.maxWidth;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.maxWidthPct = parseFloat(val) * 0.01;
             }
@@ -609,7 +615,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.maxHeight;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.maxHeightPct = parseFloat(val) * 0.01;
             }
@@ -625,7 +631,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorLeft;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.anchorLeftPct = parseFloat(val) * 0.01;
             }
@@ -641,7 +647,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorRight;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.anchorRightPct = parseFloat(val) * 0.01;
             }
@@ -657,7 +663,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorTop;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.anchorTopPct = parseFloat(val) * 0.01;
             }
@@ -673,7 +679,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorBottom;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.anchorBottomPct = parseFloat(val) * 0.01;
             }
@@ -766,7 +772,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.left;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.leftPct = parseFloat(val) * 0.01;
             }
@@ -782,7 +788,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.right;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.rightPct = parseFloat(val) * 0.01;
             }
@@ -798,7 +804,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.top;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.topPct = parseFloat(val) * 0.01;
             }
@@ -814,7 +820,7 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.bottom;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') != -1) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
                 val = val.replace('%', '');
                 this.setting.bottomPct = parseFloat(val) * 0.01;
             }
@@ -907,7 +913,8 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":5}]},{},[8])
+},{"./UI":5}]},{},[8])(8)
+});
 
 
 //# sourceMappingURL=pixi-ui.js.map
