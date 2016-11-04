@@ -191,6 +191,9 @@ UIBase.prototype.baseupdate = function () {
     if (this.setting.pivotX !== null) this.container.pivot.x = this.setting.width * this.setting.pivotX;
     if (this.setting.pivotY !== null) this.container.pivot.y = this.setting.height * this.setting.pivotY;
 
+    if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
+    if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
+
     this.container.position.x = Math.round(this.container.position.x);
     this.container.position.y = Math.round(this.container.position.y);
 };
@@ -430,6 +433,33 @@ Object.defineProperties(UIBase.prototype, {
         set: function (val) {
             this.setting.tint = val;
             this.update();
+        }
+    },
+    alpha: {
+        get: function () {
+            return this.setting.alpha;
+        },
+        set: function (val) {
+            this.setting.alpha = val;
+            this.container.alpha = val;
+        }
+    },
+    rotation: {
+        get: function () {
+            return this.setting.rotation;
+        },
+        set: function (val) {
+            this.setting.rotation = val;
+            this.container.rotation = val;
+        }
+    },
+    blendMode: {
+        get: function () {
+            return this.setting.blendMode;
+        },
+        set: function (val) {
+            this.setting.blendMode = val;
+            this.updatesettings();
         }
     },
     pivotX: {

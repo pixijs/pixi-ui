@@ -108,6 +108,13 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
             if (hs) sl.tint = sr.tint = this.tint;
             if (vs) st.tint = sb.tint = this.tint;
         }
+
+        if (this.blendMode !== null) {
+            sf.blendMode = this.blendMode;
+            if (vs && hs) stl.blendMode = str.blendMode = sbl.blendMode = sbr.blendMode = this.blendMode;
+            if (hs) sl.blendMode = sr.blendMode = this.blendMode;
+            if (vs) st.blendMode = sb.blendMode = this.blendMode;
+        }
     };
 }
 

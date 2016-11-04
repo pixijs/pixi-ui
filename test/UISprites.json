@@ -1,8 +1,16 @@
 {"frames": {
 
+"UI/horizontal-gradient.png":
+{
+	"frame": {"x":1,"y":1,"w":24,"h":23},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":24,"h":23},
+	"sourceSize": {"w":24,"h":23}
+},
 "UI/ui-box-1.png":
 {
-	"frame": {"x":1,"y":1,"w":15,"h":15},
+	"frame": {"x":27,"y":1,"w":15,"h":15},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":15},
@@ -10,15 +18,15 @@
 },
 "UI/ui-box-2.png":
 {
-	"frame": {"x":18,"y":1,"w":15,"h":15},
+	"frame": {"x":44,"y":1,"w":15,"h":15},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":15},
 	"sourceSize": {"w":15,"h":15}
 },
-"UI/ui-dot-border.png":
+"UI/ui-horizontal-line-border.png":
 {
-	"frame": {"x":35,"y":1,"w":5,"h":3},
+	"frame": {"x":27,"y":18,"w":5,"h":3},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":5,"h":3},
@@ -29,8 +37,8 @@
 	"version": "1.0",
 	"image": "UISprites.png",
 	"format": "RGBA8888",
-	"size": {"w":41,"h":17},
+	"size": {"w":60,"h":25},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:51f5ad9fa083463092544ee48b63dbf6:c63ee07c0138e881f0be5dc3efd718e0:1a4b9dce9e084a51b4415f1145cee46f$"
+	"smartupdate": "$TexturePacker:SmartUpdate:1da628efff6a96da5d2c7f2152c0592a:a21f9089255fcd27f686de97622934a7:1a4b9dce9e084a51b4415f1145cee46f$"
 }
 }

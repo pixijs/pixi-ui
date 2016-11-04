@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 03 Nov 2016 20:15:42 UTC
+ * Compiled Fri, 04 Nov 2016 21:30:02 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -28,7 +28,7 @@ Container.prototype.constructor = Container;
 module.exports = Container;
 
 
-},{"./UIBase":6}],2:[function(require,module,exports){
+},{"./UIBase":8}],2:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -139,6 +139,13 @@ function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
             if (hs) sl.tint = sr.tint = this.tint;
             if (vs) st.tint = sb.tint = this.tint;
         }
+
+        if (this.blendMode !== null) {
+            sf.blendMode = this.blendMode;
+            if (vs && hs) stl.blendMode = str.blendMode = sbl.blendMode = sbr.blendMode = this.blendMode;
+            if (hs) sl.blendMode = sr.blendMode = this.blendMode;
+            if (vs) st.blendMode = sb.blendMode = this.blendMode;
+        }
     };
 }
 
@@ -149,7 +156,121 @@ module.exports = SliceSprite;
 
 
 
-},{"./UIBase":6}],3:[function(require,module,exports){
+},{"./UIBase":8}],3:[function(require,module,exports){
+var Container = require('./Container');
+/**
+ * An UI Container object
+ *
+ * @class
+ * @extends PIXI.UI.UIBase
+ * @memberof PIXI.UI
+ * @param width {Number} Width of the Container
+ * @param height {Number} Height of the Container
+ */
+function SortableList(desc) {
+    Container.call(this);
+    this.desc = typeof desc !== "undefined" ? desc : true;
+    this.items = [];
+}
+
+SortableList.prototype = Object.create(Container.prototype);
+SortableList.prototype.constructor = SortableList;
+module.exports = SortableList;
+
+SortableList.prototype.addChild = function (UIObject, fnValue) {
+    
+    if (this.items.indexOf(UIObject) == -1) {
+        this.items.push(UIObject);
+    }
+    UIObject._sortListValue = fnValue;
+    Container.prototype.addChild.call(this, UIObject);
+
+
+    this.sort();
+}
+
+SortableList.prototype.removeChild = function (UIObject) {
+    if (arguments.length > 0) {
+        for (var i = 0; i < arguments.length; i++) {
+            this.removeChild(arguments[i]);
+        }
+    }
+    else {
+        var index = this.items.indexOf(UIObject);
+        if (index != -1) {
+            this.items.splice(index, 1);
+        }
+        Container.prototype.removeChild.call(this, UIObject);
+
+        this.sort();
+    }
+}
+
+SortableList.prototype.sort = function () {
+    
+    this.items.sort(function (a, b) {
+        if (this.desc) {
+            return a._sortListValue() > b._sortListValue() ? 1 : a._sortListValue() < b._sortListValue() ? -1 : 0;
+        }
+        else {
+            return a._sortListValue() < b._sortListValue() ? 1 : a._sortListValue() > b._sortListValue() ? -1 : 0;
+        }
+    });
+
+    var y = 0
+    var alt = true;
+    for (var i = 0; i < this.items.length; i++) {
+        alt = !alt;
+        var item = this.items[i];
+        item.anchorTop = y;
+        y += item.height;
+        if (typeof item.altering === "function")
+            item.altering(alt);
+    }
+}
+
+
+
+
+},{"./Container":1}],4:[function(require,module,exports){
+var UIBase = require('./UIBase');
+
+/**
+ * An UI sprite object
+ *
+ * @class
+ * @extends PIXI.UI.UIBase
+ * @memberof PIXI.UI
+ * @param Sprite {PIXI.Sprite} A pixi sprite object
+ */
+function Sprite(PIXISprite) {
+    this.sprite = PIXISprite;
+    UIBase.call(this, this.sprite.width, this.sprite.height);
+    this.container.addChild(this.sprite);
+}
+
+Sprite.prototype = Object.create(UIBase.prototype);
+Sprite.prototype.constructor = Sprite;
+module.exports = Sprite;
+
+/**
+ * Updates the text
+ *
+ * @private
+ */
+Sprite.prototype.update = function () {
+    if (this.tint !== null)
+        this.sprite.tint = this.tint;
+
+    if (this.blendMode !== null)
+        this.sprite.blendMode = this.blendMode;
+
+    this.sprite.width = this.width;
+    this.sprite.height = this.height;
+};
+
+
+},{"./UIBase":8}],5:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -238,7 +359,7 @@ Object.defineProperties(Stage.prototype, {
         }
     }
 });
-},{"./UIBase":6}],4:[function(require,module,exports){
+},{"./UIBase":8}],6:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -268,21 +389,26 @@ module.exports = Text;
 Text.prototype.update = function () {
     if (this.tint !== null)
         text.tint = this.tint;
+
+    if (this.blendMode !== null)
+        this.text.blendMode = this.blendMode;
 };
 
 
-},{"./UIBase":6}],5:[function(require,module,exports){
+},{"./UIBase":8}],7:[function(require,module,exports){
 var UI = {
     UISettings: require('./UISettings'),
     UIBase: require('./UIBase'),
     Stage: require('./Stage'),
     Container: require('./Container'),
+    SortableList: require('./SortableList'),
+    Sprite: require('./Sprite'),
     SliceSprite: require('./SliceSprite'),
     Text: require('./Text')
 };
 
 module.exports = UI;
-},{"./Container":1,"./SliceSprite":2,"./Stage":3,"./Text":4,"./UIBase":6,"./UISettings":7}],6:[function(require,module,exports){
+},{"./Container":1,"./SliceSprite":2,"./SortableList":3,"./Sprite":4,"./Stage":5,"./Text":6,"./UIBase":8,"./UISettings":9}],8:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI');
 
@@ -475,6 +601,9 @@ UIBase.prototype.baseupdate = function () {
     //pivot
     if (this.setting.pivotX !== null) this.container.pivot.x = this.setting.width * this.setting.pivotX;
     if (this.setting.pivotY !== null) this.container.pivot.y = this.setting.height * this.setting.pivotY;
+
+    if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
+    if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
 
     this.container.position.x = Math.round(this.container.position.x);
     this.container.position.y = Math.round(this.container.position.y);
@@ -717,6 +846,33 @@ Object.defineProperties(UIBase.prototype, {
             this.update();
         }
     },
+    alpha: {
+        get: function () {
+            return this.setting.alpha;
+        },
+        set: function (val) {
+            this.setting.alpha = val;
+            this.container.alpha = val;
+        }
+    },
+    rotation: {
+        get: function () {
+            return this.setting.rotation;
+        },
+        set: function (val) {
+            this.setting.rotation = val;
+            this.container.rotation = val;
+        }
+    },
+    blendMode: {
+        get: function () {
+            return this.setting.blendMode;
+        },
+        set: function (val) {
+            this.setting.blendMode = val;
+            this.updatesettings();
+        }
+    },
     pivotX: {
         get: function () {
             return this.setting.pivotX;
@@ -849,7 +1005,7 @@ Object.defineProperties(UIBase.prototype, {
     },
 });
 
-},{"./UI":5,"./UISettings":7}],7:[function(require,module,exports){
+},{"./UI":7,"./UISettings":9}],9:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -893,7 +1049,10 @@ function UISettings() {
     this.scaleY = null;
     this.verticalAlign = null;
     this.horizontalAlign = null;
+    this.rotation = null;
+    this.blendMode = null;
     this.tint = null;
+    this.alpha = null;
 }
 
 
@@ -901,7 +1060,7 @@ module.exports = UISettings;
 
 
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 
 var Library = {
     UI: require('./UI')
@@ -913,7 +1072,7 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":5}]},{},[8])(8)
+},{"./UI":7}]},{},[10])(10)
 });
 
 

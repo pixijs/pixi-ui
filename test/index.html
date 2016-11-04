@@ -27,21 +27,46 @@
             init();
         });
 
+        var playersArr = [
+            { name: "Alex", score: 1000, kills: 15, deaths: 4, assist: 6, ping: 75 },
+            { name: "John", score: 132, kills: 1, deaths: 2, assist: 1, ping: 25 },
+            { name: "Charles", score: 595, kills: 9, deaths: 6, assist: 4, ping: 50 },
+            { name: "Ivan", score: 705, kills: 10, deaths: 5, assist: 3, ping: 33 },
+            { name: "Martin", score: 130, kills: 2, deaths: 7, assist: 7, ping: 21 },
+            { name: "Ronnie", score: 10, kills: 0, deaths: 1, assist: 1, ping: 55 },
+            { name: "Jimmy", score: 1500, kills: 17, deaths: 1, assist: 8, ping: 55 },
+            { name: "Egon", score: 1132, kills: 5, deaths: 3, assist: 5, ping: 25 },
+            { name: "Ulrik", score: 595, kills: 9, deaths: 8, assist: 4, ping: 58 },
+            { name: "Peter", score: 705, kills: 10, deaths: 3, assist: 4, ping: 33 },
+            { name: "Nick", score: 1130, kills: 15, deaths: 5, assist: 3, ping: 247 },
+            { name: "Andy", score: 17, kills: 0, deaths: 2, assist: 2, ping: 59 }
+        ];
+
+
+
         function init() {
             var whiteBG = PIXI.Sprite.fromFrame("UI/ui-box-1.png");
             var innerBG = PIXI.Sprite.fromFrame("UI/ui-box-2.png");
-            var lineSprite = PIXI.Sprite.fromFrame("UI/ui-dot-border.png");
+            var lineSprite = PIXI.Sprite.fromFrame("UI/ui-horizontal-line-border.png");
+ 
 
+
+            var leaderboardWrapper = new PIXI.UI.Container();
+            leaderboardWrapper.horizontalAlign = "center";
+            leaderboardWrapper.verticalAlign = "middle";
+            leaderboardWrapper.height = "90%";
+            leaderboardWrapper.width = "95%";
+            uiStage.addChild(leaderboardWrapper);
 
             var container = new PIXI.UI.SliceSprite(whiteBG, 5);
             container.height = 600;
             container.width = '80%';
             container.maxWidth = 1200;
-            container.minWidth = 700;
+            container.minWidth = 550;
             container.maxHeight = "100%";
             container.horizontalAlign = "center";
             container.verticalAlign = "middle";
-            uiStage.addChild(container);
+            leaderboardWrapper.addChild(container);
 
             for (var i = 0; i < 2; i++) {
                 var section = new PIXI.UI.Container();
@@ -51,11 +76,10 @@
                 section.width = "50%";
                 container.addChild(section);
 
-                innerContainer = new PIXI.UI.SliceSprite(innerBG, 5);
+                var innerContainer = new PIXI.UI.SliceSprite(innerBG, 5);
                 innerContainer.anchorTop = innerContainer.anchorBottom = 6;
                 innerContainer.anchorRight = i == 1 ? 6 : 3;
                 innerContainer.anchorLeft = i == 1 ? 3 : 6;
-
                 innerContainer.tint = 0x252934;
                 section.addChild(innerContainer);
 
@@ -65,17 +89,68 @@
                 var HeadlineKDA = new PIXI.UI.Text("K/D/A", headlineStyle);
                 var HeadlinePing = new PIXI.UI.Text("PING", headlineStyle);
                 HeadlinePlayer.anchorTop = HeadlineScore.anchorTop = HeadlineKDA.anchorTop = HeadlinePing.anchorTop = 19;
-                HeadlinePlayer.anchorLeft = 13;
-                HeadlineScore.right = 257;
-                HeadlineKDA.right = 157;
-                HeadlinePing.right = 57;
+                HeadlinePlayer.left = 13;
+                HeadlineScore.right = "55%";
+                HeadlineKDA.right = "33%";
+                HeadlinePing.anchorRight = "2%";
 
                 var headlineStroke = new PIXI.UI.SliceSprite(lineSprite, 2, true, false);
                 headlineStroke.tint = 0x76c3f2;
                 headlineStroke.anchorLeft = headlineStroke.anchorRight = 8;
                 headlineStroke.anchorTop = 37;
 
-                innerContainer.addChild(HeadlinePlayer, HeadlineScore, HeadlineKDA, HeadlinePing, headlineStroke);
+                var sortableList = new PIXI.UI.SortableList(true, true);
+                sortableList.anchorTop = 40;
+                sortableList.anchorBottom = 1;
+                sortableList.width = "100%";
+
+                var textStyle = { fill: ['#ffffff', '#ededed'], fontSize: 14, fontFamily: 'Calibri', fontWeight: 'bold' };
+                for (var p = 0; p < playersArr.length; p++) {
+                    (function () {
+                        var player = playersArr[p];
+                        var playerItem = new PIXI.UI.Container();
+                        playerItem.width = "100%";
+                        playerItem.height = 40;
+
+
+                        var playerItemUnderline = new PIXI.UI.SliceSprite(lineSprite, 2, true, false);
+                        playerItemUnderline.anchorLeft = playerItemUnderline.anchorRight = 10;
+                        playerItemUnderline.anchorBottom = 0;
+                        playerItemUnderline.tint = 0xa1a1a1;
+
+
+                        var playerItemBG = new PIXI.UI.Sprite(PIXI.Sprite.fromFrame("UI/horizontal-gradient.png"));
+                        playerItemBG.anchorLeft = playerItemBG.anchorRight = 10;
+                        playerItemBG.anchorTop = 0;
+                        playerItemBG.anchorBottom = 3;
+
+                        var Name = new PIXI.UI.Text(player.name, textStyle);
+                        var Score = new PIXI.UI.Text(player.score, textStyle);
+                        var KDA = new PIXI.UI.Text(player.kills + "/" + player.deaths + "/" + player.assist, textStyle);
+                        var Ping = new PIXI.UI.Text(player.ping, textStyle);
+
+                        Name.anchorTop = Score.anchorTop = KDA.anchorTop = Ping.anchorTop = 6;
+                        Name.left = 13;
+                        Score.right = "55%";
+                        KDA.right = "33%";
+                        Ping.anchorRight = "2%";
+
+                        playerItem.addChild(playerItemBG, playerItemUnderline, Name, Score, KDA, Ping);
+                        playerItem.altering = function (alt) {
+                            if (alt) playerItemBG.alpha = 0;
+                            else playerItemBG.alpha = 0.11;
+                        };
+
+                        sortableList.addChild(playerItem, function () {
+                            var p = player;
+                            return p.score;
+                        });
+
+                        
+                    })();
+                }
+
+                innerContainer.addChild(HeadlinePlayer, HeadlineScore, HeadlineKDA, HeadlinePing, headlineStroke, sortableList);
             }
             Update();
         }

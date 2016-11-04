@@ -27,5 +27,8 @@ module.exports = Text;
 Text.prototype.update = function () {
     if (this.tint !== null)
         text.tint = this.tint;
+
+    if (this.blendMode !== null)
+        this.text.blendMode = this.blendMode;
 };
 

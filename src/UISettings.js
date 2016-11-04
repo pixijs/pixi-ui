@@ -41,7 +41,10 @@ function UISettings() {
     this.scaleY = null;
     this.verticalAlign = null;
     this.horizontalAlign = null;
+    this.rotation = null;
+    this.blendMode = null;
     this.tint = null;
+    this.alpha = null;
 }
 
 
