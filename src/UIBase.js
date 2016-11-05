@@ -1,21 +1,24 @@
 var UISettings = require('./UISettings'),
-    UI = require('./UI');
+    UI = require('./UI')
 
 /**
  * Base class of all UIObjects
  *
  * @class
- * @memberof PIXI.UI
+ * @extends PIXI.UI.UIBase
  * @param width {Number} Width of the UIObject
  * @param height {Number} Height of the UIObject
  */
 function UIBase(width, height) {
     this.container = new PIXI.Container();
+
     this.setting = new UISettings();
     this.children = [];
     this.parent = null;
     this.width = width || 0;
     this.height = height || 0;
+    this._draggable = false;
+    this.container.interactiveChildren = true;
 }
 
 UIBase.prototype.constructor = UIBase;
@@ -39,6 +42,9 @@ UIBase.prototype.updatesettings = function () {
  */
 UIBase.prototype.update = function () {
 };
+
+
+
 
 /**
  * Updates the UIObject with all base settings
@@ -182,6 +188,12 @@ UIBase.prototype.baseupdate = function () {
     }
 
 
+    //Unrestricted dragging
+    if (this.dragging && !this.setting.dragRestricted) {
+        this.container.position.x = this.left;
+        this.container.position.y = this.top;
+    }
+
 
     //scale
     if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
@@ -240,10 +252,138 @@ UIBase.prototype.removeChild = function (UIObject) {
     else {
         var index = this.children.indexOf(UIObject);
         if (index !== -1) {
-            this.container.removeChild(UIObject.container);
+            UIObject.container.parent.removeChild(UIObject.container);
             this.children.splice(index, 1);
             UIObject.parent = null;
         }
+    }
+};
+
+UIBase.prototype.clearDraggable = function () {
+    if (this.setting.draggable) {
+        this.container.removeListener('mousedown', this.onDragMove);
+        this.container.removeListener('touchstart', this.onDragMove);
+        document.removeEventListener("mousemove", this.onDragMove);
+        document.removeEventListener("touchmove", this.onDragMove);
+        document.removeEventListener('mouseup', this.onDragEnd);
+        document.removeEventListener('mouseupoutside', this.onDragEnd);
+        document.removeEventListener('touchend', this.onDragEnd);
+        document.removeEventListener('touchendoutside', this.onDragEnd);
+        this.setting.draggable = false;
+    }
+}
+
+UIBase.prototype.initDraggable = function () {
+    if (!this.setting.draggable) {
+        var container = this.container,
+            uiobject = this,
+            containerStart = new PIXI.Point(),
+            mouseStart = new PIXI.Point(),
+            stageOffset = new PIXI.Point();
+
+        this.container.interactive = true;
+
+        this.onDragStart = function (event) {
+            if (!uiobject.dragging) {
+                mouseStart.set(event.data.originalEvent.clientX, event.data.originalEvent.clientY);
+                containerStart.copy(container.position);
+                document.addEventListener('mousemove', uiobject.onDragMove);
+                document.addEventListener('touchmove', uiobject.onDragMove);
+            }
+        }
+
+        this.onDragMove = function (event) {
+            if (!uiobject.dragging) {
+                document.addEventListener('mouseup', uiobject.onDragEnd);
+                document.addEventListener('mouseupoutside', uiobject.onDragEnd);
+                document.addEventListener('touchend', uiobject.onDragEnd);
+                document.addEventListener('touchendoutside', uiobject.onDragEnd);
+                uiobject.dragging = true;
+                container.interactive = false;
+                PIXI.UI._dropTarget = null;
+
+                if (uiobject.dragContainer) {
+
+                    var c = uiobject.dragContainer.container ? uiobject.dragContainer.container : uiobject.dragContainer;
+                    console.log("before:", uiobject.container.worldTransform);
+                    if (c) {
+                        stageOffset.set(c.worldTransform.tx - uiobject.parent.container.worldTransform.tx, c.worldTransform.ty - uiobject.parent.container.worldTransform.ty);
+                        c.addChild(uiobject.container);
+                    }
+                } else {
+                    stageOffset.set(0);
+                }
+            }
+
+            var x = event.clientX - mouseStart.x,
+                y = event.clientY - mouseStart.y;
+
+            uiobject.x = containerStart.x + x - stageOffset.x;
+            uiobject.y = containerStart.y + y - stageOffset.y;
+        }
+
+        this.onDragEnd = function (event) {
+            if (uiobject.dragging) {
+                uiobject.dragging = false;
+                container.interactive = true;
+                document.removeEventListener("mousemove", uiobject.onDragMove);
+                document.removeEventListener("touchmove", uiobject.onDragMove);
+                document.removeEventListener('mouseup', uiobject.onDragEnd);
+                document.removeEventListener('mouseupoutside', uiobject.onDragEnd);
+                document.removeEventListener('touchend', uiobject.onDragEnd);
+                document.removeEventListener('touchendoutside', uiobject.onDragEnd);
+
+                
+
+                setTimeout(function () {
+                    var x = event.clientX - mouseStart.x,
+                    y = event.clientY - mouseStart.y;
+                    uiobject.x = containerStart.x + x;
+                    uiobject.y = containerStart.y + y;
+
+                    if (PIXI.UI._dropTarget && PIXI.UI._dropTarget.dragGroup == uiobject.dragGroup) {
+                        PIXI.UI._dropTarget.addChild(uiobject);
+                    }
+                    else {
+                        uiobject.parent.addChild(uiobject);
+                    }                    
+                }, 0);
+
+            }
+        }
+
+
+
+        container.on('mousedown', this.onDragStart);
+        container.on('touchstart', this.onDragStart);
+        this.setting.draggable = true;
+    }
+};
+
+UIBase.prototype.clearDroppable = function () {
+    if (this.setting.droppable) {
+        this.container.removeListener('mouseup', this.onDrop);
+        this.container.removeListener('touchend', this.onDrop);
+        this.setting.droppable = false;
+    }
+}
+
+UIBase.prototype.initDroppable = function () {
+    if (!this.setting.droppable) {
+        var container = this.container,
+            uiobject = this;
+
+        this.container.interactive = true;
+        this.onDrop = function (event) {
+            if (uiobject.droppableParent != null)
+                PIXI.UI._dropTarget = uiobject.droppableParent;
+            else
+                PIXI.UI._dropTarget = uiobject;
+        }
+
+        container.on('mouseup', this.onDrop);
+        container.on('touchend', this.onDrop);
+        this.setting.droppable = true;
     }
 };
 
@@ -592,4 +732,52 @@ Object.defineProperties(UIBase.prototype, {
             this.top = val;
         }
     },
+    draggable: {
+        get: function () {
+            return this.setting.draggable;
+        },
+        set: function (val) {
+            if (val)
+                this.initDraggable();
+            else
+                this.clearDraggable();
+        }
+    },
+    dragRestricted: {
+        get: function () {
+            return this.setting.dragRestricted;
+        },
+        set: function (val) {
+            this.setting.dragRestricted = val;
+        }
+    },
+    dragGroup: {
+        get: function () {
+            return this.setting.dragGroup;
+        },
+        set: function (val) {
+            this.setting.dragGroup = val;
+        }
+    },
+    dragContainer: {
+        get: function () {
+            return this.setting.dragContainer;
+        },
+        set: function (val) {
+            this.setting.dragContainer = val;
+        }
+    },
+    droppable: {
+        get: function () {
+            return this.setting.droppable;
+        },
+        set: function (val) {
+            if (val)
+                this.initDroppable();
+            else
+                this.clearDroppable();
+        }
+    },
 });
+
+

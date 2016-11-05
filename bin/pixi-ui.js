@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 04 Nov 2016 21:30:02 UTC
+ * Compiled Sat, 05 Nov 2016 21:28:52 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19,6 +19,13 @@ var UIBase = require('./UIBase');
  */
 function Container(width, height) {
     UIBase.call(this, width, height);
+    this.container.hitArea = new PIXI.Rectangle(0,0,width,height);
+
+    this.update = function () {
+        this.container.hitArea.width = this.width;
+        this.container.hitArea.height = this.height;
+        
+    }
 }
 
 
@@ -28,7 +35,86 @@ Container.prototype.constructor = Container;
 module.exports = Container;
 
 
-},{"./UIBase":8}],2:[function(require,module,exports){
+},{"./UIBase":9}],2:[function(require,module,exports){
+var UIBase = require('./UIBase'),
+    Container = require('./Container');
+
+/**
+ * An UI Container object with overflow hidden and possibility to enable scrolling
+ *
+ * @class
+ * @extends PIXI.UI.UIBase
+ * @memberof PIXI.UI
+ * @param width {Number} Width of the Container
+ * @param height {Number} Height of the Container
+ */
+function ScrollingContainer(width, height, scrollX, scrollY, cornerRadius) {
+    Container.call(this, width, height);
+    this.mask = new PIXI.Graphics();
+    this.innerContainer = new PIXI.Container();
+    this.container.addChild(this.innerContainer);
+    this.container.addChild(this.mask);
+    this.container.mask = this.mask;
+    this.scrollX = scrollX;
+    this.scrollY = scrollY;
+    this.cornerRadius = cornerRadius || 0;
+    
+    
+    
+    this.update = function () {
+        if (this._lastWidth != this.width || this._lastHeight != this.height) {
+            this.mask.clear();
+            this.mask.lineStyle(0);
+            if (this.cornerRadius == 0) {
+                this.mask.beginFill(0xFFFFFF, 1);
+                this.mask.drawRect(0, 0, this.width, this.height);
+            }
+            else {
+                this.mask.beginFill(0xFFFFFF, 1);
+                this.mask.drawRoundedRect(0, 0, this.width, this.height, this.cornerRadius);
+            }
+            this._lastWidth = this.width;
+            this._lastHeight = this.height;
+        }
+        
+    }
+}
+
+
+ScrollingContainer.prototype = Object.create(Container.prototype);
+ScrollingContainer.prototype.constructor = ScrollingContainer;
+module.exports = ScrollingContainer;
+
+
+
+Object.defineProperties(ScrollingContainer.prototype, {
+    overflowHidden: {
+        get: function () {
+            return this._overflowHidden;
+        },
+        set: function (val) {
+            this._overflowHidden = val;
+            this.updateOverflow();
+        }
+    },
+});
+
+ScrollingContainer.prototype.addChild = function (UIObject) {
+    var argumentsLength = arguments.length;
+    if (argumentsLength > 1) {
+        for (var i = 0; i < argumentsLength; i++) {
+            this.addChild(arguments[i]);
+        }
+    }
+    else {
+        Container.prototype.addChild.call(this, UIObject);
+        this.innerContainer.addChild(UIObject.container);
+    }
+    return UIObject;
+};
+
+
+},{"./Container":1,"./UIBase":9}],3:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -37,20 +123,20 @@ var UIBase = require('./UIBase');
  * @class
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
- * @param Sprite {PIXI.Sprite} the sprite for this SliceSprite
+ * @param Texture {PIXI.Texture} the texture for this SliceSprite
  * @param BorderWidth {Number} Width of the sprite borders
  * @param horizontalSlice {Boolean} Slice the sprite horizontically
  * @param horizontalSlice {Boolean} Slice the sprite vertically
  */
-function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
-    UIBase.call(this, sprite.width, sprite.height);
+function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
+    UIBase.call(this, texture.width, texture.height);
 
     var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
         bw = borderWidth || 5,
         vs = typeof verticalSlice !== "undefined" ? verticalSlice : true,
         hs = typeof horizontalSlice !== "undefined" ? horizontalSlice : true,
-        t = sprite.texture.baseTexture,
-        f = sprite.texture.frame;
+        t = texture.baseTexture,
+        f = texture.frame;
 
 
     //get frames
@@ -156,7 +242,7 @@ module.exports = SliceSprite;
 
 
 
-},{"./UIBase":8}],3:[function(require,module,exports){
+},{"./UIBase":9}],4:[function(require,module,exports){
 var Container = require('./Container');
 /**
  * An UI Container object
@@ -171,50 +257,64 @@ function SortableList(desc) {
     Container.call(this);
     this.desc = typeof desc !== "undefined" ? desc : true;
     this.items = [];
+
 }
 
 SortableList.prototype = Object.create(Container.prototype);
 SortableList.prototype.constructor = SortableList;
 module.exports = SortableList;
 
-SortableList.prototype.addChild = function (UIObject, fnValue) {
-    
+SortableList.prototype.addChild = function (UIObject, fnValue, fnThenBy) {
+    Container.prototype.addChild.call(this, UIObject);
     if (this.items.indexOf(UIObject) == -1) {
         this.items.push(UIObject);
     }
-    UIObject._sortListValue = fnValue;
-    Container.prototype.addChild.call(this, UIObject);
+
+    if (typeof fnValue === "function")
+        UIObject._sortListValue = fnValue;
+
+    if (typeof fnThenBy === "function")
+        UIObject._sortListThenByValue = fnThenBy;
+
+    if (!UIObject._sortListRnd)
+        UIObject._sortListRnd = Math.random();
+
 
 
     this.sort();
 }
 
 SortableList.prototype.removeChild = function (UIObject) {
-    if (arguments.length > 0) {
+    if (arguments.length > 1) {
         for (var i = 0; i < arguments.length; i++) {
             this.removeChild(arguments[i]);
         }
     }
     else {
+        Container.prototype.removeChild.call(this, UIObject);
         var index = this.items.indexOf(UIObject);
         if (index != -1) {
             this.items.splice(index, 1);
         }
-        Container.prototype.removeChild.call(this, UIObject);
-
         this.sort();
     }
 }
 
 SortableList.prototype.sort = function () {
-    
+    var desc = this.desc;
     this.items.sort(function (a, b) {
-        if (this.desc) {
-            return a._sortListValue() > b._sortListValue() ? 1 : a._sortListValue() < b._sortListValue() ? -1 : 0;
+        var res = a._sortListValue() < b._sortListValue() ? desc ? 1 : -1 :
+                  a._sortListValue() > b._sortListValue() ? desc ? -1 : 1 : 0;
+
+        if (res == 0 && a._sortListThenByValue && b._sortListThenByValue) {
+            res = a._sortListThenByValue() < b._sortListThenByValue() ? desc ? 1 : -1 :
+                  a._sortListThenByValue() > b._sortListThenByValue() ? desc ? -1 : 1 : 0;
         }
-        else {
-            return a._sortListValue() < b._sortListValue() ? 1 : a._sortListValue() > b._sortListValue() ? -1 : 0;
+        if (res == 0) {
+            res = a._sortListRnd > b._sortListRnd ? 1 :
+                  a._sortListRnd < b._sortListRnd ? -1 : 0;
         }
+        return res;
     });
 
     var y = 0
@@ -222,7 +322,7 @@ SortableList.prototype.sort = function () {
     for (var i = 0; i < this.items.length; i++) {
         alt = !alt;
         var item = this.items[i];
-        item.anchorTop = y;
+        item.y = y;
         y += item.height;
         if (typeof item.altering === "function")
             item.altering(alt);
@@ -232,7 +332,7 @@ SortableList.prototype.sort = function () {
 
 
 
-},{"./Container":1}],4:[function(require,module,exports){
+},{"./Container":1}],5:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -241,10 +341,10 @@ var UIBase = require('./UIBase');
  * @class
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
- * @param Sprite {PIXI.Sprite} A pixi sprite object
+ * @param Texture {PIXI.Texture} The texture for the sprite
  */
-function Sprite(PIXISprite) {
-    this.sprite = PIXISprite;
+function Sprite(t) {
+    this.sprite = new PIXI.Sprite(t);
     UIBase.call(this, this.sprite.width, this.sprite.height);
     this.container.addChild(this.sprite);
 }
@@ -270,7 +370,7 @@ Sprite.prototype.update = function () {
 };
 
 
-},{"./UIBase":8}],5:[function(require,module,exports){
+},{"./UIBase":9}],6:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -359,7 +459,7 @@ Object.defineProperties(Stage.prototype, {
         }
     }
 });
-},{"./UIBase":8}],6:[function(require,module,exports){
+},{"./UIBase":9}],7:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -395,12 +495,13 @@ Text.prototype.update = function () {
 };
 
 
-},{"./UIBase":8}],7:[function(require,module,exports){
+},{"./UIBase":9}],8:[function(require,module,exports){
 var UI = {
     UISettings: require('./UISettings'),
     UIBase: require('./UIBase'),
     Stage: require('./Stage'),
     Container: require('./Container'),
+    ScrollingContainer: require('./ScrollingContainer'),
     SortableList: require('./SortableList'),
     Sprite: require('./Sprite'),
     SliceSprite: require('./SliceSprite'),
@@ -408,25 +509,28 @@ var UI = {
 };
 
 module.exports = UI;
-},{"./Container":1,"./SliceSprite":2,"./SortableList":3,"./Sprite":4,"./Stage":5,"./Text":6,"./UIBase":8,"./UISettings":9}],8:[function(require,module,exports){
+},{"./Container":1,"./ScrollingContainer":2,"./SliceSprite":3,"./SortableList":4,"./Sprite":5,"./Stage":6,"./Text":7,"./UIBase":9,"./UISettings":10}],9:[function(require,module,exports){
 var UISettings = require('./UISettings'),
-    UI = require('./UI');
+    UI = require('./UI')
 
 /**
  * Base class of all UIObjects
  *
  * @class
- * @memberof PIXI.UI
+ * @extends PIXI.UI.UIBase
  * @param width {Number} Width of the UIObject
  * @param height {Number} Height of the UIObject
  */
 function UIBase(width, height) {
     this.container = new PIXI.Container();
+
     this.setting = new UISettings();
     this.children = [];
     this.parent = null;
     this.width = width || 0;
     this.height = height || 0;
+    this._draggable = false;
+    this.container.interactiveChildren = true;
 }
 
 UIBase.prototype.constructor = UIBase;
@@ -450,6 +554,9 @@ UIBase.prototype.updatesettings = function () {
  */
 UIBase.prototype.update = function () {
 };
+
+
+
 
 /**
  * Updates the UIObject with all base settings
@@ -593,6 +700,12 @@ UIBase.prototype.baseupdate = function () {
     }
 
 
+    //Unrestricted dragging
+    if (this.dragging && !this.setting.dragRestricted) {
+        this.container.position.x = this.left;
+        this.container.position.y = this.top;
+    }
+
 
     //scale
     if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
@@ -651,10 +764,138 @@ UIBase.prototype.removeChild = function (UIObject) {
     else {
         var index = this.children.indexOf(UIObject);
         if (index !== -1) {
-            this.container.removeChild(UIObject.container);
+            UIObject.container.parent.removeChild(UIObject.container);
             this.children.splice(index, 1);
             UIObject.parent = null;
         }
+    }
+};
+
+UIBase.prototype.clearDraggable = function () {
+    if (this.setting.draggable) {
+        this.container.removeListener('mousedown', this.onDragMove);
+        this.container.removeListener('touchstart', this.onDragMove);
+        document.removeEventListener("mousemove", this.onDragMove);
+        document.removeEventListener("touchmove", this.onDragMove);
+        document.removeEventListener('mouseup', this.onDragEnd);
+        document.removeEventListener('mouseupoutside', this.onDragEnd);
+        document.removeEventListener('touchend', this.onDragEnd);
+        document.removeEventListener('touchendoutside', this.onDragEnd);
+        this.setting.draggable = false;
+    }
+}
+
+UIBase.prototype.initDraggable = function () {
+    if (!this.setting.draggable) {
+        var container = this.container,
+            uiobject = this,
+            containerStart = new PIXI.Point(),
+            mouseStart = new PIXI.Point(),
+            stageOffset = new PIXI.Point();
+
+        this.container.interactive = true;
+
+        this.onDragStart = function (event) {
+            if (!uiobject.dragging) {
+                mouseStart.set(event.data.originalEvent.clientX, event.data.originalEvent.clientY);
+                containerStart.copy(container.position);
+                document.addEventListener('mousemove', uiobject.onDragMove);
+                document.addEventListener('touchmove', uiobject.onDragMove);
+            }
+        }
+
+        this.onDragMove = function (event) {
+            if (!uiobject.dragging) {
+                document.addEventListener('mouseup', uiobject.onDragEnd);
+                document.addEventListener('mouseupoutside', uiobject.onDragEnd);
+                document.addEventListener('touchend', uiobject.onDragEnd);
+                document.addEventListener('touchendoutside', uiobject.onDragEnd);
+                uiobject.dragging = true;
+                container.interactive = false;
+                PIXI.UI._dropTarget = null;
+
+                if (uiobject.dragContainer) {
+
+                    var c = uiobject.dragContainer.container ? uiobject.dragContainer.container : uiobject.dragContainer;
+                    console.log("before:", uiobject.container.worldTransform);
+                    if (c) {
+                        stageOffset.set(c.worldTransform.tx - uiobject.parent.container.worldTransform.tx, c.worldTransform.ty - uiobject.parent.container.worldTransform.ty);
+                        c.addChild(uiobject.container);
+                    }
+                } else {
+                    stageOffset.set(0);
+                }
+            }
+
+            var x = event.clientX - mouseStart.x,
+                y = event.clientY - mouseStart.y;
+
+            uiobject.x = containerStart.x + x - stageOffset.x;
+            uiobject.y = containerStart.y + y - stageOffset.y;
+        }
+
+        this.onDragEnd = function (event) {
+            if (uiobject.dragging) {
+                uiobject.dragging = false;
+                container.interactive = true;
+                document.removeEventListener("mousemove", uiobject.onDragMove);
+                document.removeEventListener("touchmove", uiobject.onDragMove);
+                document.removeEventListener('mouseup', uiobject.onDragEnd);
+                document.removeEventListener('mouseupoutside', uiobject.onDragEnd);
+                document.removeEventListener('touchend', uiobject.onDragEnd);
+                document.removeEventListener('touchendoutside', uiobject.onDragEnd);
+
+                
+
+                setTimeout(function () {
+                    var x = event.clientX - mouseStart.x,
+                    y = event.clientY - mouseStart.y;
+                    uiobject.x = containerStart.x + x;
+                    uiobject.y = containerStart.y + y;
+
+                    if (PIXI.UI._dropTarget && PIXI.UI._dropTarget.dragGroup == uiobject.dragGroup) {
+                        PIXI.UI._dropTarget.addChild(uiobject);
+                    }
+                    else {
+                        uiobject.parent.addChild(uiobject);
+                    }                    
+                }, 0);
+
+            }
+        }
+
+
+
+        container.on('mousedown', this.onDragStart);
+        container.on('touchstart', this.onDragStart);
+        this.setting.draggable = true;
+    }
+};
+
+UIBase.prototype.clearDroppable = function () {
+    if (this.setting.droppable) {
+        this.container.removeListener('mouseup', this.onDrop);
+        this.container.removeListener('touchend', this.onDrop);
+        this.setting.droppable = false;
+    }
+}
+
+UIBase.prototype.initDroppable = function () {
+    if (!this.setting.droppable) {
+        var container = this.container,
+            uiobject = this;
+
+        this.container.interactive = true;
+        this.onDrop = function (event) {
+            if (uiobject.droppableParent != null)
+                PIXI.UI._dropTarget = uiobject.droppableParent;
+            else
+                PIXI.UI._dropTarget = uiobject;
+        }
+
+        container.on('mouseup', this.onDrop);
+        container.on('touchend', this.onDrop);
+        this.setting.droppable = true;
     }
 };
 
@@ -1003,9 +1244,57 @@ Object.defineProperties(UIBase.prototype, {
             this.top = val;
         }
     },
+    draggable: {
+        get: function () {
+            return this.setting.draggable;
+        },
+        set: function (val) {
+            if (val)
+                this.initDraggable();
+            else
+                this.clearDraggable();
+        }
+    },
+    dragRestricted: {
+        get: function () {
+            return this.setting.dragRestricted;
+        },
+        set: function (val) {
+            this.setting.dragRestricted = val;
+        }
+    },
+    dragGroup: {
+        get: function () {
+            return this.setting.dragGroup;
+        },
+        set: function (val) {
+            this.setting.dragGroup = val;
+        }
+    },
+    dragContainer: {
+        get: function () {
+            return this.setting.dragContainer;
+        },
+        set: function (val) {
+            this.setting.dragContainer = val;
+        }
+    },
+    droppable: {
+        get: function () {
+            return this.setting.droppable;
+        },
+        set: function (val) {
+            if (val)
+                this.initDroppable();
+            else
+                this.clearDroppable();
+        }
+    },
 });
 
-},{"./UI":7,"./UISettings":9}],9:[function(require,module,exports){
+
+
+},{"./UI":8,"./UISettings":10}],10:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -1053,6 +1342,11 @@ function UISettings() {
     this.blendMode = null;
     this.tint = null;
     this.alpha = null;
+    this.draggable = null;
+    this.dragRestricted = false;
+    this.dragGroup = null;
+    this.dragContainer = null;
+    this.droppable = null;
 }
 
 
@@ -1060,7 +1354,7 @@ module.exports = UISettings;
 
 
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 
 var Library = {
     UI: require('./UI')
@@ -1072,7 +1366,7 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":7}]},{},[10])(10)
+},{"./UI":8}]},{},[11])(11)
 });
 
 

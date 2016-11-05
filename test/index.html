@@ -15,6 +15,7 @@
         var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
         var stage = new PIXI.Container();
         var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        var dragContainer = new PIXI.UI.Container();
         document.body.appendChild(renderer.view);
         stage.addChild(uiStage);
 
@@ -45,13 +46,13 @@
 
 
         function init() {
-            var whiteBG = PIXI.Sprite.fromFrame("UI/ui-box-1.png");
-            var innerBG = PIXI.Sprite.fromFrame("UI/ui-box-2.png");
-            var lineSprite = PIXI.Sprite.fromFrame("UI/ui-horizontal-line-border.png");
- 
+            var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
+            var lineSprite = PIXI.Texture.fromFrame("UI/ui-horizontal-line-border.png");
+            var horizontalGradient = PIXI.Texture.fromFrame("UI/horizontal-gradient.png");
 
 
-            var leaderboardWrapper = new PIXI.UI.Container();
+            window["lb"] = leaderboardWrapper = new PIXI.UI.Container();
             leaderboardWrapper.horizontalAlign = "center";
             leaderboardWrapper.verticalAlign = "middle";
             leaderboardWrapper.height = "90%";
@@ -76,14 +77,16 @@
                 section.width = "50%";
                 container.addChild(section);
 
-                var innerContainer = new PIXI.UI.SliceSprite(innerBG, 5);
-                innerContainer.anchorTop = innerContainer.anchorBottom = 6;
-                innerContainer.anchorRight = i == 1 ? 6 : 3;
-                innerContainer.anchorLeft = i == 1 ? 3 : 6;
-                innerContainer.tint = 0x252934;
-                section.addChild(innerContainer);
+                var teamContainer = new PIXI.UI.SliceSprite(innerBG, 5);
+                teamContainer.anchorTop = teamContainer.anchorBottom = 6;
+                teamContainer.anchorRight = i == 1 ? 6 : 3;
+                teamContainer.anchorLeft = i == 1 ? 3 : 6;
+                teamContainer.tint = i == 1 ? 0x3b0000 : 0x252934;
+                section.addChild(teamContainer);
 
-                var headlineStyle = { fill: ['#5ebef2', '#26aff1'], fontSize: 18, fontFamily: 'Calibri', fontWeight: 'bold' };
+
+
+                var headlineStyle = { fill: i == 1 ? ['#ff6c6c', '#ff3838'] : ['#5ebef2', '#26aff1'], fontSize: 18, fontFamily: 'Calibri', fontWeight: 'bold' };
                 var HeadlinePlayer = new PIXI.UI.Text("PLAYER", headlineStyle);
                 var HeadlineScore = new PIXI.UI.Text("SCORE", headlineStyle);
                 var HeadlineKDA = new PIXI.UI.Text("K/D/A", headlineStyle);
@@ -95,34 +98,45 @@
                 HeadlinePing.anchorRight = "2%";
 
                 var headlineStroke = new PIXI.UI.SliceSprite(lineSprite, 2, true, false);
-                headlineStroke.tint = 0x76c3f2;
+                headlineStroke.tint = i == 1 ? 0xff6c6c : 0x76c3f2;
                 headlineStroke.anchorLeft = headlineStroke.anchorRight = 8;
                 headlineStroke.anchorTop = 37;
 
-                var sortableList = new PIXI.UI.SortableList(true, true);
+
+                var ScrollingContainer = new PIXI.UI.ScrollingContainer("100%", "100%", false, false, 0);
+                var sortableList = new PIXI.UI.SortableList(true);
                 sortableList.anchorTop = 40;
                 sortableList.anchorBottom = 1;
                 sortableList.width = "100%";
+                ScrollingContainer.addChild(sortableList);
+                sortableList.droppable = true;
+                sortableList.dragGroup = "player";
+
 
                 var textStyle = { fill: ['#ffffff', '#ededed'], fontSize: 14, fontFamily: 'Calibri', fontWeight: 'bold' };
                 for (var p = 0; p < playersArr.length; p++) {
                     (function () {
                         var player = playersArr[p];
                         var playerItem = new PIXI.UI.Container();
-                        playerItem.width = "100%";
+                        playerItem.draggable = true;
+                        playerItem.dragGroup = "player";
+                        playerItem.dragContainer = dragContainer;
+                        playerItem.anchorLeft = 0;
+                        playerItem.anchorRight = 0;
                         playerItem.height = 40;
 
 
                         var playerItemUnderline = new PIXI.UI.SliceSprite(lineSprite, 2, true, false);
                         playerItemUnderline.anchorLeft = playerItemUnderline.anchorRight = 10;
                         playerItemUnderline.anchorBottom = 0;
-                        playerItemUnderline.tint = 0xa1a1a1;
+                        playerItemUnderline.alpha = 0.7;
 
 
-                        var playerItemBG = new PIXI.UI.Sprite(PIXI.Sprite.fromFrame("UI/horizontal-gradient.png"));
+                        var playerItemBG = new PIXI.UI.Sprite(horizontalGradient);
                         playerItemBG.anchorLeft = playerItemBG.anchorRight = 10;
                         playerItemBG.anchorTop = 0;
                         playerItemBG.anchorBottom = 3;
+                        playerItemBG.blendMode = 1;
 
                         var Name = new PIXI.UI.Text(player.name, textStyle);
                         var Score = new PIXI.UI.Text(player.score, textStyle);
@@ -138,20 +152,25 @@
                         playerItem.addChild(playerItemBG, playerItemUnderline, Name, Score, KDA, Ping);
                         playerItem.altering = function (alt) {
                             if (alt) playerItemBG.alpha = 0;
-                            else playerItemBG.alpha = 0.11;
+                            else playerItemBG.alpha = 0.08;
                         };
 
-                        sortableList.addChild(playerItem, function () {
-                            var p = player;
-                            return p.score;
-                        });
 
-                        
+                        sortableList.addChild(playerItem,
+                            function () {
+                                return player.score;
+                            },
+                            function () {
+                                return player.kills;
+                            });
                     })();
                 }
 
-                innerContainer.addChild(HeadlinePlayer, HeadlineScore, HeadlineKDA, HeadlinePing, headlineStroke, sortableList);
+                teamContainer.addChild(HeadlinePlayer, HeadlineScore, HeadlineKDA, HeadlinePing, headlineStroke, ScrollingContainer);
             }
+
+            uiStage.addChild(dragContainer);
+
             Update();
         }
 

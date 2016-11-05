@@ -45,6 +45,11 @@ function UISettings() {
     this.blendMode = null;
     this.tint = null;
     this.alpha = null;
+    this.draggable = null;
+    this.dragRestricted = false;
+    this.dragGroup = null;
+    this.dragContainer = null;
+    this.droppable = null;
 }
 
 

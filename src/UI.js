@@ -3,6 +3,7 @@
     UIBase: require('./UIBase'),
     Stage: require('./Stage'),
     Container: require('./Container'),
+    ScrollingContainer: require('./ScrollingContainer'),
     SortableList: require('./SortableList'),
     Sprite: require('./Sprite'),
     SliceSprite: require('./SliceSprite'),

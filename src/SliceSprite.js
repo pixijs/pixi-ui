@@ -6,20 +6,20 @@ var UIBase = require('./UIBase');
  * @class
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
- * @param Sprite {PIXI.Sprite} the sprite for this SliceSprite
+ * @param Texture {PIXI.Texture} the texture for this SliceSprite
  * @param BorderWidth {Number} Width of the sprite borders
  * @param horizontalSlice {Boolean} Slice the sprite horizontically
  * @param horizontalSlice {Boolean} Slice the sprite vertically
  */
-function SliceSprite(sprite, borderWidth, horizontalSlice, verticalSlice) {
-    UIBase.call(this, sprite.width, sprite.height);
+function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
+    UIBase.call(this, texture.width, texture.height);
 
     var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
         bw = borderWidth || 5,
         vs = typeof verticalSlice !== "undefined" ? verticalSlice : true,
         hs = typeof horizontalSlice !== "undefined" ? horizontalSlice : true,
-        t = sprite.texture.baseTexture,
-        f = sprite.texture.frame;
+        t = texture.baseTexture,
+        f = texture.frame;
 
 
     //get frames

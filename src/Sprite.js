@@ -6,10 +6,10 @@ var UIBase = require('./UIBase');
  * @class
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
- * @param Sprite {PIXI.Sprite} A pixi sprite object
+ * @param Texture {PIXI.Texture} The texture for the sprite
  */
-function Sprite(PIXISprite) {
-    this.sprite = PIXISprite;
+function Sprite(t) {
+    this.sprite = new PIXI.Sprite(t);
     UIBase.call(this, this.sprite.width, this.sprite.height);
     this.container.addChild(this.sprite);
 }
