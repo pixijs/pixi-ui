@@ -4,7 +4,6 @@ var UIBase = require('./UIBase');
  * A sliced sprite with dynamic width and height.
  *
  * @class
- * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
  * @param Texture {PIXI.Texture} the texture for this SliceSprite
  * @param BorderWidth {Number} Width of the sprite borders
@@ -13,6 +12,9 @@ var UIBase = require('./UIBase');
  */
 function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
     UIBase.call(this, texture.width, texture.height);
+    this.setting.minWidth = borderWidth * 2;
+    this.setting.minHeight = borderWidth * 2;
+
 
     var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
         bw = borderWidth || 5,
@@ -22,62 +24,68 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
         f = texture.frame;
 
 
-    //get frames
-    if (vs && hs) {
-        ftl = new PIXI.Rectangle(f.x, f.y, bw, bw);
-        ftr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, bw);
-        fbl = new PIXI.Rectangle(f.x, f.y + f.height - bw, bw, bw);
-        fbr = new PIXI.Rectangle(f.x + f.width - bw, f.y + f.height - bw, bw, bw);
-        ft = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, bw);
-        fb = new PIXI.Rectangle(f.x + bw, f.y + f.height - bw, f.width - bw * 2, bw);
-        fl = new PIXI.Rectangle(f.x, f.y + bw, bw, f.height - bw * 2);
-        fr = new PIXI.Rectangle(f.x + f.width - bw, f.y + bw, bw, f.height - bw * 2);
-        ff = new PIXI.Rectangle(f.x + bw, f.y + bw, f.width - bw * 2, f.height - bw * 2);
-    }
-    else if (hs) {
-        fl = new PIXI.Rectangle(f.x, f.y, bw, f.height);
-        fr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, f.height);
-        ff = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, f.height);
-    }
-    else { //vs
-        ft = new PIXI.Rectangle(f.x, f.y, f.width, bw);
-        fb = new PIXI.Rectangle(f.x, f.y + f.height - bw, f.width, bw);
-        ff = new PIXI.Rectangle(f.x, f.y + bw, f.width, f.height - bw * 2);
-    }
+    this.initialize = function () {
+        UIBase.prototype.initialize.apply(this);
 
-    //TODO: swap frames if rotation
+        //get frames
+        if (vs && hs) {
+            ftl = new PIXI.Rectangle(f.x, f.y, bw, bw);
+            ftr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, bw);
+            fbl = new PIXI.Rectangle(f.x, f.y + f.height - bw, bw, bw);
+            fbr = new PIXI.Rectangle(f.x + f.width - bw, f.y + f.height - bw, bw, bw);
+            ft = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, bw);
+            fb = new PIXI.Rectangle(f.x + bw, f.y + f.height - bw, f.width - bw * 2, bw);
+            fl = new PIXI.Rectangle(f.x, f.y + bw, bw, f.height - bw * 2);
+            fr = new PIXI.Rectangle(f.x + f.width - bw, f.y + bw, bw, f.height - bw * 2);
+            ff = new PIXI.Rectangle(f.x + bw, f.y + bw, f.width - bw * 2, f.height - bw * 2);
+        }
+        else if (hs) {
+            fl = new PIXI.Rectangle(f.x, f.y, bw, f.height);
+            fr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, f.height);
+            ff = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, f.height);
+        }
+        else { //vs
+            ft = new PIXI.Rectangle(f.x, f.y, f.width, bw);
+            fb = new PIXI.Rectangle(f.x, f.y + f.height - bw, f.width, bw);
+            ff = new PIXI.Rectangle(f.x, f.y + bw, f.width, f.height - bw * 2);
+        }
+
+        //TODO: swap frames if rotation
 
 
 
-    //make sprites
-    sf = new PIXI.Sprite(new PIXI.Texture(t, ff));
-    this.container.addChild(sf);
-    if (vs && hs) {
-        stl = new PIXI.Sprite(new PIXI.Texture(t, ftl));
-        str = new PIXI.Sprite(new PIXI.Texture(t, ftr));
-        sbl = new PIXI.Sprite(new PIXI.Texture(t, fbl));
-        sbr = new PIXI.Sprite(new PIXI.Texture(t, fbr));
-        this.container.addChild(stl, str, sbl, sbr);
+        //make sprites
+        sf = new PIXI.Sprite(new PIXI.Texture(t, ff));
+        this.container.addChildAt(sf, 0);
+        if (vs && hs) {
+            stl = new PIXI.Sprite(new PIXI.Texture(t, ftl));
+            str = new PIXI.Sprite(new PIXI.Texture(t, ftr));
+            sbl = new PIXI.Sprite(new PIXI.Texture(t, fbl));
+            sbr = new PIXI.Sprite(new PIXI.Texture(t, fbr));
+            this.container.addChildAt(stl, 0);
+            this.container.addChildAt(str, 0);
+            this.container.addChildAt(sbl, 0);
+            this.container.addChildAt(sbr, 0);
 
-    }
-    if (hs) {
-        this.setting.minWidth = bw * 2;
-        sl = new PIXI.Sprite(new PIXI.Texture(t, fl));
-        sr = new PIXI.Sprite(new PIXI.Texture(t, fr));
-        this.container.addChild(sl, sr);
-    }
-    if (vs) {
-        this.setting.minHeight = bw * 2;
-        st = new PIXI.Sprite(new PIXI.Texture(t, ft));
-        sb = new PIXI.Sprite(new PIXI.Texture(t, fb));
-        this.container.addChild(st, sb);
-    }
+        }
+        if (hs) {
+            sl = new PIXI.Sprite(new PIXI.Texture(t, fl));
+            sr = new PIXI.Sprite(new PIXI.Texture(t, fr));
+            this.container.addChildAt(sl, 0);
+            this.container.addChildAt(sr, 0);
+        }
+        if (vs) {
+            st = new PIXI.Sprite(new PIXI.Texture(t, ft));
+            sb = new PIXI.Sprite(new PIXI.Texture(t, fb));
+            this.container.addChildAt(st, 0);
+            this.container.addChildAt(sb, 0);
+        }
 
-    //set constant position and sizes
-    if (vs && hs) st.x = sb.x = sl.y = sr.y = stl.width = str.width = sbl.width = sbr.width = stl.height = str.height = sbl.height = sbr.height = bw;
-    if (hs) sf.x = sl.width = sr.width = bw;
-    if (vs) sf.y = st.height = sb.height = bw;
-
+        //set constant position and sizes
+        if (vs && hs) st.x = sb.x = sl.y = sr.y = stl.width = str.width = sbl.width = sbr.width = stl.height = str.height = sbl.height = sbr.height = bw;
+        if (hs) sf.x = sl.width = sr.width = bw;
+        if (vs) sf.y = st.height = sb.height = bw;
+    };
 
     /**
      * Updates the sliced sprites position and size
@@ -85,21 +93,22 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
      * @private
      */
     this.update = function () {
+        if (!this.initialized) return;
         if (vs && hs) {
-            str.x = sbr.x = sr.x = this.width - bw;
-            sbl.y = sbr.y = sb.y = this.height - bw;
-            sf.width = st.width = sb.width = this.width - bw * 2;
-            sf.height = sl.height = sr.height = this.height - bw * 2;
+            str.x = sbr.x = sr.x = this._width - bw;
+            sbl.y = sbr.y = sb.y = this._height - bw;
+            sf.width = st.width = sb.width = this._width - bw * 2;
+            sf.height = sl.height = sr.height = this._height - bw * 2;
         }
         else if (hs) {
-            sr.x = this.width - bw;
-            sl.height = sr.height = sf.height = this.height;
-            sf.width = this.width - bw * 2;
+            sr.x = this._width - bw;
+            sl.height = sr.height = sf.height = this._height;
+            sf.width = this._width - bw * 2;
         }
         else { //vs
-            sb.y = this.height - bw;
-            st.width = sb.width = sf.width = this.width;
-            sf.height = this.height - bw * 2;
+            sb.y = this._height - bw;
+            st.width = sb.width = sf.width = this._width;
+            sf.height = this._height - bw * 2;
         }
 
         if (this.tint !== null) {

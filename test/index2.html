@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; }
+        canvas { position: fixed; }
+    </style>
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <script type="text/javascript">
+        var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+        var stage = new PIXI.Container();
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        var dragContainer = new PIXI.UI.Container();
+        document.body.appendChild(renderer.view);
+        stage.addChild(uiStage);
+
+        window.addEventListener("resize", function () {
+            renderer.resize(window.innerWidth, window.innerHeight);
+            uiStage.resize(window.innerWidth, window.innerHeight);
+        });
+
+        PIXI.loader.add('UISprites.json').load(function () {
+            init();
+        });
+
+
+        function init() {
+            var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
+            var lineSprite = PIXI.Texture.fromFrame("UI/ui-horizontal-line-border.png");
+
+            container = new PIXI.UI.SliceSprite(whiteBG, 5);
+            container.height = 600;
+            container.width = '80%';
+            
+            container.horizontalAlign = "center";
+            container.verticalAlign = "middle";
+            uiStage.addChild(container);
+
+            section = new PIXI.UI.Container();
+            section.anchorBottom = 0;
+            section.anchorTop = 0;
+            section.width = "50%";
+            container.addChild(section);
+
+
+            section2 = new PIXI.UI.Container();
+            section2.anchorBottom = 0;
+            section2.anchorTop = 0;
+            section2.anchorRight = 0;
+            section2.width = "50%";
+            container.addChild(section2);
+
+            teamContainer = new PIXI.UI.SliceSprite(innerBG, 5);
+            teamContainer.anchorTop = teamContainer.anchorBottom = teamContainer.anchorRight = teamContainer.anchorLeft = 6;
+            teamContainer.tint = 0x3b0000;
+            teamContainer.droppable = true;
+            section.addChild(teamContainer);
+
+            teamContainer2 = new PIXI.UI.SliceSprite(innerBG, 5);
+            teamContainer2.anchorTop = teamContainer2.anchorBottom = teamContainer2.anchorRight = teamContainer2.anchorLeft = 6;
+            teamContainer2.tint =0x252934;
+            teamContainer2.droppable = true;
+            section2.addChild(teamContainer2);
+
+            tween0 = new PIXI.UI.SliceSprite(whiteBG, 5);
+            tween0.width = "10%";
+            tween0.height = "10%";
+            tween0.draggable = true;
+            teamContainer.addChild(tween0);
+
+            Update();
+        }
+
+        function Update() {
+            renderer.render(stage);
+            requestAnimationFrame(Update);
+        }
+
+    </script>
+</body>
+</html>

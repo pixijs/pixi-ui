@@ -11,18 +11,17 @@ var UIBase = require('./UIBase');
  */
 function Container(width, height) {
     UIBase.call(this, width, height);
-    this.container.hitArea = new PIXI.Rectangle(0,0,width,height);
-
-    this.update = function () {
-        this.container.hitArea.width = this.width;
-        this.container.hitArea.height = this.height;
-        
-    }
+    this.container.hitArea = new PIXI.Rectangle(0, 0, width, height);
 }
-
 
 
 Container.prototype = Object.create(UIBase.prototype);
 Container.prototype.constructor = Container;
 module.exports = Container;
+
+
+Container.prototype.update = function () {
+    this.container.hitArea.width = this._width;
+    this.container.hitArea.height = this._height;
+};
 

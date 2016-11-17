@@ -5,10 +5,8 @@
  * @memberof PIXI.UI
  */
 function UISettings() {
-    this._width = 0;
     this.width = 0;
     this.widthPct = null;
-    this._height = 0;
     this.height = 0;
     this.heightPct = null;
     this.minWidth = 0;
@@ -47,9 +45,13 @@ function UISettings() {
     this.alpha = null;
     this.draggable = null;
     this.dragRestricted = false;
+    this.dragRestrictAxis = null; //x, y
+    this.dragThreshold = 0;
     this.dragGroup = null;
     this.dragContainer = null;
     this.droppable = null;
+    this.droppableReparent = null;
+    this.dropGroup = null;
 }
 
 

@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; }
+        canvas { position: fixed; }
+    </style>
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <script type="text/javascript">
+        var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+        var stage = new PIXI.Container();
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        var dragContainer = new PIXI.UI.Container();
+        document.body.appendChild(renderer.view);
+        stage.addChild(uiStage);
+
+        window.addEventListener("resize", function () {
+            renderer.resize(window.innerWidth, window.innerHeight);
+            uiStage.resize(window.innerWidth, window.innerHeight);
+        });
+
+        PIXI.loader.add('UISprites.json').load(function () {
+            init();
+        });
+
+
+        function init() {
+            var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
+            var solidBox = PIXI.Texture.fromFrame("UI/solid-box.png");
+            var lineSprite = PIXI.Texture.fromFrame("UI/ui-horizontal-line-border.png");
+            var textStyle = { fill: ['#ffffff', '#ededed'], fontSize: 18, fontFamily: 'Calibri', fontWeight: 'bold' };
+
+            kasse = new PIXI.UI.SliceSprite(whiteBG, 5);
+            kasse.horizontalAlign = "center";
+            kasse.verticalAlign = "middle";
+            kasse.width = "100%";
+            kasse.height = "100%";
+            uiStage.addChild(kasse);
+
+            text = new PIXI.UI.Text("0", textStyle);
+            text.top = -20;
+            text.horizontalAlign = "center";
+
+            slider = new PIXI.UI.Slider({
+                track: new PIXI.UI.SliceSprite(solidBox, 7),
+                handle: new PIXI.UI.SliceSprite(solidBox, 7),
+                fill: new PIXI.UI.SliceSprite(solidBox, 7),
+                value: 200,
+                minValue: 0,
+                maxValue: 100,
+                decimals: 1,
+                onValueChanging: function (val) {
+                    text.value = val + "";
+                }
+            });
+
+            //other settings
+            slider.horizontalAlign = "center";
+            slider.verticalAlign = "middle";
+            slider.handle.width = 30;
+            slider.handle.height = 30;
+            slider.handle.tint = 0xb7bcae;
+            slider.fill.tint = 0xb4f154;
+            slider.track.tint = 0xe4e7de;
+
+            slider.handle.addChild(text);
+            uiStage.addChild(slider);
+
+            Update();
+        }
+
+        function Update() {
+            renderer.render(stage);
+            requestAnimationFrame(Update);
+        }
+
+    </script>
+</body>
+</html>

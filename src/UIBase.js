@@ -1,5 +1,7 @@
 var UISettings = require('./UISettings'),
-    UI = require('./UI')
+    UI = require('./UI'),
+    DragEvent = require('./Interaction/DragEvent'),
+    DragDropController = require('./Interaction/DragDropController');
 
 /**
  * Base class of all UIObjects
@@ -11,14 +13,52 @@ var UISettings = require('./UISettings'),
  */
 function UIBase(width, height) {
     this.container = new PIXI.Container();
-
     this.setting = new UISettings();
     this.children = [];
     this.parent = null;
-    this.width = width || 0;
-    this.height = height || 0;
-    this._draggable = false;
-    this.container.interactiveChildren = true;
+    this.stage = null;
+    this.initialized = false;
+    this.dragInitialized = false;
+    this.dropInitialized = false;
+    this.dirty = true;
+    this._oldWidth = -1;
+    this._oldHeight = -1;
+
+
+
+    if (width && isNaN(width) && width.indexOf('%') != -1) {
+        this.setting.widthPct = parseFloat(width.replace('%', '')) * 0.01;
+    }
+    else {
+        this.setting.widthPct = null;
+    }
+
+    if (height && isNaN(height) && height.indexOf('%') != -1)
+        this.setting.heightPct = parseFloat(height.replace('%', '')) * 0.01;
+    else {
+        this.setting.heightPct = null;
+    }
+
+    this.setting.width = width || 0;
+    this.setting.height = height || 0;
+
+    //actual values
+    this._width = 0;
+    this._height = 0;
+    this._minWidth = null;
+    this._minHeight = null;
+    this._maxWidth = null;
+    this._maxHeight = null;
+    this._anchorLeft = null;
+    this._anchorRight = null;
+    this._anchorTop = null;
+    this._anchorBottom = null;
+    this._left = null;
+    this._right = null;
+    this._top = null;
+    this._bottom = null;
+
+    this._dragPosition = null; //used for overriding positions if tweens is playing
 }
 
 UIBase.prototype.constructor = UIBase;
@@ -29,10 +69,29 @@ module.exports = UIBase;
  *
  * @private
  */
-UIBase.prototype.updatesettings = function () {
+UIBase.prototype.updatesettings = function (updateChildren, updateParent) {
+
+    if (!this.initialized) {
+        if (this.parent !== null && this.parent.stage !== null && this.parent.initialized) {
+            this.initialize();
+        }
+        else {
+            return;
+        }
+    }
+
+    if (updateParent)
+        this.updateParent();
+
     this.baseupdate();
     this.update();
-    this.updateChildren();
+
+    if (updateChildren)
+        this.updateChildren();
+
+
+
+
 };
 
 /**
@@ -44,6 +103,18 @@ UIBase.prototype.update = function () {
 };
 
 
+/**
+ * Updates the parent
+ *
+ * @private
+ */
+UIBase.prototype.updateParent = function () {
+    if (this.parent !== null) {
+        if (this.parent.updatesettings) {
+            this.parent.updatesettings(false, true);
+        }
+    }
+};
 
 
 /**
@@ -52,163 +123,167 @@ UIBase.prototype.update = function () {
  * @private
  */
 UIBase.prototype.baseupdate = function () {
-    var parentWidth = this.parent !== null ? this.parent.width : 0;
-    var parentHeight = this.parent !== null ? this.parent.height : 0;
-    this.setting.height = this.setting._height;
-    this.setting.width = this.setting._width;
+    //return if parent size didnt change
+    if (this.parent !== null) {
+        var parentHeight, parentWidth;
 
-    //percentage convertions
-    if (this.setting.widthPct !== null)
-        this.setting.width = parentWidth * this.setting.widthPct;
-    if (this.setting.heightPct !== null)
-        this.setting.height = parentHeight * this.setting.heightPct;
-    if (this.setting.minWidthPct !== null)
-        this.setting.minWidth = parentWidth * this.setting.minWidthPct;
-    if (this.setting.minHeightPct !== null)
-        this.setting.minHeight = parentHeight * this.setting.minHeightPct;
-    if (this.setting.maxWidthPct !== null)
-        this.setting.maxWidth = parentWidth * this.setting.maxWidthPct;
-    if (this.setting.maxHeightPct !== null)
-        this.setting.maxHeight = parentHeight * this.setting.maxHeightPct;
-    if (this.setting.leftPct !== null)
-        this.setting.left = parentWidth * this.setting.leftPct;
-    if (this.setting.rightPct !== null)
-        this.setting.right = parentWidth * this.setting.rightPct;
-    if (this.setting.topPct !== null)
-        this.setting.top = parentHeight * this.setting.topPct;
-    if (this.setting.bottomPct !== null)
-        this.setting.bottom = parentHeight * this.setting.bottomPct;
-    if (this.setting.anchorLeftPct !== null)
-        this.setting.anchorLeft = parentWidth * this.setting.anchorLeftPct;
-    if (this.setting.anchorRightPct !== null)
-        this.setting.anchorRight = parentWidth * this.setting.anchorRightPct;
-    if (this.setting.anchorTopPct !== null)
-        this.setting.anchorTop = parentHeight * this.setting.anchorTopPct;
-    if (this.setting.anchorBottomPct !== null)
-        this.setting.anchorBottom = parentHeight * this.setting.anchorBottomPct;
 
-    if (this.horizontalAlign === null) {
-        //get anchors (use left right if conflict)
-        var anchorLeft = this.anchorLeft;
-        var anchorRight = this.anchorRight;
-        if (anchorLeft !== null && anchorRight === null && this.right !== null)
-            anchorRight = this.right;
-        else if (anchorLeft === null && anchorRight !== null && this.left !== null)
-            anchorLeft = this.left;
-        else if (anchorLeft === null && anchorRight === null && this.left !== null && this.right !== null) {
-            anchorLeft = this.left;
-            anchorRight = this.right;
-        }
 
-        var useHorizontalAnchor = anchorLeft !== null || anchorRight !== null;
-        var useLeftRight = !useHorizontalAnchor && (this.left !== null || this.right !== null);
 
-        if (useLeftRight) {
-            if (this.left !== null)
-                this.container.position.x = this.left;
-            else if (this.right !== null)
-                this.container.position.x = parentWidth - this.right;
-        }
-        else if (useHorizontalAnchor) {
-            if (anchorLeft !== null && anchorRight === null)
-                this.container.position.x = anchorLeft;
-            else if (anchorLeft === null && anchorRight !== null)
-                this.container.position.x = parentWidth - this.width - anchorRight;
-            else if (anchorLeft !== null && anchorRight !== null) {
-                this.container.position.x = anchorLeft;
-                this.setting.width = parentWidth - anchorLeft - anchorRight;
+        //transform convertion (% etc)
+        this.dirty = true;
+        this.i1 = this._width = this.actual_width;
+        this.i2 = this._height = this.actual_height;
+        this.i3 = this._minWidth = this.actual_minWidth;
+        this.i4 = this._minHeight = this.actual_minHeight;
+        this.i5 = this._maxWidth = this.actual_maxWidth;
+        this.i6 = this._maxHeight = this.actual_maxHeight;
+        this.i7 = this._anchorLeft = this.actual_anchorLeft;
+        this.i8 = this._anchorRight = this.actual_anchorRight;
+        this.i9 = this._anchorTop = this.actual_anchorTop;
+        this.i10 = this._anchorBottom = this.actual_anchorBottom;
+        this.i11 = this._left = this.actual_left;
+        this.i12 = this._right = this.actual_right;
+        this.i13 = this._top = this.actual_top;
+        this.i14 = this._bottom = this.actual_bottom;
+        this.i15 = parentWidth = this.parent._width;
+        this.i16 = parentHeight = this.parent._height;
+        this.i17 = this.scaleX;
+        this.i18 = this.scaleY;
+        this.i19 = this.pivotX;
+        this.i20 = this.pivotY;
+        this.i21 = this.alpha;
+        this.dirty = false;
+
+
+
+        if (this.horizontalAlign === null) {
+            //get anchors (use left right if conflict)
+            if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
+                this._anchorRight = this._right;
+            else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null)
+                this._anchorLeft = this._left;
+            else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
+                this._anchorLeft = this._left;
+                this._anchorRight = this._right;
             }
-            this.container.position.x += this.pivotX * this.setting.width;
-        }
-        else {
-            this.container.position.x = 0;
-        }
-    }
 
-    if (this.verticalAlign === null) {
-        //get anchors (use top bottom if conflict)
-        var anchorTop = this.anchorTop;
-        var anchorBottom = this.anchorBottom;
-        if (anchorTop !== null && anchorBottom === null && this.bottom !== null)
-            anchorBottom = this.bottom;
-        if (anchorTop === null && anchorBottom !== null && this.top !== null)
-            anchorTop = this.top;
 
-        var useVerticalAnchor = anchorTop !== null || anchorBottom !== null;
-        var useTopBottom = !useVerticalAnchor && (this.top !== null || this.bottom !== null);
+            var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
+            var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
 
-        if (useTopBottom) {
-            if (this.top !== null)
-                this.container.position.y = this.top;
-            else if (this.bottom !== null)
-                this.container.position.y = parentHeight - this.bottom;
-        }
-        else if (useVerticalAnchor) {
-            if (anchorTop !== null && anchorBottom === null)
-                this.container.position.y = anchorTop;
-            else if (anchorTop === null && anchorBottom !== null)
-                this.container.position.y = parentHeight - this.height - anchorBottom;
-            else if (anchorTop !== null && anchorBottom !== null) {
-                this.container.position.y = anchorTop;
-                this.setting.height = parentHeight - anchorTop - anchorBottom;
+            if (useLeftRight) {
+                if (this._left !== null)
+                    this.container.position.x = this._left;
+                else if (this._right !== null)
+                    this.container.position.x = parentWidth - this._right;
             }
-            this.container.position.y += this.pivotY * this.setting.width;
+            else if (useHorizontalAnchor) {
+
+                if (this._anchorLeft !== null && this._anchorRight === null)
+                    this.container.position.x = this._anchorLeft;
+                else if (this._anchorLeft === null && this._anchorRight !== null)
+                    this.container.position.x = parentWidth - this._width - this._anchorRight;
+                else if (this._anchorLeft !== null && this._anchorRight !== null) {
+                    this.container.position.x = this._anchorLeft;
+                    this._width = parentWidth - this._anchorLeft - this._anchorRight;
+                }
+                this.container.position.x += this.pivotX * this._width;
+            }
+            else {
+                this.container.position.x = 0;
+            }
         }
-        else {
-            this.container.position.y = 0;
+
+
+
+        if (this.verticalAlign === null) {
+            //get anchors (use top bottom if conflict)
+            if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null)
+                this._anchorBottom = this._bottom;
+            if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null)
+                this._anchorTop = this._top;
+
+            var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
+            var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
+
+            if (useTopBottom) {
+                if (this._top !== null)
+                    this.container.position.y = this._top;
+                else if (this._bottom !== null)
+                    this.container.position.y = parentHeight - this._bottom;
+            }
+            else if (useVerticalAnchor) {
+                if (this._anchorTop !== null && this._anchorBottom === null)
+                    this.container.position.y = this._anchorTop;
+                else if (this._anchorTop === null && this._anchorBottom !== null)
+                    this.container.position.y = parentHeight - this._height - this._anchorBottom;
+                else if (this._anchorTop !== null && this._anchorBottom !== null) {
+                    this.container.position.y = this._anchorTop;
+                    this._height = parentHeight - this._anchorTop - this._anchorBottom;
+                }
+                this.container.position.y += this.pivotY * this._width;
+            }
+            else {
+                this.container.position.y = 0;
+            }
         }
+
+        //min/max sizes
+        if (this._maxWidth !== null && this._width > this._maxWidth) this._width = this._maxWidth;
+        if (this._width < this._minWidth) this._width = this._minWidth;
+
+        if (this._maxHeight !== null && this._height > this._maxHeight) this._height = this._maxHeight;
+        if (this._height < this._minHeight) this._height = this._minHeight;
+
+
+        //pure vertical/horizontal align
+        if (this.horizontalAlign !== null) {
+            if (this.horizontalAlign == "center")
+                this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
+            else if (this.horizontalAlign == "right")
+                this.container.position.x = parentWidth - this._width;
+            else
+                this.container.position.x = 0;
+            this.container.position.x += this._width * this.pivotX;
+        }
+        if (this.verticalAlign !== null) {
+            if (this.verticalAlign == "middle")
+                this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
+            else if (this.verticalAlign == "bottom")
+                this.container.position.y = parentHeight - this._height;
+            else
+                this.container.position.y = 0;
+            this.container.position.y += this._height * this.pivotY;
+        }
+
+
+        //Unrestricted dragging
+        if (this.dragging && !this.setting.dragRestricted) {
+            this.container.position.x = this._dragPosition.x;
+            this.container.position.y = this._dragPosition.y;
+        }
+
+
+        //scale
+        if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
+        if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
+
+        //pivot
+        if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
+        if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
+
+        if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
+        if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
+
+        //make pixel perfect
+        this._width = Math.round(this._width);
+        this._height = Math.round(this._height);
+        this.container.position.x = Math.round(this.container.position.x);
+        this.container.position.y = Math.round(this.container.position.y);
     }
-
-    //min/max sizes
-    if (this.setting.maxWidth !== null && this.setting.width > this.setting.maxWidth) this.setting.width = this.setting.maxWidth;
-    if (this.setting.width < this.setting.minWidth) this.setting.width = this.setting.minWidth;
-
-    if (this.setting.maxHeight !== null && this.setting.height > this.setting.maxHeight) this.setting.height = this.setting.maxHeight;
-    if (this.setting.height < this.setting.minHeight) this.setting.height = this.setting.minHeight;
-
-
-    //pure vertical/horizontal align
-    if (this.horizontalAlign !== null) {
-        if (this.horizontalAlign == "center")
-            this.container.position.x = parentWidth * 0.5 - this.width * 0.5;
-        else if (this.horizontalAlign == "right")
-            this.container.position.x = parentWidth - this.width;
-        else
-            this.container.position.x = 0;
-        this.container.position.x += this.width * this.pivotX;
-    }
-    if (this.verticalAlign !== null) {
-        if (this.verticalAlign == "middle")
-            this.container.position.y = parentHeight * 0.5 - this.height * 0.5;
-        else if (this.verticalAlign == "bottom")
-            this.container.position.y = parentHeight - this.height;
-        else
-            this.container.position.y = 0;
-        this.container.position.y += this.height * this.pivotY;
-    }
-
-
-    //Unrestricted dragging
-    if (this.dragging && !this.setting.dragRestricted) {
-        this.container.position.x = this.left;
-        this.container.position.y = this.top;
-    }
-
-
-    //scale
-    if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
-    if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
-
-    //pivot
-    if (this.setting.pivotX !== null) this.container.pivot.x = this.setting.width * this.setting.pivotX;
-    if (this.setting.pivotY !== null) this.container.pivot.y = this.setting.height * this.setting.pivotY;
-
-    if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
-    if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
-
-    this.container.position.x = Math.round(this.container.position.x);
-    this.container.position.y = Math.round(this.container.position.y);
 };
+
 
 /**
  * Updates all UI Children
@@ -217,7 +292,7 @@ UIBase.prototype.baseupdate = function () {
  */
 UIBase.prototype.updateChildren = function () {
     for (var i = 0; i < this.children.length; i++) {
-        this.children[i].updatesettings();
+        this.children[i].updatesettings(true);
     }
 };
 
@@ -236,7 +311,7 @@ UIBase.prototype.addChild = function (UIObject) {
         UIObject.parent = this;
         this.container.addChild(UIObject.container);
         this.children.push(UIObject);
-        this.updatesettings();
+        this.updatesettings(true, true);
     }
 
     return UIObject;
@@ -252,156 +327,180 @@ UIBase.prototype.removeChild = function (UIObject) {
     else {
         var index = this.children.indexOf(UIObject);
         if (index !== -1) {
+            var oldUIParent = UIObject.parent;
+            var oldParent = UIObject.container.parent;
             UIObject.container.parent.removeChild(UIObject.container);
             this.children.splice(index, 1);
             UIObject.parent = null;
+
+            //oldParent._recursivePostUpdateTransform();
+            setTimeout(function () { //hack but cant get the transforms to update propertly otherwice?
+                if (oldUIParent.updatesettings)
+                    oldUIParent.updatesettings(true, true);
+            }, 0);
         }
+    }
+};
+
+/**
+ * Initializes the object when its added to an UIStage
+ *
+ * @private
+ */
+UIBase.prototype.initialize = function () {
+    this.initialized = true;
+    this.stage = this.parent.stage;
+    if (this.draggable) {
+        this.initDraggable();
+    }
+
+    if (this.droppable) {
+        this.initDroppable();
     }
 };
 
 UIBase.prototype.clearDraggable = function () {
-    if (this.setting.draggable) {
-        this.container.removeListener('mousedown', this.onDragMove);
-        this.container.removeListener('touchstart', this.onDragMove);
-        document.removeEventListener("mousemove", this.onDragMove);
-        document.removeEventListener("touchmove", this.onDragMove);
-        document.removeEventListener('mouseup', this.onDragEnd);
-        document.removeEventListener('mouseupoutside', this.onDragEnd);
-        document.removeEventListener('touchend', this.onDragEnd);
-        document.removeEventListener('touchendoutside', this.onDragEnd);
-        this.setting.draggable = false;
+    if (this.dragInitialized) {
+        this.dragInitialized = false;
+        this.drag.stopEvent();
     }
-}
+};
 
 UIBase.prototype.initDraggable = function () {
-    if (!this.setting.draggable) {
-        var container = this.container,
-            uiobject = this,
-            containerStart = new PIXI.Point(),
-            mouseStart = new PIXI.Point(),
-            stageOffset = new PIXI.Point();
+    if (!this.dragInitialized) {
+        this.dragInitialized = true;
+        var containerStart = new PIXI.Point(),
+            stageOffset = new PIXI.Point(),
+            self = this;
 
-        this.container.interactive = true;
-
-        this.onDragStart = function (event) {
-            if (!uiobject.dragging) {
-                mouseStart.set(event.data.originalEvent.clientX, event.data.originalEvent.clientY);
-                containerStart.copy(container.position);
-                document.addEventListener('mousemove', uiobject.onDragMove);
-                document.addEventListener('touchmove', uiobject.onDragMove);
-            }
-        }
-
-        this.onDragMove = function (event) {
-            if (!uiobject.dragging) {
-                document.addEventListener('mouseup', uiobject.onDragEnd);
-                document.addEventListener('mouseupoutside', uiobject.onDragEnd);
-                document.addEventListener('touchend', uiobject.onDragEnd);
-                document.addEventListener('touchendoutside', uiobject.onDragEnd);
-                uiobject.dragging = true;
-                container.interactive = false;
-                PIXI.UI._dropTarget = null;
-
-                if (uiobject.dragContainer) {
-
-                    var c = uiobject.dragContainer.container ? uiobject.dragContainer.container : uiobject.dragContainer;
-                    console.log("before:", uiobject.container.worldTransform);
+        this._dragPosition = new PIXI.Point();
+        this.drag = new DragEvent(this);
+        this.drag.onDragStart = function (e) {
+            var added = DragDropController.add(this, e);
+            if (!this.dragging && added) {
+                this.dragging = true;
+                this.container.interactive = false;
+                containerStart.copy(this.container.position);
+                if (this.dragContainer) {
+                    var c = this.dragContainer.container ? this.dragContainer.container : this.dragContainer;
                     if (c) {
-                        stageOffset.set(c.worldTransform.tx - uiobject.parent.container.worldTransform.tx, c.worldTransform.ty - uiobject.parent.container.worldTransform.ty);
-                        c.addChild(uiobject.container);
+                        //_this.container._recursivePostUpdateTransform();
+                        stageOffset.set(c.worldTransform.tx - this.parent.container.worldTransform.tx, c.worldTransform.ty - this.parent.container.worldTransform.ty);
+                        c.addChild(this.container);
                     }
                 } else {
                     stageOffset.set(0);
                 }
+
             }
+        };
 
-            var x = event.clientX - mouseStart.x,
-                y = event.clientY - mouseStart.y;
 
-            uiobject.x = containerStart.x + x - stageOffset.x;
-            uiobject.y = containerStart.y + y - stageOffset.y;
-        }
+        this.drag.onDragMove = function (e, offset) {
+            if (this.dragging) {
+                this._dragPosition.set(containerStart.x + offset.x - stageOffset.x, containerStart.y + offset.y - stageOffset.y);
+                this.x = this._dragPosition.x;
+                this.y = this._dragPosition.y;
+            }
+        };
 
-        this.onDragEnd = function (event) {
-            if (uiobject.dragging) {
-                uiobject.dragging = false;
-                container.interactive = true;
-                document.removeEventListener("mousemove", uiobject.onDragMove);
-                document.removeEventListener("touchmove", uiobject.onDragMove);
-                document.removeEventListener('mouseup', uiobject.onDragEnd);
-                document.removeEventListener('mouseupoutside', uiobject.onDragEnd);
-                document.removeEventListener('touchend', uiobject.onDragEnd);
-                document.removeEventListener('touchendoutside', uiobject.onDragEnd);
-
-                
-
+        this.drag.onDragEnd = function (e) {
+            if (this.dragging) {
+                this.dragging = false;
+                //Return to container after 1ms if not picked up by a droppable
                 setTimeout(function () {
-                    var x = event.clientX - mouseStart.x,
-                    y = event.clientY - mouseStart.y;
-                    uiobject.x = containerStart.x + x;
-                    uiobject.y = containerStart.y + y;
-
-                    if (PIXI.UI._dropTarget && PIXI.UI._dropTarget.dragGroup == uiobject.dragGroup) {
-                        PIXI.UI._dropTarget.addChild(uiobject);
+                    self.container.interactive = true;
+                    var item = DragDropController.getItem(self);
+                    if (item) {
+                        var container = self.parent === self.stage ? self.stage : self.parent.container;
+                        container.toLocal(self.container.position, self.container.parent, self);
+                        if (container != self.container) {
+                            self.parent.addChild(self);
+                        }
                     }
-                    else {
-                        uiobject.parent.addChild(uiobject);
-                    }                    
-                }, 0);
-
+                }, 1);
             }
-        }
 
-
-
-        container.on('mousedown', this.onDragStart);
-        container.on('touchstart', this.onDragStart);
-        this.setting.draggable = true;
+        };
     }
 };
 
 UIBase.prototype.clearDroppable = function () {
-    if (this.setting.droppable) {
+    if (this.dropInitialized) {
+        this.dropInitialized = false;
         this.container.removeListener('mouseup', this.onDrop);
         this.container.removeListener('touchend', this.onDrop);
-        this.setting.droppable = false;
     }
-}
+};
 
 UIBase.prototype.initDroppable = function () {
-    if (!this.setting.droppable) {
+    if (!this.dropInitialized) {
+        this.dropInitialized = true;
         var container = this.container,
-            uiobject = this;
+            self = this;
 
         this.container.interactive = true;
         this.onDrop = function (event) {
-            if (uiobject.droppableParent != null)
-                PIXI.UI._dropTarget = uiobject.droppableParent;
-            else
-                PIXI.UI._dropTarget = uiobject;
-        }
+            var item = DragDropController.getEventItem(event, self.dropGroup);
+            if (item && item.dragging) {
+                item.dragging = false;
+                item.container.interactive = true;
+                var parent = self.droppableReparent !== null ? self.droppableReparent : self;
+                parent.container.toLocal(item.container.position, item.container.parent, item);
+                if (parent.container != item.container.parent)
+                    parent.addChild(item);
+            }
+        };
 
         container.on('mouseup', this.onDrop);
         container.on('touchend', this.onDrop);
-        this.setting.droppable = true;
     }
 };
 
 Object.defineProperties(UIBase.prototype, {
+    x: {
+        get: function () {
+            return this.setting.left;
+        },
+        set: function (val) {
+            this.left = val;
+        }
+    },
+    y: {
+        get: function () {
+            return this.setting.top;
+        },
+        set: function (val) {
+            this.top = val;
+        }
+    },
     width: {
         get: function () {
             return this.setting.width;
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.widthPct = parseFloat(val) * 0.01;
+                this.setting.width = val;
+                this.setting.widthPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
+                this.setting.width = val;
                 this.setting.widthPct = null;
-                this.setting._width = val;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_width: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.widthPct !== null) {
+                    this._width = this.parent._width * this.setting.widthPct;
+                }
+                else {
+                    this._width = this.setting.width;
+                }
+            }
+            return this._width;
         }
     },
     height: {
@@ -410,14 +509,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.heightPct = parseFloat(val) * 0.01;
+                this.setting.height = val;
+                this.setting.heightPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
+                this.setting.height = val;
                 this.setting.heightPct = null;
-                this.setting._height = val;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_height: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.heightPct !== null) {
+                    this._height = this.parent._height * this.setting.heightPct;
+                }
+                else {
+                    this._height = this.setting.height;
+                }
+            }
+            return this._height;
         }
     },
     minWidth: {
@@ -426,14 +538,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.percentageMinWidth = parseFloat(val) * 0.01;
+                this.setting.minWidth = val;
+                this.setting.minWidthPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.percentageMinWidth = null;
                 this.setting.minWidth = val;
+                this.setting.minWidthPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_minWidth: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.minWidthPct !== null) {
+                    this._minWidth = this.parent._width * this.setting.minWidthPct;
+                }
+                else {
+                    this._minWidth = this.setting.minWidth;
+                }
+            }
+            return this._minWidth;
         }
     },
     minHeight: {
@@ -442,14 +567,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.percentageMinHeight = parseFloat(val) * 0.01;
+                this.setting.minHeight = val;
+                this.setting.minHeightPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.percentageMinHeight = null;
                 this.setting.minHeight = val;
+                this.setting.minHeightPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_minHeight: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.minHeightPct !== null) {
+                    this._minHeight = this.parent._height * this.setting.minHeightPct;
+                }
+                else {
+                    this._minHeight = this.setting.minHeight;
+                }
+            }
+            return this._minHeight;
         }
     },
     maxWidth: {
@@ -458,14 +596,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.maxWidthPct = parseFloat(val) * 0.01;
+                this.setting.maxWidth = val;
+                this.setting.maxWidthPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.maxWidthPct = null;
                 this.setting.maxWidth = val;
+                this.setting.maxWidthPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_maxWidth: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.maxWidthPct !== null) {
+                    this._maxWidth = this.parent._width * this.setting.maxWidthPct;
+                }
+                else {
+                    this._maxWidth = this.setting.maxWidth;
+                }
+            }
+            return this._maxWidth;
         }
     },
     maxHeight: {
@@ -474,14 +625,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.maxHeightPct = parseFloat(val) * 0.01;
+                this.setting.maxHeight = val;
+                this.setting.maxHeightPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.maxHeightPct = null;
                 this.setting.maxHeight = val;
+                this.setting.maxHeightPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_maxHeight: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.maxHeightPct !== null) {
+                    this._maxHeight = this.parent._height * this.setting.maxHeightPct;
+                }
+                else {
+                    this._maxHeight = this.setting.maxHeight;
+                }
+            }
+            return this._maxHeight;
         }
     },
     anchorLeft: {
@@ -490,14 +654,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.anchorLeftPct = parseFloat(val) * 0.01;
+                this.setting.anchorLeft = val;
+                this.setting.anchorLeftPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.anchorLeftPct = null;
                 this.setting.anchorLeft = val;
+                this.setting.anchorLeftPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_anchorLeft: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.anchorLeftPct !== null) {
+                    this._anchorLeft = this.parent._width * this.setting.anchorLeftPct;
+                }
+                else {
+                    this._anchorLeft = this.setting.anchorLeft;
+                }
+            }
+            return this._anchorLeft;
         }
     },
     anchorRight: {
@@ -506,14 +683,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.anchorRightPct = parseFloat(val) * 0.01;
+                this.setting.anchorRight = val;
+                this.setting.anchorRightPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.anchorRightPct = null;
                 this.setting.anchorRight = val;
+                this.setting.anchorRightPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_anchorRight: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.anchorRightPct !== null) {
+                    this._anchorRight = this.parent._width * this.setting.anchorRightPct;
+                }
+                else {
+                    this._anchorRight = this.setting.anchorRight;
+                }
+            }
+            return this._anchorRight;
         }
     },
     anchorTop: {
@@ -522,14 +712,27 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.anchorTopPct = parseFloat(val) * 0.01;
+                this.setting.anchorTop = val;
+                this.setting.anchorTopPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.anchorTopPct = null;
                 this.setting.anchorTop = val;
+                this.setting.anchorTopPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_anchorTop: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.anchorTopPct !== null) {
+                    this._anchorTop = this.parent._height * this.setting.anchorTopPct;
+                }
+                else {
+                    this._anchorTop = this.setting.anchorTop;
+                }
+            }
+            return this._anchorTop;
         }
     },
     anchorBottom: {
@@ -538,14 +741,143 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.anchorBottomPct = parseFloat(val) * 0.01;
+                this.setting.anchorBottom = val;
+                this.setting.anchorBottomPct = parseFloat(val.replace('%', '')) * 0.01;
             }
             else {
-                this.setting.anchorBottomPct = null;
                 this.setting.anchorBottom = val;
+                this.setting.anchorBottomPct = null;
             }
-            this.updatesettings();
+            this.updatesettings(true);
+        }
+    },
+    actual_anchorBottom: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.anchorBottomPct !== null) {
+                    this._anchorBottom = this.parent._height * this.setting.anchorBottomPct;
+                }
+                else {
+                    this._anchorBottom = this.setting.anchorBottom;
+                }
+            }
+            return this._anchorBottom;
+        }
+    },
+    left: {
+        get: function () {
+            return this.setting.left;
+        },
+        set: function (val) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
+                this.setting.left = val;
+                this.setting.leftPct = parseFloat(val.replace('%', '')) * 0.01;
+            }
+            else {
+                this.setting.left = val;
+                this.setting.leftPct = null;
+            }
+            this.updatesettings(true);
+        }
+    },
+    actual_left: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.leftPct !== null) {
+                    this._left = this.parent._width * this.setting.leftPct;
+                }
+                else {
+                    this._left = this.setting.left;
+                }
+            }
+            return this._left;
+        }
+    },
+    right: {
+        get: function () {
+            return this.setting.right;
+        },
+        set: function (val) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
+                this.setting.right = val;
+                this.setting.rightPct = parseFloat(val.replace('%', '')) * 0.01;
+            }
+            else {
+                this.setting.right = val;
+                this.setting.rightPct = null;
+            }
+            this.updatesettings(true);
+        }
+    },
+    actual_right: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.rightPct !== null) {
+                    this._right = this.parent._width * this.setting.rightPct;
+                }
+                else {
+                    this._right = this.setting.right;
+                }
+            }
+            return this._right;
+        }
+    },
+    top: {
+        get: function () {
+            return this.setting.top;
+        },
+        set: function (val) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
+                this.setting.top = val;
+                this.setting.topPct = parseFloat(val.replace('%', '')) * 0.01;
+            }
+            else {
+                this.setting.top = val;
+                this.setting.topPct = null;
+            }
+            this.updatesettings(true);
+        }
+    },
+    actual_top: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.topPct !== null) {
+                    this._top = this.parent._height * this.setting.topPct;
+                }
+                else {
+                    this._top = this.setting.top;
+                }
+            }
+            return this._top;
+        }
+    },
+    bottom: {
+        get: function () {
+            return this.setting.bottom;
+        },
+        set: function (val) {
+            if (isNaN(val) && val.indexOf('%') !== -1) {
+                this.setting.bottom = val;
+                this.setting.bottomPct = parseFloat(val.replace('%', '')) * 0.01;
+            }
+            else {
+                this.setting.bottom = val;
+                this.setting.bottomPct = null;
+            }
+            this.updatesettings(true);
+        }
+    },
+    actual_bottom: {
+        get: function () {
+            if (this.dirty) {
+                if (this.setting.bottomPct !== null) {
+                    this._bottom = this.parent._height * this.setting.bottomPct;
+                }
+                else {
+                    this._bottom = this.setting.bottom;
+                }
+            }
+            return this._bottom;
         }
     },
     verticalAlign: {
@@ -554,7 +886,7 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.verticalAlign = val;
-            this.updatesettings();
+            this.baseupdate();
         }
     },
     horizontalAlign: {
@@ -563,7 +895,7 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.horizontalAlign = val;
-            this.updatesettings();
+            this.baseupdate();
         }
     },
     tint: {
@@ -599,7 +931,7 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.blendMode = val;
-            this.updatesettings();
+            this.update();
         }
     },
     pivotX: {
@@ -608,7 +940,8 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.pivotX = val;
-            this.updatesettings();
+            this.baseupdate();
+            this.update();
         }
     },
     pivotY: {
@@ -617,14 +950,16 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.pivotY = val;
-            this.updatesettings();
+            this.baseupdate();
+            this.update();
         }
     },
     pivot: {
         set: function (val) {
             this.setting.pivotX = val;
             this.setting.pivotY = val;
-            this.updatesettings();
+            this.baseupdate();
+            this.update();
         }
     },
     scaleX: {
@@ -633,7 +968,7 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.scaleX = val;
-            this.updatesettings();
+            this.container.scale.x = val;
         }
     },
     scaleY: {
@@ -642,105 +977,33 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.scaleY = val;
-            this.updatesettings();
+            this.container.scale.y = val;
         }
     },
     scale: {
+        get: function () {
+            return this.setting.scaleX;
+        },
         set: function (val) {
             this.setting.scaleX = val;
             this.setting.scaleY = val;
-            this.updatesettings();
+            this.container.scale.x = val;
+            this.container.scale.y = val;
         }
     },
-    left: {
-        get: function () {
-            return this.setting.left;
-        },
-        set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.leftPct = parseFloat(val) * 0.01;
-            }
-            else {
-                this.setting.leftPct = null;
-                this.setting.left = val;
-            }
-            this.updatesettings();
-        }
-    },
-    right: {
-        get: function () {
-            return this.setting.right;
-        },
-        set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.rightPct = parseFloat(val) * 0.01;
-            }
-            else {
-                this.setting.rightPct = null;
-                this.setting.right = val;
-            }
-            this.updatesettings();
-        }
-    },
-    top: {
-        get: function () {
-            return this.setting.top;
-        },
-        set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.topPct = parseFloat(val) * 0.01;
-            }
-            else {
-                this.setting.topPct = null;
-                this.setting.top = val;
-            }
-            this.updatesettings();
-        }
-    },
-    bottom: {
-        get: function () {
-            return this.setting.bottom;
-        },
-        set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                val = val.replace('%', '');
-                this.setting.bottomPct = parseFloat(val) * 0.01;
-            }
-            else {
-                this.setting.bottomPct = null;
-                this.setting.bottom = val;
-            }
-            this.updatesettings();
-        }
-    },
-    x: {
-        get: function () {
-            return this.setting.left;
-        },
-        set: function (val) {
-            this.left = val;
-        }
-    },
-    y: {
-        get: function () {
-            return this.setting.right;
-        },
-        set: function (val) {
-            this.top = val;
-        }
-    },
+
     draggable: {
         get: function () {
             return this.setting.draggable;
         },
         set: function (val) {
-            if (val)
-                this.initDraggable();
-            else
-                this.clearDraggable();
+            this.setting.draggable = val;
+            if (this.initialized) {
+                if (val)
+                    this.initDraggable();
+                else
+                    this.clearDraggable();
+            }
         }
     },
     dragRestricted: {
@@ -749,6 +1012,22 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.setting.dragRestricted = val;
+        }
+    },
+    dragRestrictAxis: {
+        get: function () {
+            return this.setting.dragRestrictAxis;
+        },
+        set: function (val) {
+            this.setting.dragRestrictAxis = val;
+        }
+    },
+    dragThreshold: {
+        get: function () {
+            return this.setting.dragThreshold;
+        },
+        set: function (val) {
+            this.setting.dragThreshold = val;
         }
     },
     dragGroup: {
@@ -772,12 +1051,47 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.droppable;
         },
         set: function (val) {
-            if (val)
-                this.initDroppable();
-            else
-                this.clearDroppable();
+            this.setting.droppable = true;
+            if (this.initialized) {
+                if (val)
+                    this.initDroppable();
+                else
+                    this.clearDroppable();
+            }
         }
     },
+    droppableReparent: {
+        get: function () {
+            return this.setting.droppableReparent;
+        },
+        set: function (val) {
+            this.setting.droppableReparent = val;
+        }
+    },
+    dropGroup: {
+        get: function () {
+            return this.setting.dropGroup;
+        },
+        set: function (val) {
+            this.setting.dropGroup = val;
+        }
+    },
+    renderable: {
+        get: function () {
+            return this.container.renderable;
+        },
+        set: function (val) {
+            this.container.renderable = val;
+        }
+    },
+    visible: {
+        get: function () {
+            return this.container.visible;
+        },
+        set: function (val) {
+            this.container.visible = val;
+        }
+    }
 });
 
 

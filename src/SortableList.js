@@ -1,16 +1,20 @@
 var Container = require('./Container');
+var Tween = require('./Tween');
 /**
  * An UI Container object
  *
  * @class
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
- * @param width {Number} Width of the Container
- * @param height {Number} Height of the Container
+ * @param desc {Boolean} Sort the list descending
+ * @param tweenTime {Number} if above 0 the sort will be animated
+ * @param tweenEase {PIXI.UI.Ease} ease method used for animation
  */
-function SortableList(desc) {
+function SortableList(desc, tweenTime, tweenEase) {
     Container.call(this);
-    this.desc = typeof desc !== "undefined" ? desc : true;
+    this.desc = typeof desc !== "undefined" ? desc : false;
+    this.tweenTime = tweenTime || 0;
+    this.tweenEase = tweenEase;
     this.items = [];
 
 }
@@ -37,7 +41,7 @@ SortableList.prototype.addChild = function (UIObject, fnValue, fnThenBy) {
 
 
     this.sort();
-}
+};
 
 SortableList.prototype.removeChild = function (UIObject) {
     if (arguments.length > 1) {
@@ -53,36 +57,58 @@ SortableList.prototype.removeChild = function (UIObject) {
         }
         this.sort();
     }
-}
+};
 
 SortableList.prototype.sort = function () {
-    var desc = this.desc;
+    clearTimeout(this._sortTimeout);
+    var _this = this;
+    this._sortTimeout = setTimeout(function () { _this._sort(); }, 1);
+};
+
+SortableList.prototype._sort = function () {
+    var self = this,
+        desc = this.desc,
+        y = 0,
+        alt = true;
+
     this.items.sort(function (a, b) {
         var res = a._sortListValue() < b._sortListValue() ? desc ? 1 : -1 :
                   a._sortListValue() > b._sortListValue() ? desc ? -1 : 1 : 0;
 
-        if (res == 0 && a._sortListThenByValue && b._sortListThenByValue) {
+        if (res === 0 && a._sortListThenByValue && b._sortListThenByValue) {
             res = a._sortListThenByValue() < b._sortListThenByValue() ? desc ? 1 : -1 :
                   a._sortListThenByValue() > b._sortListThenByValue() ? desc ? -1 : 1 : 0;
         }
-        if (res == 0) {
+        if (res === 0) {
             res = a._sortListRnd > b._sortListRnd ? 1 :
                   a._sortListRnd < b._sortListRnd ? -1 : 0;
         }
         return res;
     });
 
-    var y = 0
-    var alt = true;
     for (var i = 0; i < this.items.length; i++) {
-        alt = !alt;
         var item = this.items[i];
-        item.y = y;
+
+        alt = !alt;
+
+        if (this.tweenTime > 0) {
+            Tween.fromTo(item, this.tweenTime, { x: item.x, y: item.y }, { x: 0, y: y }, this.tweenEase);
+        }
+        else {
+            item.x = 0;
+            item.y = y;
+        }
         y += item.height;
         if (typeof item.altering === "function")
             item.altering(alt);
     }
-}
 
+    //force it to update parents when sort animation is done (prevent scrolling container bug)
+    if (this.tweenTime > 0) {
+        setTimeout(function () {
+            self.updatesettings(false, true);
+        }, this.tweenTime * 1000);
+    }
+};
 
 

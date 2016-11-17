@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; }
+        canvas { position: fixed; }
+    </style>
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <script type="text/javascript">
+        var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight);
+        var stage = new PIXI.Container();
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        var dragContainer = new PIXI.UI.Container();
+        document.body.appendChild(renderer.view);
+        stage.addChild(uiStage);
+
+        window.addEventListener("resize", function () {
+            renderer.resize(window.innerWidth, window.innerHeight);
+            uiStage.resize(window.innerWidth, window.innerHeight);
+        });
+
+        PIXI.loader.add('UISprites.json').load(function () {
+            init();
+        });
+
+
+        function init() {
+            var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
+            var lineSprite = PIXI.Texture.fromFrame("UI/ui-horizontal-line-border.png");
+
+            container = new PIXI.UI.SliceSprite(whiteBG, 5);
+            container.height = 100;
+            container.width = 100;
+            container.top = "50%";
+            container.left = "50%";
+            uiStage.addChild(container);
+
+           
+            PIXI.UI.Tween.to(container, 2, { left: 10, top:10 }, PIXI.UI.Ease.Bounce.BounceInOut);
+
+            Update();
+        }
+
+        function Update() {
+            renderer.render(stage);
+            requestAnimationFrame(Update);
+        }
+
+    </script>
+</body>
+</html>

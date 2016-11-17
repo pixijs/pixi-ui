@@ -8,22 +8,22 @@ var UIBase = require('./UIBase');
  * @memberof PIXI.UI
  * @param Texture {PIXI.Texture} The texture for the sprite
  */
-function Sprite(t) {
-    this.sprite = new PIXI.Sprite(t);
+function TilingSprite(t) {
+    this.sprite = new PIXI.extras.TilingSprite(t);
     UIBase.call(this, this.sprite.width, this.sprite.height);
     this.container.addChild(this.sprite);
 }
 
-Sprite.prototype = Object.create(UIBase.prototype);
-Sprite.prototype.constructor = Sprite;
-module.exports = Sprite;
+TilingSprite.prototype = Object.create(UIBase.prototype);
+TilingSprite.prototype.constructor = TilingSprite;
+module.exports = TilingSprite;
 
 /**
  * Updates the text
  *
  * @private
  */
-Sprite.prototype.update = function () {
+TilingSprite.prototype.update = function () {
     if (this.tint !== null)
         this.sprite.tint = this.tint;
 

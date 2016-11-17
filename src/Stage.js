@@ -10,10 +10,13 @@ var UIBase = require('./UIBase');
  * @param height {Number} Height of the Stage
  */
 function Stage(width, height) {
-    this._width = width;
-    this._height = height;
     PIXI.Container.call(this);
+    this.__width = width;
+    this.__height = height;
     this.UIChildren = [];
+    this.stage = this;
+    this.interactive = true;
+    this.initialized = true;
 }
 
 Stage.prototype = Object.create(PIXI.Container.prototype);
@@ -34,6 +37,7 @@ Stage.prototype.addChild = function (UIObject) {
         UIObject.parent = this;
         this.UIChildren.push(UIObject);
         PIXI.Container.prototype.addChild.call(this, UIObject.container);
+        UIObject.updatesettings(true);
     }
 };
 
@@ -45,42 +49,43 @@ Stage.prototype.removeChild = function (UIObject) {
         }
     }
     else {
+        PIXI.Container.prototype.removeChild.call(this, UIObject.container);
         var index = this.UIChildren.indexOf(UIObject);
         if (index != -1) {
             this.UIChildren.splice(index, 1);
             UIObject.parent = null;
         }
-        PIXI.Container.prototype.addChild.call(this, UIObject.container);
+        
     }
 };
 
 Stage.prototype.resize = function (width, height) {
-    if (!isNaN(height)) this._height = height;
-    if (!isNaN(width)) this._width = width;
+    if (!isNaN(height)) this.__height = height;
+    if (!isNaN(width)) this.__width = width;
 
     for (var i = 0; i < this.UIChildren.length; i++)
-        this.UIChildren[i].updatesettings();
+        this.UIChildren[i].updatesettings(true, false);
 };
 
 Object.defineProperties(Stage.prototype, {
-    width: {
+    _width: {
         get: function () {
-            return this._width;
+            return this.__width;
         },
         set: function (val) {
             if (!isNaN(val)) {
-                this._width = val;
+                this.__width = val;
                 this.resize();
             }
         }
     },
-    height: {
+    _height: {
         get: function () {
-            return this._height;
+            return this.__height;
         },
         set: function (val) {
             if (!isNaN(val)) {
-                this._height = val;
+                this.__height = val;
                 this.resize();
             }
         }
