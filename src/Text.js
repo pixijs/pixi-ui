@@ -22,8 +22,6 @@ function Text(text, PIXITextStyle) {
             this.setting.widthPct = null;
         }
         else {
-            console.log("ehm");
-            console.log(this.anchorLeft, this.anchorRight);
             this._text.width = this._width;
         }
 

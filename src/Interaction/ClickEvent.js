@@ -1,10 +1,13 @@
 ﻿var ClickEvent = function (obj) {
     var bound = false,
-        self = this;
+        self = this,
+        id = 0;
 
     obj.container.interactive = true;
 
     var _onMouseDown = function (event) {
+        id = event.data.identifier;
+        self.onPress.call(obj, event, true);
         if (!bound) {
             obj.container.on('mouseup', _onMouseUp);
             obj.container.on('mouseupoutside', _onMouseUpOutside);
@@ -12,10 +15,10 @@
             obj.container.on('touchendoutside', _onMouseUpOutside);
             bound = true;
         }
-        self.onPress.call(obj, event, true);
     };
 
     var _mouseUpAll = function (event) {
+        if (event.data.identifier !== id) return;
         if (bound) {
             obj.container.removeListener('mouseup', _onMouseUp);
             obj.container.removeListener('mouseupoutside', _onMouseUpOutside);
@@ -27,11 +30,13 @@
     };
 
     var _onMouseUp = function (event) {
+        if (event.data.identifier !== id) return;
         _mouseUpAll(event);
         self.onClick.call(obj, event);
     };
 
     var _onMouseUpOutside = function (event) {
+        if (event.data.identifier !== id) return;
         _mouseUpAll(event);
     };
 

@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 17 Nov 2016 05:02:02 UTC
+ * Compiled Fri, 02 Dec 2016 08:00:21 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19,7 +19,7 @@ var UIBase = require('./UIBase');
  */
 function Container(width, height) {
     UIBase.call(this, width, height);
-    this.container.hitArea = new PIXI.Rectangle(0, 0, width, height);
+    this.container.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
 }
 
 
@@ -29,12 +29,14 @@ module.exports = Container;
 
 
 Container.prototype.update = function () {
-    this.container.hitArea.width = this._width;
-    this.container.hitArea.height = this._height;
+    //if (this.container.interactive) {
+        this.container.hitArea.width = this._width;
+        this.container.hitArea.height = this._height;
+    //}
 };
 
 
-},{"./UIBase":21}],2:[function(require,module,exports){
+},{"./UIBase":23}],2:[function(require,module,exports){
 var Ease = {},
     EaseBase = require('./EaseBase'),
     ExponentialEase = require('./ExponentialEase'),
@@ -216,11 +218,14 @@ module.exports = ExponentialEase;
 },{"./EaseBase":3}],5:[function(require,module,exports){
 var ClickEvent = function (obj) {
     var bound = false,
-        self = this;
+        self = this,
+        id = 0;
 
     obj.container.interactive = true;
 
     var _onMouseDown = function (event) {
+        id = event.data.identifier;
+        self.onPress.call(obj, event, true);
         if (!bound) {
             obj.container.on('mouseup', _onMouseUp);
             obj.container.on('mouseupoutside', _onMouseUpOutside);
@@ -228,10 +233,10 @@ var ClickEvent = function (obj) {
             obj.container.on('touchendoutside', _onMouseUpOutside);
             bound = true;
         }
-        self.onPress.call(obj, event, true);
     };
 
     var _mouseUpAll = function (event) {
+        if (event.data.identifier !== id) return;
         if (bound) {
             obj.container.removeListener('mouseup', _onMouseUp);
             obj.container.removeListener('mouseupoutside', _onMouseUpOutside);
@@ -243,11 +248,13 @@ var ClickEvent = function (obj) {
     };
 
     var _onMouseUp = function (event) {
+        if (event.data.identifier !== id) return;
         _mouseUpAll(event);
         self.onClick.call(obj, event);
     };
 
     var _onMouseUpOutside = function (event) {
+        if (event.data.identifier !== id) return;
         _mouseUpAll(event);
     };
 
@@ -443,6 +450,15 @@ DragEvent.prototype.onDragEnd = function (event) { };
 DragEvent.prototype.onDragMove = function (event, offset) { };
 DragEvent.prototype.onDragStart = function (event) { };
 },{}],8:[function(require,module,exports){
+var Interaction = {
+    ClickEvent: require('./ClickEvent'),
+    DragEvent: require('./DragEvent'),
+    MouseScrollEvent: require('./MouseScrollEvent')
+};
+
+
+module.exports = Interaction;
+},{"./ClickEvent":5,"./DragEvent":7,"./MouseScrollEvent":9}],9:[function(require,module,exports){
 var MouseScrollEvent = function (obj, preventDefault) {
     var bound = false, delta = new PIXI.Point(), self = this;
     obj.container.interactive = true;
@@ -495,7 +511,7 @@ MouseScrollEvent.prototype.constructor = MouseScrollEvent;
 module.exports = MouseScrollEvent;
 
 MouseScrollEvent.prototype.onMouseScroll = function (event, delta) { };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var MathHelper = {
     Lerp: function (start, stop, amt) {
         if (amt > 1) amt = 1;
@@ -509,7 +525,7 @@ var MathHelper = {
 };
 
 module.exports = MathHelper;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var Slider = require('./Slider'),
     Tween = require('./Tween'),
     Ease = require('./Ease/Ease');
@@ -603,7 +619,7 @@ ScrollBar.prototype.toggleHidden = function (hidden) {
 
 
 
-},{"./Ease/Ease":2,"./Slider":13,"./Tween":19}],11:[function(require,module,exports){
+},{"./Ease/Ease":2,"./Slider":14,"./Tween":21}],12:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     Container = require('./Container'),
     MathHelper = require('./MathHelper'),
@@ -839,7 +855,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
 
-},{"./Container":1,"./Interaction/DragEvent":7,"./Interaction/MouseScrollEvent":8,"./MathHelper":9,"./Ticker":18,"./UIBase":21}],12:[function(require,module,exports){
+},{"./Container":1,"./Interaction/DragEvent":7,"./Interaction/MouseScrollEvent":9,"./MathHelper":10,"./Ticker":19,"./UIBase":23}],13:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -976,7 +992,7 @@ module.exports = SliceSprite;
 
 
 
-},{"./UIBase":21}],13:[function(require,module,exports){
+},{"./UIBase":23}],14:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     DragEvent = require('./Interaction/DragEvent'),
     ClickEvent = require('./Interaction/ClickEvent'),
@@ -1205,7 +1221,7 @@ Object.defineProperties(Slider.prototype, {
         }
     }
 });
-},{"./Ease/Ease":2,"./Interaction/ClickEvent":5,"./Interaction/DragEvent":7,"./MathHelper":9,"./Tween":19,"./UIBase":21}],14:[function(require,module,exports){
+},{"./Ease/Ease":2,"./Interaction/ClickEvent":5,"./Interaction/DragEvent":7,"./MathHelper":10,"./Tween":21,"./UIBase":23}],15:[function(require,module,exports){
 var Container = require('./Container');
 var Tween = require('./Tween');
 /**
@@ -1267,10 +1283,16 @@ SortableList.prototype.removeChild = function (UIObject) {
     }
 };
 
-SortableList.prototype.sort = function () {
+SortableList.prototype.sort = function (instant) {
     clearTimeout(this._sortTimeout);
+
+    if (instant) {
+        this._sort();
+        return;
+    }
+
     var _this = this;
-    this._sortTimeout = setTimeout(function () { _this._sort(); }, 1);
+    this._sortTimeout = setTimeout(function () { _this._sort(); }, 0);
 };
 
 SortableList.prototype._sort = function () {
@@ -1321,7 +1343,7 @@ SortableList.prototype._sort = function () {
 
 
 
-},{"./Container":1,"./Tween":19}],15:[function(require,module,exports){
+},{"./Container":1,"./Tween":21}],16:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1359,7 +1381,7 @@ Sprite.prototype.update = function () {
 };
 
 
-},{"./UIBase":21}],16:[function(require,module,exports){
+},{"./UIBase":23}],17:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1378,6 +1400,7 @@ function Stage(width, height) {
     this.UIChildren = [];
     this.stage = this;
     this.interactive = true;
+    this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.initialized = true;
 }
 
@@ -1453,7 +1476,7 @@ Object.defineProperties(Stage.prototype, {
         }
     }
 });
-},{"./UIBase":21}],17:[function(require,module,exports){
+},{"./UIBase":23}],18:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1478,8 +1501,6 @@ function Text(text, PIXITextStyle) {
             this.setting.widthPct = null;
         }
         else {
-            console.log("ehm");
-            console.log(this.anchorLeft, this.anchorRight);
             this._text.width = this._width;
         }
 
@@ -1531,7 +1552,7 @@ Object.defineProperties(Text.prototype, {
         }
     }
 });
-},{"./UIBase":21}],18:[function(require,module,exports){
+},{"./UIBase":23}],19:[function(require,module,exports){
 var Tween = require('./Tween');
 
 function Ticker(autoStart) {
@@ -1608,7 +1629,64 @@ Ticker.removeListener = function (event, fn) {
 
 
 Ticker.shared = new Ticker(true);
-},{"./Tween":19}],19:[function(require,module,exports){
+},{"./Tween":21}],20:[function(require,module,exports){
+var UIBase = require('./UIBase');
+
+/**
+ * An UI sprite object
+ *
+ * @class
+ * @extends PIXI.UI.UIBase
+ * @memberof PIXI.UI
+ * @param Texture {PIXI.Texture} The texture for the sprite
+ * @param [Width=Texture.width] {number} Width of tilingsprite
+ * @param [Height=Texture.height] {number} Height of tiling sprite
+ */
+function TilingSprite(t, width, height) {
+    this.sprite = new PIXI.extras.TilingSprite(t);
+    UIBase.call(this, width || this.sprite.width, height || this.sprite.height);
+    this.container.addChild(this.sprite);
+}
+
+TilingSprite.prototype = Object.create(UIBase.prototype);
+TilingSprite.prototype.constructor = TilingSprite;
+module.exports = TilingSprite;
+
+/**
+ * Updates the text
+ *
+ * @private
+ */
+TilingSprite.prototype.update = function () {
+    if (this.tint !== null)
+        this.sprite.tint = this.tint;
+
+    if (this.blendMode !== null)
+        this.sprite.blendMode = this.blendMode;
+
+    this.sprite.width = this._width;
+    this.sprite.height = this._height;
+};
+
+Object.defineProperties(TilingSprite.prototype, {
+    tilePosition: {
+        get: function () {
+            return this.sprite.tilePosition;
+        },
+        set: function (val) {
+            this.sprite.tilePosition = val;
+        }
+    },
+    tileScale: {
+        get: function () {
+            return this.sprite.tileScale;
+        },
+        set: function (val) {
+            this.sprite.tileScale = val;
+        }
+    }
+});
+},{"./UIBase":23}],21:[function(require,module,exports){
 var MathHelper = require('./MathHelper');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
@@ -1791,13 +1869,14 @@ var Tween = {
 
 
 module.exports = Tween;
-},{"./Ease/Ease":2,"./MathHelper":9}],20:[function(require,module,exports){
+},{"./Ease/Ease":2,"./MathHelper":10}],22:[function(require,module,exports){
 var UI = {
     Stage: require('./Stage'),
     Container: require('./Container'),
     ScrollingContainer: require('./ScrollingContainer'),
     SortableList: require('./SortableList'),
     Sprite: require('./Sprite'),
+    TilingSprite: require('./TilingSprite'),
     SliceSprite: require('./SliceSprite'),
     Slider: require('./Slider'),
     ScrollBar: require('./ScrollBar'),
@@ -1805,13 +1884,14 @@ var UI = {
     MathHelper: require('./MathHelper'),
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
+    Interaction: require('./Interaction/Interaction'),
     Ticker: require('./Ticker').shared,
     _draggedItems: []
 };
 
 
 module.exports = UI;
-},{"./Container":1,"./Ease/Ease":2,"./MathHelper":9,"./ScrollBar":10,"./ScrollingContainer":11,"./SliceSprite":12,"./Slider":13,"./SortableList":14,"./Sprite":15,"./Stage":16,"./Text":17,"./Ticker":18,"./Tween":19}],21:[function(require,module,exports){
+},{"./Container":1,"./Ease/Ease":2,"./Interaction/Interaction":8,"./MathHelper":10,"./ScrollBar":11,"./ScrollingContainer":12,"./SliceSprite":13,"./Slider":14,"./SortableList":15,"./Sprite":16,"./Stage":17,"./Text":18,"./Ticker":19,"./TilingSprite":20,"./Tween":21}],23:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI'),
     DragEvent = require('./Interaction/DragEvent'),
@@ -2036,7 +2116,7 @@ UIBase.prototype.baseupdate = function () {
                     this.container.position.y = this._anchorTop;
                     this._height = parentHeight - this._anchorTop - this._anchorBottom;
                 }
-                this.container.position.y += this.pivotY * this._width;
+                this.container.position.y += this.pivotY * this._height;
             }
             else {
                 this.container.position.y = 0;
@@ -2905,12 +2985,20 @@ Object.defineProperties(UIBase.prototype, {
         set: function (val) {
             this.container.visible = val;
         }
+    },
+    click: {
+        get: function () {
+            return this.container.click;
+        },
+        set: function (val) {
+            this.container.click = val;
+        }
     }
 });
 
 
 
-},{"./Interaction/DragDropController":6,"./Interaction/DragEvent":7,"./UI":20,"./UISettings":22}],22:[function(require,module,exports){
+},{"./Interaction/DragDropController":6,"./Interaction/DragEvent":7,"./UI":22,"./UISettings":24}],24:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -2972,7 +3060,7 @@ module.exports = UISettings;
 
 
 
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 
 var Library = {
     UI: require('./UI')
@@ -2984,7 +3072,7 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":20}]},{},[23])(23)
+},{"./UI":22}]},{},[25])(25)
 });
 
 

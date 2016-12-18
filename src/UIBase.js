@@ -222,7 +222,7 @@ UIBase.prototype.baseupdate = function () {
                     this.container.position.y = this._anchorTop;
                     this._height = parentHeight - this._anchorTop - this._anchorBottom;
                 }
-                this.container.position.y += this.pivotY * this._width;
+                this.container.position.y += this.pivotY * this._height;
             }
             else {
                 this.container.position.y = 0;
@@ -1090,6 +1090,14 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.container.visible = val;
+        }
+    },
+    click: {
+        get: function () {
+            return this.container.click;
+        },
+        set: function (val) {
+            this.container.click = val;
         }
     }
 });

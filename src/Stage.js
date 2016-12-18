@@ -16,6 +16,7 @@ function Stage(width, height) {
     this.UIChildren = [];
     this.stage = this;
     this.interactive = true;
+    this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.initialized = true;
 }
 

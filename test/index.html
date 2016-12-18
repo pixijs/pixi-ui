@@ -3,11 +3,12 @@
 <head>
     <style>
         body, html { margin: 0; padding: 0; }
-        canvas { position: fixed; }
+        canvas { position: fixed; width: 100%; height: 100%; }
     </style>
     <script src="pixi.js"></script>
     <script src="../bin/pixi-ui.js"></script>
     <title></title>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
     <meta charset="utf-8" />
 </head>
 <body>
@@ -20,10 +21,15 @@
         stage.addChild(uiStage);
 
         window.addEventListener("resize", function () {
-            renderer.resize(window.innerWidth, window.innerHeight);
-            uiStage.resize(window.innerWidth, window.innerHeight);
+            resize();
         });
 
+        var resize = function () {
+            renderer.resize(window.innerWidth * devicePixelRatio, window.innerHeight * devicePixelRatio);
+            uiStage.resize(window.innerWidth * devicePixelRatio, window.innerHeight * devicePixelRatio);
+        }
+
+        resize();
         PIXI.loader.add('UISprites.json').load(function () {
             init();
         });

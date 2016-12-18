@@ -59,10 +59,16 @@ SortableList.prototype.removeChild = function (UIObject) {
     }
 };
 
-SortableList.prototype.sort = function () {
+SortableList.prototype.sort = function (instant) {
     clearTimeout(this._sortTimeout);
+
+    if (instant) {
+        this._sort();
+        return;
+    }
+
     var _this = this;
-    this._sortTimeout = setTimeout(function () { _this._sort(); }, 1);
+    this._sortTimeout = setTimeout(function () { _this._sort(); }, 0);
 };
 
 SortableList.prototype._sort = function () {

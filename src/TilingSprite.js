@@ -7,10 +7,12 @@ var UIBase = require('./UIBase');
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
  * @param Texture {PIXI.Texture} The texture for the sprite
+ * @param [Width=Texture.width] {number} Width of tilingsprite
+ * @param [Height=Texture.height] {number} Height of tiling sprite
  */
-function TilingSprite(t) {
+function TilingSprite(t, width, height) {
     this.sprite = new PIXI.extras.TilingSprite(t);
-    UIBase.call(this, this.sprite.width, this.sprite.height);
+    UIBase.call(this, width || this.sprite.width, height || this.sprite.height);
     this.container.addChild(this.sprite);
 }
 
@@ -34,3 +36,21 @@ TilingSprite.prototype.update = function () {
     this.sprite.height = this._height;
 };
 
+Object.defineProperties(TilingSprite.prototype, {
+    tilePosition: {
+        get: function () {
+            return this.sprite.tilePosition;
+        },
+        set: function (val) {
+            this.sprite.tilePosition = val;
+        }
+    },
+    tileScale: {
+        get: function () {
+            return this.sprite.tileScale;
+        },
+        set: function (val) {
+            this.sprite.tileScale = val;
+        }
+    }
+});
