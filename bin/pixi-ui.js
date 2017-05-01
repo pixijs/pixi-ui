@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Mon, 01 May 2017 21:46:38 UTC
+ * Compiled Mon, 01 May 2017 22:38:11 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2091,7 +2091,8 @@ function TextInput(options) {
     var _sp = new PIXI.Point();
     var scrollToPosition = function (pos) {
         _sp.copy(pos);
-        if (multiLine)
+        console.log("y", _sp.y, paddingTop);
+        if (multiLine && _sp.y >= lineHeight)
             _sp.y += lineHeight;
         textContainer.focusPosition(_sp);
     };
@@ -2590,7 +2591,7 @@ Object.defineProperties(TextInput.prototype, {
 
 /*
  * Features:
- * shift selection, Mouse Selection, Cut, Copy, Paste, Delete, Backspace, Arrow navigation, tabIndex
+ * multiLine, shift selection, Mouse Selection, Cut, Copy, Paste, Delete, Backspace, Arrow navigation, tabIndex
  * 
  * Methods:
  * blur()
