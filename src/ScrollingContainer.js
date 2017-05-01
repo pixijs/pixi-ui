@@ -146,8 +146,6 @@ ScrollingContainer.prototype.initScrolling = function () {
             
             if (y + container.y > this._height) {
                 dif = y - this._height;
-                console.log(dif);
-
                 container.y = -dif;
             }
             else if (y + container.y < 0) {

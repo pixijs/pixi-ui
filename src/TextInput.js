@@ -116,6 +116,7 @@ function TextInput(options) {
 
 
     var innerContainer = textContainer.innerContainer;
+    innerContainer.cacheAsBitmap = true;
     //textContainer.container.addChild(innerContainer);
 
 
@@ -655,7 +656,7 @@ function TextInput(options) {
             shiftDown = false;
             hideCaret();
             this.clearSelection();
-            //if (chars.length > 1) innerContainer.cacheAsBitmap = true;
+            if (chars.length > 1) innerContainer.cacheAsBitmap = true;
             _pui_tempInput.removeEventListener("blur", inputBlurEvent);
             document.removeEventListener("keydown", keyDownEvent);
             document.removeEventListener("keyup", keyUpEvent);

@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Mon, 01 May 2017 21:36:04 UTC
+ * Compiled Mon, 01 May 2017 21:46:38 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -931,8 +931,6 @@ ScrollingContainer.prototype.initScrolling = function () {
             
             if (y + container.y > this._height) {
                 dif = y - this._height;
-                console.log(dif);
-
                 container.y = -dif;
             }
             else if (y + container.y < 0) {
@@ -1885,6 +1883,7 @@ function TextInput(options) {
 
 
     var innerContainer = textContainer.innerContainer;
+    innerContainer.cacheAsBitmap = true;
     //textContainer.container.addChild(innerContainer);
 
 
@@ -2424,7 +2423,7 @@ function TextInput(options) {
             shiftDown = false;
             hideCaret();
             this.clearSelection();
-            //if (chars.length > 1) innerContainer.cacheAsBitmap = true;
+            if (chars.length > 1) innerContainer.cacheAsBitmap = true;
             _pui_tempInput.removeEventListener("blur", inputBlurEvent);
             document.removeEventListener("keydown", keyDownEvent);
             document.removeEventListener("keyup", keyUpEvent);
