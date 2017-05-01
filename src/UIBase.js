@@ -12,6 +12,7 @@ var UISettings = require('./UISettings'),
  * @param height {Number} Height of the UIObject
  */
 function UIBase(width, height) {
+    PIXI.utils.EventEmitter.call(this);
     this.container = new PIXI.Container();
     this.setting = new UISettings();
     this.children = [];
@@ -23,7 +24,7 @@ function UIBase(width, height) {
     this.dirty = true;
     this._oldWidth = -1;
     this._oldHeight = -1;
-
+    this.pixelPerfect = true;
 
 
     if (width && isNaN(width) && width.indexOf('%') != -1) {
@@ -61,6 +62,7 @@ function UIBase(width, height) {
     this._dragPosition = null; //used for overriding positions if tweens is playing
 }
 
+UIBase.prototype = Object.create(PIXI.utils.EventEmitter.prototype);
 UIBase.prototype.constructor = UIBase;
 module.exports = UIBase;
 
@@ -132,27 +134,22 @@ UIBase.prototype.baseupdate = function () {
 
         //transform convertion (% etc)
         this.dirty = true;
-        this.i1 = this._width = this.actual_width;
-        this.i2 = this._height = this.actual_height;
-        this.i3 = this._minWidth = this.actual_minWidth;
-        this.i4 = this._minHeight = this.actual_minHeight;
-        this.i5 = this._maxWidth = this.actual_maxWidth;
-        this.i6 = this._maxHeight = this.actual_maxHeight;
-        this.i7 = this._anchorLeft = this.actual_anchorLeft;
-        this.i8 = this._anchorRight = this.actual_anchorRight;
-        this.i9 = this._anchorTop = this.actual_anchorTop;
-        this.i10 = this._anchorBottom = this.actual_anchorBottom;
-        this.i11 = this._left = this.actual_left;
-        this.i12 = this._right = this.actual_right;
-        this.i13 = this._top = this.actual_top;
-        this.i14 = this._bottom = this.actual_bottom;
-        this.i15 = parentWidth = this.parent._width;
-        this.i16 = parentHeight = this.parent._height;
-        this.i17 = this.scaleX;
-        this.i18 = this.scaleY;
-        this.i19 = this.pivotX;
-        this.i20 = this.pivotY;
-        this.i21 = this.alpha;
+        this._width = this.actual_width;
+        this._height = this.actual_height;
+        this._minWidth = this.actual_minWidth;
+        this._minHeight = this.actual_minHeight;
+        this._maxWidth = this.actual_maxWidth;
+        this._maxHeight = this.actual_maxHeight;
+        this._anchorLeft = this.actual_anchorLeft;
+        this._anchorRight = this.actual_anchorRight;
+        this._anchorTop = this.actual_anchorTop;
+        this._anchorBottom = this.actual_anchorBottom;
+        this._left = this.actual_left;
+        this._right = this.actual_right;
+        this._top = this.actual_top;
+        this._bottom = this.actual_bottom;
+        parentWidth = this.parent._width;
+        parentHeight = this.parent._height;
         this.dirty = false;
 
 
@@ -277,10 +274,12 @@ UIBase.prototype.baseupdate = function () {
         if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
 
         //make pixel perfect
-        this._width = Math.round(this._width);
-        this._height = Math.round(this._height);
-        this.container.position.x = Math.round(this.container.position.x);
-        this.container.position.y = Math.round(this.container.position.y);
+        if (this.pixelPerfect) {
+            this._width = Math.round(this._width);
+            this._height = Math.round(this._height);
+            this.container.position.x = Math.round(this.container.position.x);
+            this.container.position.y = Math.round(this.container.position.y);
+        }
     }
 };
 
@@ -1092,6 +1091,14 @@ Object.defineProperties(UIBase.prototype, {
             this.container.visible = val;
         }
     },
+    cacheAsBitmap: {
+        get: function () {
+            return this.container.cacheAsBitmap;
+        },
+        set: function (val) {
+            this.container.cacheAsBitmap = val;
+        }
+    },
     click: {
         get: function () {
             return this.container.click;
@@ -1101,5 +1108,3 @@ Object.defineProperties(UIBase.prototype, {
         }
     }
 });
-
-

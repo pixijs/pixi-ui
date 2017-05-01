@@ -12,9 +12,6 @@ var UIBase = require('./UIBase');
  */
 function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
     UIBase.call(this, texture.width, texture.height);
-    this.setting.minWidth = borderWidth * 2;
-    this.setting.minHeight = borderWidth * 2;
-
 
     var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
         bw = borderWidth || 5,
@@ -23,6 +20,9 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
         t = texture.baseTexture,
         f = texture.frame;
 
+
+    if (hs) this.setting.minWidth = borderWidth * 2;
+    if (vs) this.setting.minHeight = borderWidth * 2;
 
     this.initialize = function () {
         UIBase.prototype.initialize.apply(this);

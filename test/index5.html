@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; width:100%; height:100%;}
+        canvas { width:100% !important;
+            height:100% !important;
+            position:fixed;
+
+        }
+    </style>
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+
+</head>
+<body>
+    <script type="text/javascript">
+        PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.LINEAR;
+        PIXI.settings.RESOLUTION = devicePixelRatio || 1;
+        var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight, { resolution: devicePixelRatio || 1, transparent: true });
+        var stage = new PIXI.Container();
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        var dragContainer = new PIXI.UI.Container();
+        document.body.appendChild(renderer.view);
+        stage.addChild(uiStage);
+        var resizeFunction = function () {
+            renderer.resize(window.innerWidth, window.innerHeight);
+            uiStage.resize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener("resize", resizeFunction);
+        resizeFunction();
+        PIXI.loader.add('UISprites.json').load(function () {
+            init();
+        });
+
+
+        function init() {
+            var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
+            var solidBox = PIXI.Texture.fromFrame("UI/solid-box.png");
+            var lineSprite = PIXI.Texture.fromFrame("UI/ui-horizontal-line-border.png");
+            var textStyle = { fill: '#000000', fontSize: 18, fontFamily: 'Lucida Sans Typewriter' };
+
+            container = new PIXI.UI.Container();
+            container.anchorBottom = container.anchorTop = container.anchorRight = container.anchorLeft = 10;
+            container.minHeight = 285;
+            uiStage.addChild(container);
+
+            textInput = new PIXI.UI.TextInput({
+            value: "Hello!\n\nYou know you're ugly when you get handed the camera every time they make a group photo.\n\nI asked my mom if by any chance I was adopted. She replied: Hilarious. Why would we choose you?\n\nWhat is the difference between a snowman and a snowwoman?\n- Snowballs.\n\nI asked my mom if by any chance I was adopted. She replied: Hilarious. Why would we choose you?",
+                style: { fill: '#000000', fontSize: 20, fontFamily: 'Calibri' },
+                background: new PIXI.UI.SliceSprite(solidBox, 8),
+                width: "100%",
+                height: 200,
+                padding: 6,
+                paddingLeft: 10,
+                paddingRight: 15,
+                tabIndex: 1,
+                multiLine: true,
+                lineHeight: 27
+            });
+
+            textInput.background.alpha = .2;
+            textInput.on("focusChanged", function (focus) {
+                textInput.background.alpha = focus ? 0.4 : 0.2;
+            });
+            textInput.on("change", function () {
+                //console.log("Change:", this.value);
+            });
+            container.addChild(textInput);
+
+
+
+            scrollbar = new PIXI.UI.ScrollBar({
+                track: new PIXI.UI.SliceSprite(whiteBG, 3),
+                handle: new PIXI.UI.SliceSprite(whiteBG, 3),
+                scrollingContainer: textInput.textContainer,
+                vertical: true,
+                autohide: true
+            });
+            scrollbar.width = 8;
+            scrollbar.anchorRight = scrollbar.anchorBottom = scrollbar.anchorTop = 3;
+            scrollbar.track.width = scrollbar.handle.width = 11;
+            scrollbar.handle.tint = 0x999999;
+            textInput.addChild(scrollbar);
+
+
+            textInput2 = new PIXI.UI.TextInput({
+                value: "Hello world!",
+                style: { fill: '#000000', fontSize: 20, fontFamily: 'Calibri' },
+                background: new PIXI.UI.SliceSprite(solidBox, 8),
+                width: "100%",
+                height: 33,
+                padding: 6,
+                paddingLeft: 10,
+                tabIndex: 2
+            });
+            textInput2.y = 210;
+            textInput2.background.alpha = .2;
+            textInput2.on("focusChanged", function (focus) {
+                textInput2.background.alpha = focus ? 0.4 : 0.2;
+            });
+            textInput2.on("change", function () {
+                //console.log("Change:", this.value);
+            });
+            container.addChild(textInput2);
+
+
+            textInput3 = new PIXI.UI.TextInput({
+                value: "Hello world!",
+                style: { fill: '#000000', fontSize: 20, fontFamily: 'Calibri' },
+                background: new PIXI.UI.SliceSprite(solidBox, 8),
+                width: "100%",
+                height: 33,
+                padding: 6,
+                paddingLeft: 10,
+                tabIndex: 3
+            });
+            textInput3.anchorBottom = 0;
+            textInput3.background.alpha = .2;
+            textInput3.on("focusChanged", function (focus) {
+                textInput3.background.alpha = focus ? 0.4 : 0.2;
+            });
+            textInput3.on("change", function () {
+                //console.log("Change:", this.value);
+            });
+            container.addChild(textInput3);
+
+
+
+            //textInput2 = new PIXI.UI.TextInput({
+            //    value: "Hello world!",
+            //    style: { fill: ['#000000', '#333333'], fontSize: 50, fontFamily: 'Calibri' },
+            //    background: new PIXI.UI.SliceSprite(solidBox, 8),
+            //    width: "60%",
+            //    height: 70,
+            //    padding: 10,
+            //    paddingLeft: 15,
+            //    tabIndex: 2,
+            //    caretWidth:4
+            //});
+            //textInput2.scale = 0.5;
+            //textInput2.minWidth = 300;
+            //textInput2.horizontalAlign = "center";
+            //textInput2.y = 300;
+            //textInput2.background.alpha = .2;
+            //textInput2.on("focusChanged", function (focus) {
+            //    textInput2.background.alpha = focus ? 0.4 : 0.2;
+            //});
+            //uiStage.addChild(textInput2);
+
+
+
+            //textInput3 = new PIXI.UI.TextInput({
+            //    value: "☢☣☠⚠☤⚕⚚†☯⚖☮⚘⚔☭⚒⚓⚛⚜⚡⚶☥✠✙✞✟✧⋆★☆✪✫✬",
+            //    style: { fill: ['#000000', '#333333'], fontSize: 50, fontFamily: 'Calibri' },
+            //    background: new PIXI.UI.SliceSprite(solidBox, 8),
+            //    width: "60%",
+            //    height: 70,
+            //    padding: 10,
+            //    paddingLeft: 15,
+            //    tabIndex: 3
+            //});
+            //textInput3.minWidth = 300;
+            //textInput3.horizontalAlign = "center";
+            //textInput3.y = 400;
+            //textInput3.background.alpha = .2;
+            //textInput3.on("focusChanged", function (focus) {
+            //    textInput3.background.alpha = focus ? 0.4 : 0.2;
+            //});
+            //textInput3.on("focus", function () {
+
+            //    //this.select();
+
+            //});
+            //uiStage.addChild(textInput3);
+
+            Update();
+        }
+
+        function Update() {
+            renderer.render(stage);
+            requestAnimationFrame(Update);
+        }
+
+    </script>
+</body>
+</html>

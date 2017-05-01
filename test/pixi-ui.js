@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Mon, 01 May 2017 21:36:04 UTC
+ * Compiled Fri, 02 Dec 2016 08:00:21 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -36,7 +36,7 @@ Container.prototype.update = function () {
 };
 
 
-},{"./UIBase":26}],2:[function(require,module,exports){
+},{"./UIBase":23}],2:[function(require,module,exports){
 var Ease = {},
     EaseBase = require('./EaseBase'),
     ExponentialEase = require('./ExponentialEase'),
@@ -216,110 +216,6 @@ module.exports = ExponentialEase;
 
 
 },{"./EaseBase":3}],5:[function(require,module,exports){
-var UIBase = require('./UIBase'),
-    InputController = require('./Interaction/InputController'),
-    ClickEvent = require('./Interaction/ClickEvent');
-/**
- * base object for all Input type objects
- *
- * @class
- * @extends PIXI.UI.UIBase
- * @memberof PIXI.UI
- * @param width {number} passed to uibase
- * @param height {number} passed to uibase
- * @param tabIndex {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
- */
-function InputBase(width, height, tabIndex, tabGroup) {
-    UIBase.call(this, width, height);
-    var self = this;
-    this._focused = false;
-    this._useTab = this._usePrev = this._useNext = true;
-
-    InputController.registrer(this, tabIndex, tabGroup);
-
-
-    var keyDownEvent = function (e) {
-        if (e.which === 9) {
-            if (self._useTab) {
-                InputController.fireTab();
-                e.preventDefault();
-            }
-        }
-        else if (e.which === 38) {
-            if (self._usePrev) {
-                InputController.firePrev();
-                e.preventDefault();
-            }
-        }
-        else if (e.which === 40) {
-            if (self._useNext) {
-                InputController.fireNext();
-                e.preventDefault();
-            }
-        }
-    };
-
-    var documentMouseDown = function (e) {
-        if (!self.__down)
-            self.blur();
-    };
-
-    this.container.on("pointerdown", function (e) {
-        self.focus();
-        self.__down = true;
-    });
-
-    this.container.on("pointerup", function (e) {
-        self.__down = false;
-    });
-
-    this.container.on("pointerupoutside", function (e) {
-        self.__down = false;
-    });
-
-    //var cancelFocusEvent = new ClickEvent(this.stage)
-
-    this._bindEvents = function () {
-        if (this.stage !== null) {
-            this.stage.on("pointerdown", documentMouseDown);
-            document.addEventListener("keydown", keyDownEvent);
-        }
-    };
-
-    this._clearEvents = function () {
-        if (this.stage !== null) {
-            this.stage.off("pointerdown", documentMouseDown);
-            document.removeEventListener("keydown", keyDownEvent);
-        }
-    };
-}
-
-InputBase.prototype = Object.create(UIBase.prototype);
-InputBase.prototype.constructor = InputBase;
-module.exports = InputBase;
-
-InputBase.prototype.focus = function () {
-    if (!this._focused) {
-        this._focused = true;
-        this._bindEvents();
-        InputController.set(this);
-        this.emit("focusChanged", true);
-        this.emit("focus");
-
-    }
-};
-
-InputBase.prototype.blur = function () {
-    if (this._focused) {
-        InputController.clear();
-        this._focused = false;
-        this._clearEvents();
-        this.emit("focusChanged", false);
-        this.emit("blur");
-
-    }
-};
-},{"./Interaction/ClickEvent":6,"./Interaction/InputController":9,"./UIBase":26}],6:[function(require,module,exports){
 var ClickEvent = function (obj) {
     var bound = false,
         self = this,
@@ -401,7 +297,7 @@ ClickEvent.prototype.onHover = function (event) { };
 ClickEvent.prototype.onLeave = function (event) { };
 ClickEvent.prototype.onPress = function (event, isPressed) { };
 ClickEvent.prototype.onClick = function (event) { };
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var _items = [];
 var DragDropController = {
     add: function (item, event) {
@@ -454,7 +350,7 @@ var DragDropController = {
 };
 
 module.exports = DragDropController;
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var DragEvent = function (obj) {
     var bound = false,
         start = new PIXI.Point(),
@@ -469,18 +365,17 @@ var DragEvent = function (obj) {
 
     obj.container.interactive = true;
 
-    var _onDragStart = function (e) {
-        id = e.data.identifier;
-        self.onPress.call(obj, e, true);
+    var _onDragStart = function (event) {
+        id = event.data.identifier;
+        self.onPress.call(obj, event, true);
         if (!bound) {
-            start.copy(e.data.global);
+            start.copy(event.data.global);
             obj.stage.on('mousemove', _onDragMove);
             obj.stage.on('touchmove', _onDragMove);
             obj.stage.on('mouseup', _onDragEnd);
             obj.stage.on('mouseupoutside', _onDragEnd);
             obj.stage.on('touchend', _onDragEnd);
             obj.stage.on('touchendoutside', _onDragEnd);
-            obj.stage.on('touchcancel', _onDragEnd);
             bound = true;
         }
     };
@@ -517,7 +412,6 @@ var DragEvent = function (obj) {
             obj.stage.removeListener('mouseupoutside', _onDragEnd);
             obj.stage.removeListener('touchend', _onDragEnd);
             obj.stage.removeListener('touchendoutside', _onDragEnd);
-            obj.stage.removeListener('touchcancel', _onDragEnd);
             dragging = false;
             bound = false;
             self.onDragEnd.call(obj, event);
@@ -555,64 +449,7 @@ DragEvent.prototype.onPress = function (event, isPressed) { };
 DragEvent.prototype.onDragEnd = function (event) { };
 DragEvent.prototype.onDragMove = function (event, offset) { };
 DragEvent.prototype.onDragStart = function (event) { };
-},{}],9:[function(require,module,exports){
-var _currentItem;
-var tabGroups = {};
-var InputController = {
-    registrer: function (item, tabIndex, tabGroup) {
-        var groupName = tabGroup || "default";
-
-        var items = tabGroups[groupName];
-        if (!items)
-            items = tabGroups[groupName] = [];
-
-        var i = items.indexOf(item);
-        if (i === -1){
-            item._tabIndex = tabIndex !== undefined ? tabIndex : -1;
-            item._tabGroup = items;
-            items.push(item);
-            items.sort(function (a, b) {
-                if (a._tabIndex < b._tabIndex)
-                    return -1;
-                if (a._tabIndex > b._tabIndex)
-                    return 1;
-                return 0;
-            });
-        }
-    },
-    set: function (item) {
-        if (_currentItem && typeof _currentItem.blur === "function")
-            _currentItem.blur();
-        _currentItem = item;
-    },
-    clear: function () {
-        _currentItem = undefined;
-    },
-    fireTab: function () {
-        if (_currentItem) {
-            var i = _currentItem._tabGroup.indexOf(_currentItem) + 1;
-            if (i >= _currentItem._tabGroup.length) i = 0;
-            _currentItem._tabGroup[i].focus();
-        }
-    },
-    fireNext: function () {
-        if (_currentItem) {
-            var i = _currentItem._tabGroup.indexOf(_currentItem) + 1;
-            if (i >= _currentItem._tabGroup.length) i = _currentItem._tabGroup.length - 1;
-            _currentItem._tabGroup[i].focus();
-        }
-    },
-    firePrev: function () {
-        if (_currentItem) {
-            var i = _currentItem._tabGroup.indexOf(_currentItem) - 1;
-            if (i < 0) i = 0;
-            _currentItem._tabGroup[i].focus();
-        }
-    }
-};
-
-module.exports = InputController;
-},{}],10:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var Interaction = {
     ClickEvent: require('./ClickEvent'),
     DragEvent: require('./DragEvent'),
@@ -621,7 +458,7 @@ var Interaction = {
 
 
 module.exports = Interaction;
-},{"./ClickEvent":6,"./DragEvent":8,"./MouseScrollEvent":11}],11:[function(require,module,exports){
+},{"./ClickEvent":5,"./DragEvent":7,"./MouseScrollEvent":9}],9:[function(require,module,exports){
 var MouseScrollEvent = function (obj, preventDefault) {
     var bound = false, delta = new PIXI.Point(), self = this;
     obj.container.interactive = true;
@@ -674,7 +511,7 @@ MouseScrollEvent.prototype.constructor = MouseScrollEvent;
 module.exports = MouseScrollEvent;
 
 MouseScrollEvent.prototype.onMouseScroll = function (event, delta) { };
-},{}],12:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var MathHelper = {
     Lerp: function (start, stop, amt) {
         if (amt > 1) amt = 1;
@@ -688,7 +525,7 @@ var MathHelper = {
 };
 
 module.exports = MathHelper;
-},{}],13:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var Slider = require('./Slider'),
     Tween = require('./Tween'),
     Ease = require('./Ease/Ease');
@@ -782,7 +619,7 @@ ScrollBar.prototype.toggleHidden = function (hidden) {
 
 
 
-},{"./Ease/Ease":2,"./Slider":16,"./Tween":24}],14:[function(require,module,exports){
+},{"./Ease/Ease":2,"./Slider":14,"./Tween":21}],12:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     Container = require('./Container'),
     MathHelper = require('./MathHelper'),
@@ -792,38 +629,25 @@ var UIBase = require('./UIBase'),
 
 
 /**
- * An UI Container object with expandMask hidden and possibility to enable scrolling
+ * An UI Container object with overflow hidden and possibility to enable scrolling
  *
  * @class
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
- * @param [options.scrollX=false] {Boolean} Enable horizontal scrolling
- * @param [options.scrollY=false] {Boolean} Enable vertical scrolling
- * @param [options.dragScrolling=true] {Boolean} Enable mousedrag scrolling
- * @param [options.softness=0.5] {Number} (0-1) softness of scrolling
- * @param [options.width=0] {Number|String} container width 
- * @param [options.height=0] {Number} container height 
- * @param [options.radius=0] {Number} corner radius of clipping mask
- * @param [options.expandMask=0] {Number} mask expand (px)
- * @param [options.overflowY=0] {Number} how much can be scrolled past content dimensions
- * @param [options.overflowX=0] {Number} how much can be scrolled past content dimensions
+ * @param width {Number} Width of the Container
+ * @param height {Number} Height of the Container
  */
-function ScrollingContainer(options) {
-    Container.call(this, options.width, options.height);
+function ScrollingContainer(scrollY, scrollX, smoothness, cornerRadius, width, height) {
+    Container.call(this, width, height);
     this.mask = new PIXI.Graphics();
     this.innerContainer = new PIXI.Container();
     this.container.addChild(this.mask);
     this.container.addChild(this.innerContainer);
     this.container.mask = this.mask;
-    this.scrollX = options.scrollX !== undefined ? options.scrollX : false;
-    this.scrollY = options.scrollY !== undefined ? options.scrollY : false;
-    this.dragScrolling = options.dragScrolling !== undefined ? options.dragScrolling : true;
-    this.softness = options.softness !== undefined ? Math.max(Math.min(options.softness || 0, 1), 0) : 0.5;
-    this.radius = options.radius || 0;
-    this.expandMask = options.expandMask || 0;
-    this.overflowY = options.overflowY || 0;
-    this.overflowX = options.overflowX || 0;
-
+    this.scrollX = scrollX;
+    this.scrollY = scrollY;
+    this.smoothness = Math.max(Math.min(smoothness || 0, 1), 0);
+    this.cornerRadius = cornerRadius || 0;
     this.animating = false;
     this.scrolling = false;
     this._scrollBars = [];
@@ -845,20 +669,21 @@ ScrollingContainer.prototype.initialize = function () {
 ScrollingContainer.prototype.update = function () {
     Container.prototype.update.apply(this);
     if (this._lastWidth != this._width || this._lastHeight != this._height) {
-        var of = this.expandMask;
         this.mask.clear();
         this.mask.lineStyle(0);
         this.mask.beginFill(0xFFFFFF, 1);
-        if (this.radius === 0) {
+        if (this.cornerRadius === 0) {
 
             //this.mask.drawRect(0, 0, this._width, this._height);
-            this.mask.moveTo(-of, -of);
-            this.mask.lineTo(this._width + of, -of);
-            this.mask.lineTo(this._width + of, this._height + of);
-            this.mask.lineTo(-of, this._height + of);
+            this.mask.moveTo(0, 0);
+            this.mask.lineTo(this._width, 0);
+            this.mask.lineTo(this._width, this._height);
+            this.mask.lineTo(0, this._height);
+            this.mask.lineTo(0, 0);
+
         }
         else {
-            this.mask.drawRoundedRect(-of, -of, this._width + of, this.height + of, this.radius);
+            this.mask.drawRoundedRect(0, 0, this._width, this.height, this.cornerRadius);
         }
         this.mask.endFill();
         this._lastWidth = this._width;
@@ -904,48 +729,12 @@ ScrollingContainer.prototype.initScrolling = function () {
 
     this.forcePctPosition = function (direction, pct) {
         if (this.scrollX && direction == "x") {
-            container.position[direction] = -((container.width - this._width) * pct);
+            this.innerContainer.position[direction] = -((this.innerContainer.width - this._width) * pct);
         }
         if (this.scrollY && direction == "y") {
-            container.position[direction] = -((container.height - this._height) * pct);
+            this.innerContainer.position[direction] = -((this.innerContainer.height - this._height) * pct);
         }
-        Position[direction] = targetPosition[direction] = container.position[direction];
-    };
-
-    this.focusPosition = function (pos) {
-        var dif;
-        if (this.scrollX) {
-            var x = Math.max(0, (Math.min(container.width, pos.x)));
-            if (x + container.x > this._width) {
-                dif = x - this._width;
-                container.x = -dif;
-            }
-            else if (x + container.x < 0) {
-                dif = x + container.x;
-                container.x -= dif;
-            }
-        }
-
-        if (this.scrollY) {
-            var y = Math.max(0, (Math.min(container.height, pos.y)));
-            
-            if (y + container.y > this._height) {
-                dif = y - this._height;
-                console.log(dif);
-
-                container.y = -dif;
-            }
-            else if (y + container.y < 0) {
-                dif = y + container.y;
-                container.y -= dif;
-            }
-        }
-
-        lastPosition.copy(container.position);
-        targetPosition.copy(container.position);
-        Position.copy(container.position);
-        this.updateScrollBars();
-
+        Position[direction] = targetPosition[direction] = this.innerContainer.position[direction];
     };
 
     this.setScrollPosition = function (speed) {
@@ -972,8 +761,6 @@ ScrollingContainer.prototype.initScrolling = function () {
     };
 
     this.updateDirection = function (direction, delta) {
-
-
         var min;
         if (direction == "y")
             min = Math.round(Math.min(0, this._height - container.height));
@@ -982,7 +769,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) !== 0) {
             targetPosition[direction] += Speed[direction];
-            Speed[direction] = MathHelper.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.softness, 0.01)) * delta);
+            Speed[direction] = MathHelper.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.smoothness, 0.01)) * delta);
 
             if (targetPosition[direction] > 0) {
                 targetPosition[direction] = 0;
@@ -996,7 +783,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) === 0 && (container[direction] > 0 || container[direction] < min)) {
             var target = Position[direction] > 0 ? 0 : min;
-            Position[direction] = MathHelper.Lerp(Position[direction], target, (40 - (30 * this.softness)) * delta);
+            Position[direction] = MathHelper.Lerp(Position[direction], target, (40 - (30 * this.smoothness)) * delta);
             stop = false;
         }
         else if (this.scrolling || Math.round(Speed[direction]) !== 0) {
@@ -1005,13 +792,14 @@ ScrollingContainer.prototype.initScrolling = function () {
                 Speed[direction] = Position[direction] - lastPosition[direction];
                 lastPosition.copy(Position);
             }
+
             if (targetPosition[direction] > 0) {
                 Speed[direction] = 0;
-                Position[direction] = 100 * this.softness * (1 - Math.exp(targetPosition[direction] / -200));
+                Position[direction] = 100 * this.smoothness * (1 - Math.exp(targetPosition[direction] / -200));
             }
             else if (targetPosition[direction] < min) {
                 Speed[direction] = 0;
-                Position[direction] = min - (100 * this.softness * (1 - Math.exp((min - targetPosition[direction]) / -200)));
+                Position[direction] = min - (100 * this.smoothness * (1 - Math.exp((min - targetPosition[direction]) / -200)));
             }
             else {
                 Position[direction] = targetPosition[direction];
@@ -1027,28 +815,27 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
     //Drag scroll
-    if (this.dragScrolling) {
-        var drag = new DragEvent(this);
-        drag.onDragStart = function (e) {
-            if (!this.scrolling) {
-                containerStart.copy(container.position);
-                Position.copy(container.position);
-                this.scrolling = true;
-                this.setScrollPosition();
-            }
-        };
+    var drag = new DragEvent(this);
+    drag.onDragStart = function (e) {
+        if (!this.scrolling) {
+            containerStart.copy(container.position);
+            Position.copy(container.position);
+            this.scrolling = true;
+            this.setScrollPosition();
+        }
+    };
 
-        drag.onDragMove = function (e, offset) {
-            if (this.scrollX)
-                targetPosition.x = containerStart.x + offset.x;
-            if (this.scrollY)
-                targetPosition.y = containerStart.y + offset.y;
-        };
+    drag.onDragMove = function (e, offset) {
+        if (this.scrollX)
+            targetPosition.x = containerStart.x + offset.x;
+        if (this.scrollY)
+            targetPosition.y = containerStart.y + offset.y;
+    };
 
-        drag.onDragEnd = function (e) {
-            this.scrolling = false;
-        };
-    }
+    drag.onDragEnd = function (e) {
+        this.scrolling = false;
+    };
+
 
     //Mouse scroll
     var scrollSpeed = new PIXI.Point();
@@ -1068,7 +855,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
 
-},{"./Container":1,"./Interaction/DragEvent":8,"./Interaction/MouseScrollEvent":11,"./MathHelper":12,"./Ticker":22,"./UIBase":26}],15:[function(require,module,exports){
+},{"./Container":1,"./Interaction/DragEvent":7,"./Interaction/MouseScrollEvent":9,"./MathHelper":10,"./Ticker":19,"./UIBase":23}],13:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1083,6 +870,9 @@ var UIBase = require('./UIBase');
  */
 function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
     UIBase.call(this, texture.width, texture.height);
+    this.setting.minWidth = borderWidth * 2;
+    this.setting.minHeight = borderWidth * 2;
+
 
     var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
         bw = borderWidth || 5,
@@ -1091,9 +881,6 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
         t = texture.baseTexture,
         f = texture.frame;
 
-
-    if (hs) this.setting.minWidth = borderWidth * 2;
-    if (vs) this.setting.minHeight = borderWidth * 2;
 
     this.initialize = function () {
         UIBase.prototype.initialize.apply(this);
@@ -1205,7 +992,7 @@ module.exports = SliceSprite;
 
 
 
-},{"./UIBase":26}],16:[function(require,module,exports){
+},{"./UIBase":23}],14:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     DragEvent = require('./Interaction/DragEvent'),
     ClickEvent = require('./Interaction/ClickEvent'),
@@ -1434,7 +1221,7 @@ Object.defineProperties(Slider.prototype, {
         }
     }
 });
-},{"./Ease/Ease":2,"./Interaction/ClickEvent":6,"./Interaction/DragEvent":8,"./MathHelper":12,"./Tween":24,"./UIBase":26}],17:[function(require,module,exports){
+},{"./Ease/Ease":2,"./Interaction/ClickEvent":5,"./Interaction/DragEvent":7,"./MathHelper":10,"./Tween":21,"./UIBase":23}],15:[function(require,module,exports){
 var Container = require('./Container');
 var Tween = require('./Tween');
 /**
@@ -1556,7 +1343,7 @@ SortableList.prototype._sort = function () {
 
 
 
-},{"./Container":1,"./Tween":24}],18:[function(require,module,exports){
+},{"./Container":1,"./Tween":21}],16:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1594,7 +1381,7 @@ Sprite.prototype.update = function () {
 };
 
 
-},{"./UIBase":26}],19:[function(require,module,exports){
+},{"./UIBase":23}],17:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1660,8 +1447,7 @@ Stage.prototype.removeChild = function (UIObject) {
 Stage.prototype.resize = function (width, height) {
     if (!isNaN(height)) this.__height = height;
     if (!isNaN(width)) this.__width = width;
-    this.hitArea.width = this.__width;
-    this.hitArea.height = this.__height;
+
     for (var i = 0; i < this.UIChildren.length; i++)
         this.UIChildren[i].updatesettings(true, false);
 };
@@ -1690,7 +1476,7 @@ Object.defineProperties(Stage.prototype, {
         }
     }
 });
-},{"./UIBase":26}],20:[function(require,module,exports){
+},{"./UIBase":23}],18:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1754,7 +1540,7 @@ Object.defineProperties(Text.prototype, {
         },
         set: function (val) {
             this._text.text = val;
-            this.updatesettings(true);
+            this.baseupdate();
         }
     },
     text: {
@@ -1766,851 +1552,7 @@ Object.defineProperties(Text.prototype, {
         }
     }
 });
-},{"./UIBase":26}],21:[function(require,module,exports){
-var InputBase = require('./InputBase'),
-    Container = require('./Container'),
-    DragEvent = require('./Interaction/DragEvent');
-
-/**
- * An UI text object
- *
- * @class
- * @extends PIXI.UI.InputBase
- * @memberof PIXI.UI
- * @param options.value {String} Text content
- * @param [options.multiLine=false] {Boolean} Multiline input
- * @param options.style {PIXI.TextStyle} Style used for the Text
- * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
- * @param [options.selectedColor='#ffffff'] {String|Array} Fill color of selected text
- * @param [options.selectedBackgroundColor='#318cfa'] {String} BackgroundColor of selected text
- * @param [options.width=150] {Number} width of input
- * @param [options.height=20] {Number} height of input
- * @param [options.padding=3] {Number} input padding
- * @param [options.paddingTop=0] {Number} input padding
- * @param [options.paddingBottom=0] {Number} input padding
- * @param [options.paddingLeft=0] {Number} input padding
- * @param [options.paddingRight=0] {Number} input padding
- * @param [options.tabIndex=0] {Number} input tab index
- * @param [options.tabGroup=0] {Number|String} input tab group
- * @param [options.maxLength=0] {Number} 0 = unlimited
- * @param [options.caretWidth=1] {Number} width of the caret
- * @param [options.lineHeight=0] {Number} 0 = inherit from text
- */
-function TextInput(options) {
-    //create temp input (for mobile keyboard)
-    if (typeof _pui_tempInput === "undefined") {
-        _pui_tempInput = document.createElement("INPUT");
-        _pui_tempInput.setAttribute("type", "text");
-        _pui_tempInput.setAttribute("id", "_pui_tempInput");
-        _pui_tempInput.setAttribute("style", "position:fixed; left:-10px; top:-10px; width:0px; height: 0px;");
-        document.body.appendChild(_pui_tempInput);
-    }
-
-
-    InputBase.call(this, options.width || 150, options.height || 20, options.tabIndex || 0, options.tabGroup || 0);
-    this._dirtyText = true;
-    this.maxLength = options.maxLength || 0;
-    this._value = this._lastValue = options.value || "";
-
-    if (this.maxLength) this._value = this._value.slice(0, this.maxLength);
-
-    var self = this;
-    var chars = [];
-    var multiLine = options.multiLine !== undefined ? options.multiLine : false;
-    var color = options.style && options.style.fill ? options.style.fill : "#000000";
-    var selectedColor = options.selectedColor || "#ffffff";
-    var selectedBackgroundColor = options.selectedBackgroundColor || "#318cfa";
-    var tempText = new PIXI.Text("1", options.style);
-    var textHeight = tempText.height;
-    var lineHeight = options.lineHeight || textHeight || self._height;
-    tempText.destroy();
-
-
-    //set cursor
-    //this.container.cursor = "text";
-
-    //selection graphics
-    var selection = self.selection = new PIXI.Graphics();
-    selection.visible = false;
-    selection._startIndex = 0;
-    selection._endIndex = 0;
-
-    //caret graphics
-    var caret = self.caret = new PIXI.Graphics();
-    caret.visible = false;
-    caret._index = 0;
-    caret.lineStyle(options.caretWidth || 1, "#ffffff", 1);
-    caret.moveTo(0, 0);
-    caret.lineTo(0, textHeight);
-
-
-    //insert bg
-    if (options.background) {
-        this.background = options.background;
-        this.background.width = "100%";
-        this.background.height = "100%";
-        this.addChild(this.background);
-    }
-
-    //var padding
-    var paddingLeft = options.paddingLeft !== undefined ? options.paddingLeft : options.padding !== undefined ? options.padding : 3;
-    var paddingRight = options.paddingRight !== undefined ? options.paddingRight : options.padding !== undefined ? options.padding : 3;
-    var paddingBottom = options.paddingBottom !== undefined ? options.paddingBottom : options.padding !== undefined ? options.padding : 3;
-    var paddingTop = options.paddingTop !== undefined ? options.paddingTop : options.padding !== undefined ? options.padding : 3;
-
-    //insert text container (scrolling container)
-    var textContainer = this.textContainer = new PIXI.UI.ScrollingContainer({
-        scrollX: !multiLine,
-        scrollY: multiLine,
-        dragScrolling: multiLine,
-        expandMask: 2,
-        softness: 0.2,
-        overflowX: 40,
-        overflowY: 40
-    });
-    textContainer.anchorTop = paddingTop;
-    textContainer.anchorBottom = paddingBottom;
-    textContainer.anchorLeft = paddingLeft;
-    textContainer.anchorRight = paddingRight;
-    this.addChild(textContainer);
-
-    if (multiLine) {
-        this._useNext = this._usePrev = false;
-        textContainer.dragRestrictAxis = "y";
-        textContainer.dragThreshold = 5;
-        this.dragRestrictAxis = "x";
-        this.dragThreshold = 5;
-
-    }
-
-
-    var innerContainer = textContainer.innerContainer;
-    //textContainer.container.addChild(innerContainer);
-
-
-    this.update = function () {
-        if (this._width != this._lastWidth) {
-            this._lastWidth = this._width;
-            if (multiLine) {
-                updateText();
-                if (caret.visible) self.setCaretIndex(caret._index);
-                if (hasSelection) updateSelectionGraphics();
-            }
-
-        }
-
-        //update text        
-        if (this._dirtyText) {
-            updateText();
-            this._dirtyText = false;
-        }
-    };
-
-    //selection Vars
-    var caretInterval, //interval for flash
-        si, //startIndex
-        sie, //startIndexEnd
-        ei, //endIndex
-        eie, //endIndexEnd
-        sp = new PIXI.Point(), //startposition
-        ds = new PIXI.Point(), //dragStart
-        de = new PIXI.Point(), //dragend
-        rdd = false, //Reverse drag direction
-        vrdd = false, //vertical Reverse drag direction
-        selectionStart = -1,
-        selectionEnd = -1,
-        hasSelection = false,
-        t = performance.now(), //timestamp
-        cc = 0,  //click counter
-        textLengthPX = 0,
-        textHeightPX = 0,
-        lineIndexMax = 0,
-        ctrlDown = false,
-        shiftDown = false,
-        shiftKey = 16,
-        ctrlKey = 17,
-        cmdKey = 91;
-
-
-
-    var updateText = function () {
-        textLengthPX = 0;
-        textHeightPX = 0;
-        lineIndexMax = 0;
-
-        var lineIndex = 0,
-            length = self._value.length,
-            x = 0,
-            y = (lineHeight - textHeight) * 0.5,
-            i = 0;
-
-        //destroy excess chars
-        if (chars.length > length) {
-            for (i = chars.length - 1; i >= length; i--) {
-                innerContainer.removeChild(chars[i]);
-                chars[i].destroy();
-            }
-            chars.splice(length, chars.length - length);
-        }
-
-        //update and add chars
-        var whitespace = false;
-        var newline = false;
-        var wordIndex = 0;
-        var lastWordIndex = -1;
-        var wrap = false;
-        for (i = 0; i < self._value.length; i++) {
-            if (whitespace || newline) {
-                lastWordIndex = i;
-                wordIndex++;
-            }
-
-            var c = self._value[i];
-            whitespace = c === " ";
-            newline = c === "\n";
-
-
-            if (newline) { //newline "hack". webgl render errors if \n is passed to text
-                c = "";
-            }
-
-
-
-            var charText = chars[i];
-            if (!charText) {
-                charText = new PIXI.Text(c, options.style);
-                innerContainer.addChild(charText);
-                chars.push(charText);
-            }
-            else {
-                charText.text = c;
-            }
-
-            charText.scale.x = newline ? 0 : 1;
-            charText.wrapped = wrap;
-            wrap = false;
-
-            if (newline || (multiLine && x + charText.width >= self._width - paddingLeft - paddingRight)) {
-                lineIndex++;
-                x = 0;
-                y += lineHeight;
-
-                if (lastWordIndex != -1 && !newline) {
-                    i = lastWordIndex - 1;
-                    lastWordIndex = -1;
-                    wrap = true;
-                    continue;
-                }
-            }
-
-
-            charText.lineIndex = lineIndex;
-            charText.x = x;
-            charText.y = y;
-            charText.wordIndex = whitespace || newline ? -1 : wordIndex;
-            x += charText.width;
-
-
-            if (x > textLengthPX)
-                textLengthPX = x;
-            if (y > textHeightPX)
-                textHeightPX = y;
-        }
-
-        lineIndexMax = lineIndex;
-
-        //put caret on top
-        innerContainer.addChild(caret);
-
-        //recache
-        if (innerContainer.cacheAsBitmap) {
-            innerContainer.cacheAsBitmap = false;
-            innerContainer.cacheAsBitmap = true;
-        }
-
-        textContainer.update();
-
-    };
-
-    var updateClosestIndex = function (point, start) {
-        var currentDistX = 99999;
-        var currentClosest;
-        var currentIndex = -1;
-        var atEnd = false;
-
-        var closestLineIndex = 0;
-        if (lineIndexMax > 0)
-            closestLineIndex = Math.max(0, Math.min(lineIndexMax, Math.floor(point.y / lineHeight)));
-
-
-
-
-
-        for (var i = 0; i < chars.length; i++) {
-            var char = chars[i];
-            if (char.lineIndex != closestLineIndex) continue;
-
-            var distX = Math.abs(point.x - (char.x + (char.width * 0.5)));
-            if (distX < currentDistX) {
-                currentDistX = distX;
-                currentClosest = char;
-                currentIndex = i;
-                atEnd = point.x > char.x + (char.width * 0.5);
-            }
-        }
-
-
-        if (start) {
-            si = currentIndex;
-            sie = atEnd;
-        }
-        else {
-            ei = currentIndex;
-            eie = atEnd;
-        }
-    };
-
-    var deleteSelection = function () {
-        if (hasSelection) {
-            self.value = self.value.slice(0, selectionStart) + self.value.slice(selectionEnd + 1);
-            self.setCaretIndex(selectionStart);
-            return true;
-        }
-        return false;
-    };
-
-    var updateSelectionColors = function () {
-        //Color charecters
-        for (var i = 0; i < chars.length; i++) {
-            if (i >= selectionStart && i <= selectionEnd)
-                chars[i].style.fill = selectedColor;
-            else
-                chars[i].style.fill = color;
-        }
-    };
-
-    var _sp = new PIXI.Point();
-    var scrollToPosition = function (pos) {
-        _sp.copy(pos);
-        if (multiLine)
-            _sp.y += lineHeight;
-        textContainer.focusPosition(_sp);
-    };
-
-    var resetScrollPosition = function () {
-        _sp.set(0, 0);
-        textContainer.focusPosition(_sp);
-    };
-
-    //caret
-    var hideCaret = function () {
-        caret.visible = false;
-        clearInterval(caretInterval);
-    };
-
-    var showCaret = function () {
-        self.clearSelection();
-        clearInterval(caretInterval);
-        caret.alpha = 1;
-        caret.visible = true;
-        caretInterval = setInterval(function () {
-            caret.alpha = caret.alpha === 0 ? 1 : 0;
-        }, 500);
-
-    };
-
-    var insertTextAtCaret = function (c) {
-        if (hasSelection)
-            deleteSelection();
-        if (!self.maxLength || chars.length < self.maxLength) {
-
-            if (caret._atEnd) {
-                self.value += c;
-                self.setCaretIndex(chars.length);
-            }
-            else {
-                var index = Math.min(chars.length - 1, caret._index);
-                self.value = self.value.slice(0, index) + c + self.value.slice(index);
-                self.setCaretIndex(index + c.length);
-            }
-        }
-    };
-
-    //events
-    var keyDownEvent = function (e) {
-        if (e.which === ctrlKey || e.which === cmdKey) ctrlDown = true;
-        if (e.which === shiftKey) shiftDown = true;
-
-        if (e.which === 13) { //enter
-            insertTextAtCaret('\n');
-            e.preventDefault();
-            return;
-        }
-
-        if (ctrlDown) {
-
-            //ctrl + ?
-            if (e.which === 65) { //ctrl + a
-                self.select();
-                e.preventDefault();
-                return;
-            }
-            else if (e.which === 90) { //ctrl + z (undo)
-                if (self.value != self._lastValue)
-                    self.value = self._lastValue;
-                self.setCaretIndex(self._lastValue.length + 1);
-                e.preventDefault();
-                return;
-            }
-
-        }
-        if (e.which === 8) {
-            //backspace
-            if (!deleteSelection()) {
-                if (caret._index > 0 || (chars.length === 1 && caret._atEnd)) {
-                    if (caret._atEnd) {
-                        self.value = self.value.slice(0, chars.length - 1);
-                        self.setCaretIndex(caret._index);
-                    }
-                    else {
-                        self.value = self.value.slice(0, caret._index - 1) + self.value.slice(caret._index);
-                        self.setCaretIndex(caret._index - 1);
-                    }
-                }
-            }
-            e.preventDefault();
-            return;
-        }
-
-        if (e.which === 46) {
-            //delete
-            if (!deleteSelection()) {
-                if (!caret._atEnd) {
-                    self.value = self.value.slice(0, caret._index) + self.value.slice(caret._index + 1);
-                    self.setCaretIndex(caret._index);
-                }
-            }
-            e.preventDefault();
-            return;
-        }
-        else if (e.which === 37 || e.which === 39) {
-            rdd = e.which === 37;
-            if (shiftDown) {
-                if (hasSelection) {
-                    var caretAtStart = selectionStart === caret._index;
-                    if (caretAtStart) {
-                        if (selectionStart === selectionEnd && rdd === caret._forward) {
-                            self.setCaretIndex(caret._forward ? caret._index : caret._index + 1);
-                        }
-                        else {
-                            var startindex = rdd ? caret._index - 1 : caret._index + 1;
-                            self.selectRange(startindex, selectionEnd);
-                            caret._index = Math.min(chars.length - 1, Math.max(0, startindex));
-                        }
-                    }
-                    else {
-                        var endIndex = rdd ? caret._index - 1 : caret._index + 1;
-                        self.selectRange(selectionStart, endIndex);
-                        caret._index = Math.min(chars.length - 1, Math.max(0, endIndex));
-                    }
-                }
-                else {
-                    var _i = caret._atEnd ? caret._index + 1 : caret._index;
-                    var selectIndex = rdd ? _i - 1 : _i;
-                    self.selectRange(selectIndex, selectIndex);
-                    caret._index = selectIndex;
-                    caret._forward = !rdd;
-                }
-            }
-            else {
-                //Navigation
-                if (hasSelection)
-                    self.setCaretIndex(rdd ? selectionStart : selectionEnd + 1);
-                else
-                    self.setCaretIndex(caret._index + (rdd ? caret._atEnd ? 0 : -1 : 1));
-            }
-            e.preventDefault();
-            return;
-
-        }
-        else if (multiLine && (e.which === 38 || e.which === 40)) {
-            vrdd = e.which === 38;
-            if (shiftDown) {
-                if (hasSelection) {
-                    de.y = Math.max(0, Math.min(textHeightPX, de.y + (vrdd ? -lineHeight : lineHeight)));
-                    updateClosestIndex(de, false);
-                    console.log(si, ei);
-                    if (Math.abs(si - ei) <= 1) {
-                        console.log(si, ei);
-                        self.setCaretIndex(sie ? si + 1 : si);
-                    } else {
-                        caret._index = (eie ? ei + 1 : ei) + (caret._down ? -1 : 0);
-                        self.selectRange(caret._down ? si : si - 1, caret._index);
-                    }
-
-                }
-                else {
-                    si = caret._index;
-                    sie = false;
-                    de.copy(caret);
-                    de.y = Math.max(0, Math.min(textHeightPX, de.y + (vrdd ? -lineHeight : lineHeight)));
-                    updateClosestIndex(de, false);
-                    caret._index = (eie ? ei + 1 : ei) - (vrdd ? 0 : 1);
-                    self.selectRange(vrdd ? si - 1 : si, caret._index);
-                    caret._down = !vrdd;
-                }
-            }
-            else {
-                if (hasSelection) {
-                    self.setCaretIndex(vrdd ? selectionStart : selectionEnd + 1);
-                }
-                else {
-                    ds.copy(caret);
-                    ds.y += vrdd ? -lineHeight : lineHeight;
-                    ds.x += 1;
-                    updateClosestIndex(ds, true);
-                    self.setCaretIndex(sie ? si + 1 : si);
-                }
-            }
-            e.preventDefault();
-            return;
-        }
-    };
-
-    var keyUpEvent = function (e) {
-        if (e.which == ctrlKey || e.which == cmdKey) ctrlDown = false;
-        if (e.which === shiftKey) shiftDown = false;
-    };
-
-    var copyEvent = function (e) {
-        if (hasSelection) {
-            var clipboardData = e.clipboardData || window.clipboardData;
-            clipboardData.setData('Text', self.value.slice(selectionStart, selectionEnd + 1));
-        }
-        e.preventDefault();
-    };
-
-    var cutEvent = function (e) {
-        if (hasSelection) {
-            copyEvent(e);
-            deleteSelection();
-        }
-        e.preventDefault();
-    };
-
-    var pasteEvent = function (e) {
-        var clipboardData = e.clipboardData || window.clipboardData;
-        insertTextAtCaret(clipboardData.getData('Text'));
-        e.preventDefault();
-    };
-
-    var inputEvent = function (e) {
-        insertTextAtCaret(e.data);
-        e.preventDefault();
-    };
-
-    var inputBlurEvent = function (e) {
-        self.blur();
-    };
-
-    var event = new DragEvent(this);
-
-    event.onPress = function (e, mouseDown) {
-
-        if (mouseDown) {
-            var timeSinceLast = performance.now() - t;
-            t = performance.now();
-            if (timeSinceLast < 250) {
-                cc++;
-                if (cc > 1)
-                    this.select();
-                else {
-                    innerContainer.toLocal(sp, undefined, ds, true);
-                    updateClosestIndex(ds, true);
-                    var c = chars[si];
-                    if (c) {
-                        if (c.wordIndex != -1)
-                            this.selectWord(c.wordIndex);
-                        else
-                            this.selectRange(si, si);
-                    }
-                }
-            }
-            else {
-                cc = 0;
-                sp.copy(e.data.global);
-                innerContainer.toLocal(sp, undefined, ds, true);
-                if (chars.length) {
-                    updateClosestIndex(ds, true);
-                    self.setCaretIndex(sie ? si + 1 : si);
-                }
-            }
-        }
-        e.data.originalEvent.preventDefault();
-    };
-
-    event.onDragMove = function (e, offset) {
-        if (!chars.length || !this._focused) return;
-
-        de.x = sp.x + offset.x;
-        de.y = sp.y + offset.y;
-        innerContainer.toLocal(de, undefined, de, true);
-        updateClosestIndex(de, false);
-
-        if (si < ei) {
-            self.selectRange(sie ? si + 1 : si, eie ? ei : ei - 1);
-            caret._index = eie ? ei : ei - 1;
-        }
-        else if (si > ei) {
-            self.selectRange(ei, sie ? si : si - 1);
-            caret._index = ei;
-        }
-        else {
-            if (sie === eie) {
-                self.setCaretIndex(sie ? si + 1 : si);
-            }
-            else {
-                self.selectRange(si, ei);
-                caret._index = ei;
-            }
-        }
-
-        caret._forward = si <= ei;
-        caret._down = offset.y > 0;
-
-        scrollToPosition(de);
-    };
-
-
-
-
-    //public methods
-    this.focus = function () {
-        if (!this._focused) {
-            InputBase.prototype.focus.call(this);
-
-            var l = this.container.worldTransform.tx + "px";
-            var t = this.container.worldTransform.ty + "px";
-            var h = this.container.height + "px";
-            var w = this.container.width + "px";
-
-            _pui_tempInput.setAttribute("style", "position:fixed; left:" + l + "; top:" + t + "; height:" + h + "; width:" + w + ";");
-            _pui_tempInput.value = "";
-            _pui_tempInput.focus();
-            _pui_tempInput.setAttribute("style", "position:fixed; left:-10px; top:-10px; width:0px; height: 0px;");
-
-            innerContainer.cacheAsBitmap = false;
-            _pui_tempInput.addEventListener("blur", inputBlurEvent, false);
-            document.addEventListener("keydown", keyDownEvent, false);
-            document.addEventListener("keyup", keyUpEvent, false);
-            document.addEventListener('paste', pasteEvent, false);
-            document.addEventListener('copy', copyEvent, false);
-            document.addEventListener('cut', cutEvent, false);
-            _pui_tempInput.addEventListener('textInput', inputEvent, false);
-
-            setTimeout(function () {
-                if (!caret.visible && !self.selection.visible)
-                    self.setCaretIndex(chars.length);
-            }, 0);
-
-        }
-
-    };
-
-    this.blur = function () {
-        if (this._focused) {
-            InputBase.prototype.blur.call(this);
-            ctrlDown = false;
-            shiftDown = false;
-            hideCaret();
-            this.clearSelection();
-            //if (chars.length > 1) innerContainer.cacheAsBitmap = true;
-            _pui_tempInput.removeEventListener("blur", inputBlurEvent);
-            document.removeEventListener("keydown", keyDownEvent);
-            document.removeEventListener("keyup", keyUpEvent);
-            document.removeEventListener('paste', pasteEvent);
-            document.removeEventListener('copy', copyEvent);
-            document.removeEventListener('cut', cutEvent);
-            _pui_tempInput.removeEventListener('textInput', inputEvent);
-            _pui_tempInput.blur();
-
-        }
-
-        if (!multiLine)
-            resetScrollPosition();
-    };
-
-    this.setCaretIndex = function (index) {
-        caret._atEnd = index >= chars.length;
-        caret._index = Math.max(0, Math.min(chars.length - 1, index));
-
-        if (chars.length && index > 0) {
-
-            var i = Math.max(0, Math.min(index, chars.length - 1));
-            var c = chars[i];
-
-            if (c && c.wrapped) {
-                caret.x = c.x;
-                caret.y = c.y;
-            }
-            else {
-                i = Math.max(0, Math.min(index - 1, chars.length - 1));
-                c = chars[i];
-                caret.x = chars[i].x + chars[i].width;
-                caret.y = (chars[i].lineIndex * lineHeight) + (lineHeight - textHeight) * 0.5;
-            }
-        }
-        else {
-            caret.x = 0;
-            caret.y = (lineHeight - textHeight) * 0.5;
-        }
-
-        scrollToPosition(caret);
-        showCaret();
-
-    };
-
-    this.select = function () {
-        this.selectRange(0, chars.length - 1);
-    };
-
-    this.selectWord = function (wordIndex) {
-        var startIndex = chars.length;
-        var endIndex = 0;
-        for (var i = 0; i < chars.length; i++) {
-            if (chars[i].wordIndex !== wordIndex) continue;
-            if (i < startIndex)
-                startIndex = i;
-            if (i > endIndex)
-                endIndex = i;
-        }
-
-        this.selectRange(startIndex, endIndex);
-    };
-
-    var drawSelectionRect = function (x, y, w, h) {
-        self.selection.beginFill("0x" + selectedBackgroundColor.slice(1), 1);
-        self.selection.moveTo(x, y);
-        self.selection.lineTo(x + w, y);
-        self.selection.lineTo(x + w, y + h);
-        self.selection.lineTo(x, y + h);
-        self.selection.endFill();
-    };
-
-    var updateSelectionGraphics = function () {
-        var c1 = chars[selectionStart];
-        if (c1 !== undefined) {
-            var cx = c1.x,
-                cy = c1.y,
-                w = 0,
-                h = textHeight,
-                cl = c1.lineIndex;
-
-            self.selection.clear();
-            for (var i = selectionStart; i <= selectionEnd; i++) {
-                var c = chars[i];
-                if (c.lineIndex != cl) {
-                    drawSelectionRect(cx, cy, w, h);
-                    cx = c.x;
-                    cy = c.y;
-                    cl = c.lineIndex;
-                    w = 0;
-                }
-                w += c.width;
-            }
-            drawSelectionRect(cx, cy, w, h);
-            innerContainer.addChildAt(self.selection, 0);
-        }
-    };
-
-    this.selectRange = function (startIndex, endIndex) {
-        if (startIndex > -1 && endIndex > -1) {
-            var start = Math.min(startIndex, endIndex, chars.length - 1);
-            var end = Math.min(Math.max(startIndex, endIndex), chars.length - 1);
-            if (start != selectionStart || end != selectionEnd) {
-                hasSelection = true;
-                this.selection.visible = true;
-                selectionStart = start;
-                selectionEnd = end;
-                hideCaret();
-                updateSelectionGraphics();
-                updateSelectionColors();
-            }
-            this.focus();
-        }
-        else {
-            self.clearSelection();
-        }
-    };
-
-    this.clearSelection = function () {
-        if (hasSelection) {
-            //remove color
-            hasSelection = false;
-            this.selection.visible = false;
-            selectionStart = -1;
-            selectionEnd = -1;
-            updateSelectionColors();
-        }
-    };
-}
-
-TextInput.prototype = Object.create(InputBase.prototype);
-TextInput.prototype.constructor = TextInput;
-module.exports = TextInput;
-
-Object.defineProperties(TextInput.prototype, {
-    value: {
-        get: function () {
-            return this._value;
-        },
-        set: function (val) {
-            if (this.maxLength)
-                val = val.slice(0, this.maxLength);
-
-            if (this._value != val) {
-                this._lastValue = this._value;
-                this._value = val;
-                this._dirtyText = true;
-                this.update();
-                this.emit("change");
-
-            }
-        }
-    },
-    text: {
-        get: function () {
-            return this.value;
-        },
-        set: function (val) {
-            this.value = val;
-        }
-    }
-});
-
-
-/*
- * Features:
- * shift selection, Mouse Selection, Cut, Copy, Paste, Delete, Backspace, Arrow navigation, tabIndex
- * 
- * Methods:
- * blur()
- * focus()
- * select() - selects all text
- * selectRange(startIndex, endIndex)
- * clearSelection() 
- * setCaretIndex(index) moves caret to index
- * 
- * 
- * Events:
- * "change"
- * "blur"
- * "focus"
- * "focusChanged" param: [bool]focus
- *  
- * 
- */
-},{"./Container":1,"./InputBase":5,"./Interaction/DragEvent":8}],22:[function(require,module,exports){
+},{"./UIBase":23}],19:[function(require,module,exports){
 var Tween = require('./Tween');
 
 function Ticker(autoStart) {
@@ -2687,7 +1629,7 @@ Ticker.removeListener = function (event, fn) {
 
 
 Ticker.shared = new Ticker(true);
-},{"./Tween":24}],23:[function(require,module,exports){
+},{"./Tween":21}],20:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -2744,7 +1686,7 @@ Object.defineProperties(TilingSprite.prototype, {
         }
     }
 });
-},{"./UIBase":26}],24:[function(require,module,exports){
+},{"./UIBase":23}],21:[function(require,module,exports){
 var MathHelper = require('./MathHelper');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
@@ -2927,7 +1869,7 @@ var Tween = {
 
 
 module.exports = Tween;
-},{"./Ease/Ease":2,"./MathHelper":12}],25:[function(require,module,exports){
+},{"./Ease/Ease":2,"./MathHelper":10}],22:[function(require,module,exports){
 var UI = {
     Stage: require('./Stage'),
     Container: require('./Container'),
@@ -2939,17 +1881,17 @@ var UI = {
     Slider: require('./Slider'),
     ScrollBar: require('./ScrollBar'),
     Text: require('./Text'),
-    TextInput: require('./TextInput'),
     MathHelper: require('./MathHelper'),
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
     Interaction: require('./Interaction/Interaction'),
     Ticker: require('./Ticker').shared,
+    _draggedItems: []
 };
 
 
 module.exports = UI;
-},{"./Container":1,"./Ease/Ease":2,"./Interaction/Interaction":10,"./MathHelper":12,"./ScrollBar":13,"./ScrollingContainer":14,"./SliceSprite":15,"./Slider":16,"./SortableList":17,"./Sprite":18,"./Stage":19,"./Text":20,"./TextInput":21,"./Ticker":22,"./TilingSprite":23,"./Tween":24}],26:[function(require,module,exports){
+},{"./Container":1,"./Ease/Ease":2,"./Interaction/Interaction":8,"./MathHelper":10,"./ScrollBar":11,"./ScrollingContainer":12,"./SliceSprite":13,"./Slider":14,"./SortableList":15,"./Sprite":16,"./Stage":17,"./Text":18,"./Ticker":19,"./TilingSprite":20,"./Tween":21}],23:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI'),
     DragEvent = require('./Interaction/DragEvent'),
@@ -2964,7 +1906,6 @@ var UISettings = require('./UISettings'),
  * @param height {Number} Height of the UIObject
  */
 function UIBase(width, height) {
-    PIXI.utils.EventEmitter.call(this);
     this.container = new PIXI.Container();
     this.setting = new UISettings();
     this.children = [];
@@ -2976,7 +1917,7 @@ function UIBase(width, height) {
     this.dirty = true;
     this._oldWidth = -1;
     this._oldHeight = -1;
-    this.pixelPerfect = true;
+
 
 
     if (width && isNaN(width) && width.indexOf('%') != -1) {
@@ -3014,7 +1955,6 @@ function UIBase(width, height) {
     this._dragPosition = null; //used for overriding positions if tweens is playing
 }
 
-UIBase.prototype = Object.create(PIXI.utils.EventEmitter.prototype);
 UIBase.prototype.constructor = UIBase;
 module.exports = UIBase;
 
@@ -3086,22 +2026,27 @@ UIBase.prototype.baseupdate = function () {
 
         //transform convertion (% etc)
         this.dirty = true;
-        this._width = this.actual_width;
-        this._height = this.actual_height;
-        this._minWidth = this.actual_minWidth;
-        this._minHeight = this.actual_minHeight;
-        this._maxWidth = this.actual_maxWidth;
-        this._maxHeight = this.actual_maxHeight;
-        this._anchorLeft = this.actual_anchorLeft;
-        this._anchorRight = this.actual_anchorRight;
-        this._anchorTop = this.actual_anchorTop;
-        this._anchorBottom = this.actual_anchorBottom;
-        this._left = this.actual_left;
-        this._right = this.actual_right;
-        this._top = this.actual_top;
-        this._bottom = this.actual_bottom;
-        parentWidth = this.parent._width;
-        parentHeight = this.parent._height;
+        this.i1 = this._width = this.actual_width;
+        this.i2 = this._height = this.actual_height;
+        this.i3 = this._minWidth = this.actual_minWidth;
+        this.i4 = this._minHeight = this.actual_minHeight;
+        this.i5 = this._maxWidth = this.actual_maxWidth;
+        this.i6 = this._maxHeight = this.actual_maxHeight;
+        this.i7 = this._anchorLeft = this.actual_anchorLeft;
+        this.i8 = this._anchorRight = this.actual_anchorRight;
+        this.i9 = this._anchorTop = this.actual_anchorTop;
+        this.i10 = this._anchorBottom = this.actual_anchorBottom;
+        this.i11 = this._left = this.actual_left;
+        this.i12 = this._right = this.actual_right;
+        this.i13 = this._top = this.actual_top;
+        this.i14 = this._bottom = this.actual_bottom;
+        this.i15 = parentWidth = this.parent._width;
+        this.i16 = parentHeight = this.parent._height;
+        this.i17 = this.scaleX;
+        this.i18 = this.scaleY;
+        this.i19 = this.pivotX;
+        this.i20 = this.pivotY;
+        this.i21 = this.alpha;
         this.dirty = false;
 
 
@@ -3226,12 +2171,10 @@ UIBase.prototype.baseupdate = function () {
         if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
 
         //make pixel perfect
-        if (this.pixelPerfect) {
-            this._width = Math.round(this._width);
-            this._height = Math.round(this._height);
-            this.container.position.x = Math.round(this.container.position.x);
-            this.container.position.y = Math.round(this.container.position.y);
-        }
+        this._width = Math.round(this._width);
+        this._height = Math.round(this._height);
+        this.container.position.x = Math.round(this.container.position.x);
+        this.container.position.y = Math.round(this.container.position.y);
     }
 };
 
@@ -4043,14 +2986,6 @@ Object.defineProperties(UIBase.prototype, {
             this.container.visible = val;
         }
     },
-    cacheAsBitmap: {
-        get: function () {
-            return this.container.cacheAsBitmap;
-        },
-        set: function (val) {
-            this.container.cacheAsBitmap = val;
-        }
-    },
     click: {
         get: function () {
             return this.container.click;
@@ -4060,7 +2995,10 @@ Object.defineProperties(UIBase.prototype, {
         }
     }
 });
-},{"./Interaction/DragDropController":7,"./Interaction/DragEvent":8,"./UI":25,"./UISettings":27}],27:[function(require,module,exports){
+
+
+
+},{"./Interaction/DragDropController":6,"./Interaction/DragEvent":7,"./UI":22,"./UISettings":24}],24:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -4069,47 +3007,43 @@ Object.defineProperties(UIBase.prototype, {
  */
 function UISettings() {
     this.width = 0;
-    this.height = 0;
-    this.minHeight = 0;
-    this.maxWidth = null;
-    this.maxHeight = null;
-    this.left = null;
-    this.right = null;
-    this.top = null;
-    this.bottom = null;
-    this.anchorLeft = null;
-    this.anchorRight = null;
-    this.anchorTop = null;
-    this.anchorBottom = null;
-
     this.widthPct = null;
+    this.height = 0;
     this.heightPct = null;
-    this.minWidthPct = null;
-    this.minHeightPct = null;
-    this.maxWidthPct = null;
-    this.maxHeightPct = null;
     this.minWidth = 0;
+    this.minWidthPct = null;
+    this.minHeight = 0;
+    this.minHeightPct = null;
+    this.maxWidth = null;
+    this.maxWidthPct = null;
+    this.maxHeight = null;
+    this.maxHeightPct = null;
+    this.left = null;
     this.leftPct = null;
+    this.right = null;
     this.rightPct = null;
+    this.top = null;
     this.topPct = null;
+    this.bottom = null;
     this.bottomPct = null;
+    this.anchorLeft = null;
     this.anchorLeftPct = null;
+    this.anchorRight = null;
     this.anchorRightPct = null;
+    this.anchorTop = null;
     this.anchorTopPct = null;
+    this.anchorBottom = null;
     this.anchorBottomPct = null;
-
-    this.pivotX = 0;
-    this.pivotY = 0;
-    this.scaleX = 1;
-    this.scaleY = 1;
+    this.pivotX = null;
+    this.pivotY = null;
+    this.scaleX = null;
+    this.scaleY = null;
     this.verticalAlign = null;
     this.horizontalAlign = null;
     this.rotation = null;
     this.blendMode = null;
     this.tint = null;
-    this.alpha = 1;
-
-
+    this.alpha = null;
     this.draggable = null;
     this.dragRestricted = false;
     this.dragRestrictAxis = null; //x, y
@@ -4126,7 +3060,7 @@ module.exports = UISettings;
 
 
 
-},{}],28:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 
 var Library = {
     UI: require('./UI')
@@ -4138,7 +3072,7 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":25}]},{},[28])(28)
+},{"./UI":22}]},{},[25])(25)
 });
 
 

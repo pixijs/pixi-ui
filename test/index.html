@@ -8,7 +8,7 @@
     <script src="pixi.js"></script>
     <script src="../bin/pixi-ui.js"></script>
     <title></title>
-    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
     <meta charset="utf-8" />
 </head>
 <body>
@@ -92,7 +92,7 @@
             TextSlider.top = 0;
             sliderContainer.addChild(TextSlider);
 
-            
+
             slider = new PIXI.UI.Slider({
                 track: new PIXI.UI.SliceSprite(whiteBG, 7),
                 handle: new PIXI.UI.SliceSprite(solidBox, 7),
@@ -198,7 +198,7 @@
                 sortableList.droppable = true;
                 sortableList.dropGroup = "player";
 
-                var ScrollingContainer = new PIXI.UI.ScrollingContainer(true, false, 0.6);
+                var ScrollingContainer = new PIXI.UI.ScrollingContainer({ scrollX: false, scrollY: true });
                 ScrollingContainer.anchorLeft = ScrollingContainer.anchorRight = ScrollingContainer.anchorBottom = 0;
                 ScrollingContainer.anchorTop = 40;
                 ScrollingContainer.dragThreshold = 5;
@@ -218,7 +218,7 @@
                 ScrollBar.anchorRight = 0;
                 ScrollBar.track.tint = 0x222222;
                 ScrollBar.track.blendMode = 0;
-                
+
 
                 var textStyle = { fill: ['#ffffff', '#ededed'], fontSize: 14, fontFamily: 'Calibri', fontWeight: 'bold' };
                 for (var p = 0; p < playersArr.length; p++) {
@@ -294,30 +294,30 @@
 
 
 
-            setTimeout(function () { 
-            PIXI.UI.Tween.to(tween0, 2, { anchorRight: 5 });
-            PIXI.UI.Tween.to(tween1, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power1.easeIn);
-            PIXI.UI.Tween.to(tween2, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power1.easeOut);
-            PIXI.UI.Tween.to(tween3, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power1.easeInOut);
-            PIXI.UI.Tween.to(tween4, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power2.easeInOut);
-            PIXI.UI.Tween.to(tween5, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power3.easeInOut);
-            PIXI.UI.Tween.to(tween6, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power4.easeInOut);
-            PIXI.UI.Tween.to(tween7, 2, { anchorRight: 5 }, PIXI.UI.Ease.Bounce.BounceIn);
-            PIXI.UI.Tween.to(tween8, 2, { anchorRight: 5 }, PIXI.UI.Ease.Bounce.BounceOut);
-            PIXI.UI.Tween.to(tween9, 2, { anchorRight: 5 }, PIXI.UI.Ease.Bounce.BounceInOut);
-            PIXI.UI.Tween.to(tween10, 2, { anchorRight: 5 }, PIXI.UI.Ease.Expo.ExpoIn);
-            PIXI.UI.Tween.to(tween11, 2, { anchorRight: 5 }, PIXI.UI.Ease.Expo.ExpoOut);
-            PIXI.UI.Tween.to(tween12, 2, { anchorRight: 5 }, PIXI.UI.Ease.Expo.ExpoInOut);
-            PIXI.UI.Tween.to(tween13, 2, { anchorRight: 5 }, PIXI.UI.Ease.Circ.CircIn);
-            PIXI.UI.Tween.to(tween14, 2, { anchorRight: 5 }, PIXI.UI.Ease.Circ.CircOut);
-            PIXI.UI.Tween.to(tween15, 2, { anchorRight: 5 }, PIXI.UI.Ease.Circ.CircInOut);
-            PIXI.UI.Tween.to(tween16, 2, { anchorRight: 5 }, PIXI.UI.Ease.Sine.SineIn);
-            PIXI.UI.Tween.to(tween17, 2, { anchorRight: 5 }, PIXI.UI.Ease.Sine.SineOut);
-            PIXI.UI.Tween.to(tween18, 2, { anchorRight: 5 }, PIXI.UI.Ease.Sine.SineInOut);
+            setTimeout(function () {
+                PIXI.UI.Tween.to(tween0, 2, { anchorRight: 5 });
+                PIXI.UI.Tween.to(tween1, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power1.easeIn);
+                PIXI.UI.Tween.to(tween2, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power1.easeOut);
+                PIXI.UI.Tween.to(tween3, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power1.easeInOut);
+                PIXI.UI.Tween.to(tween4, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power2.easeInOut);
+                PIXI.UI.Tween.to(tween5, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power3.easeInOut);
+                PIXI.UI.Tween.to(tween6, 2, { anchorRight: 5 }, PIXI.UI.Ease.Power4.easeInOut);
+                PIXI.UI.Tween.to(tween7, 2, { anchorRight: 5 }, PIXI.UI.Ease.Bounce.BounceIn);
+                PIXI.UI.Tween.to(tween8, 2, { anchorRight: 5 }, PIXI.UI.Ease.Bounce.BounceOut);
+                PIXI.UI.Tween.to(tween9, 2, { anchorRight: 5 }, PIXI.UI.Ease.Bounce.BounceInOut);
+                PIXI.UI.Tween.to(tween10, 2, { anchorRight: 5 }, PIXI.UI.Ease.Expo.ExpoIn);
+                PIXI.UI.Tween.to(tween11, 2, { anchorRight: 5 }, PIXI.UI.Ease.Expo.ExpoOut);
+                PIXI.UI.Tween.to(tween12, 2, { anchorRight: 5 }, PIXI.UI.Ease.Expo.ExpoInOut);
+                PIXI.UI.Tween.to(tween13, 2, { anchorRight: 5 }, PIXI.UI.Ease.Circ.CircIn);
+                PIXI.UI.Tween.to(tween14, 2, { anchorRight: 5 }, PIXI.UI.Ease.Circ.CircOut);
+                PIXI.UI.Tween.to(tween15, 2, { anchorRight: 5 }, PIXI.UI.Ease.Circ.CircInOut);
+                PIXI.UI.Tween.to(tween16, 2, { anchorRight: 5 }, PIXI.UI.Ease.Sine.SineIn);
+                PIXI.UI.Tween.to(tween17, 2, { anchorRight: 5 }, PIXI.UI.Ease.Sine.SineOut);
+                PIXI.UI.Tween.to(tween18, 2, { anchorRight: 5 }, PIXI.UI.Ease.Sine.SineInOut);
 
 
-            PIXI.UI.Tween.to(container, 1.3, { scaleX: 1, rotation: 0 }, PIXI.UI.Ease.Sine.SineOut);
-            PIXI.UI.Tween.to(container, 1.25, { scaleY: 1 }, PIXI.UI.Ease.Sine.SineIn);
+                PIXI.UI.Tween.to(container, 1.3, { scaleX: 1, rotation: 0 }, PIXI.UI.Ease.Sine.SineOut);
+                PIXI.UI.Tween.to(container, 1.25, { scaleY: 1 }, PIXI.UI.Ease.Sine.SineIn);
             }, 100);
             Update(performance.now());
         }

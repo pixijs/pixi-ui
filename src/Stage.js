@@ -63,7 +63,8 @@ Stage.prototype.removeChild = function (UIObject) {
 Stage.prototype.resize = function (width, height) {
     if (!isNaN(height)) this.__height = height;
     if (!isNaN(width)) this.__width = width;
-
+    this.hitArea.width = this.__width;
+    this.hitArea.height = this.__height;
     for (var i = 0; i < this.UIChildren.length; i++)
         this.UIChildren[i].updatesettings(true, false);
 };

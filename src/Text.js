@@ -61,7 +61,7 @@ Object.defineProperties(Text.prototype, {
         },
         set: function (val) {
             this._text.text = val;
-            this.baseupdate();
+            this.updatesettings(true);
         }
     },
     text: {

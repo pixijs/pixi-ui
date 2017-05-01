@@ -12,17 +12,18 @@
 
     obj.container.interactive = true;
 
-    var _onDragStart = function (event) {
-        id = event.data.identifier;
-        self.onPress.call(obj, event, true);
+    var _onDragStart = function (e) {
+        id = e.data.identifier;
+        self.onPress.call(obj, e, true);
         if (!bound) {
-            start.copy(event.data.global);
+            start.copy(e.data.global);
             obj.stage.on('mousemove', _onDragMove);
             obj.stage.on('touchmove', _onDragMove);
             obj.stage.on('mouseup', _onDragEnd);
             obj.stage.on('mouseupoutside', _onDragEnd);
             obj.stage.on('touchend', _onDragEnd);
             obj.stage.on('touchendoutside', _onDragEnd);
+            obj.stage.on('touchcancel', _onDragEnd);
             bound = true;
         }
     };
@@ -59,6 +60,7 @@
             obj.stage.removeListener('mouseupoutside', _onDragEnd);
             obj.stage.removeListener('touchend', _onDragEnd);
             obj.stage.removeListener('touchendoutside', _onDragEnd);
+            obj.stage.removeListener('touchcancel', _onDragEnd);
             dragging = false;
             bound = false;
             self.onDragEnd.call(obj, event);

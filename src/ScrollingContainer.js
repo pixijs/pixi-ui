@@ -7,25 +7,38 @@ var UIBase = require('./UIBase'),
 
 
 /**
- * An UI Container object with overflow hidden and possibility to enable scrolling
+ * An UI Container object with expandMask hidden and possibility to enable scrolling
  *
  * @class
  * @extends PIXI.UI.UIBase
  * @memberof PIXI.UI
- * @param width {Number} Width of the Container
- * @param height {Number} Height of the Container
+ * @param [options.scrollX=false] {Boolean} Enable horizontal scrolling
+ * @param [options.scrollY=false] {Boolean} Enable vertical scrolling
+ * @param [options.dragScrolling=true] {Boolean} Enable mousedrag scrolling
+ * @param [options.softness=0.5] {Number} (0-1) softness of scrolling
+ * @param [options.width=0] {Number|String} container width 
+ * @param [options.height=0] {Number} container height 
+ * @param [options.radius=0] {Number} corner radius of clipping mask
+ * @param [options.expandMask=0] {Number} mask expand (px)
+ * @param [options.overflowY=0] {Number} how much can be scrolled past content dimensions
+ * @param [options.overflowX=0] {Number} how much can be scrolled past content dimensions
  */
-function ScrollingContainer(scrollY, scrollX, smoothness, cornerRadius, width, height) {
-    Container.call(this, width, height);
+function ScrollingContainer(options) {
+    Container.call(this, options.width, options.height);
     this.mask = new PIXI.Graphics();
     this.innerContainer = new PIXI.Container();
     this.container.addChild(this.mask);
     this.container.addChild(this.innerContainer);
     this.container.mask = this.mask;
-    this.scrollX = scrollX;
-    this.scrollY = scrollY;
-    this.smoothness = Math.max(Math.min(smoothness || 0, 1), 0);
-    this.cornerRadius = cornerRadius || 0;
+    this.scrollX = options.scrollX !== undefined ? options.scrollX : false;
+    this.scrollY = options.scrollY !== undefined ? options.scrollY : false;
+    this.dragScrolling = options.dragScrolling !== undefined ? options.dragScrolling : true;
+    this.softness = options.softness !== undefined ? Math.max(Math.min(options.softness || 0, 1), 0) : 0.5;
+    this.radius = options.radius || 0;
+    this.expandMask = options.expandMask || 0;
+    this.overflowY = options.overflowY || 0;
+    this.overflowX = options.overflowX || 0;
+
     this.animating = false;
     this.scrolling = false;
     this._scrollBars = [];
@@ -47,21 +60,20 @@ ScrollingContainer.prototype.initialize = function () {
 ScrollingContainer.prototype.update = function () {
     Container.prototype.update.apply(this);
     if (this._lastWidth != this._width || this._lastHeight != this._height) {
+        var of = this.expandMask;
         this.mask.clear();
         this.mask.lineStyle(0);
         this.mask.beginFill(0xFFFFFF, 1);
-        if (this.cornerRadius === 0) {
+        if (this.radius === 0) {
 
             //this.mask.drawRect(0, 0, this._width, this._height);
-            this.mask.moveTo(0, 0);
-            this.mask.lineTo(this._width, 0);
-            this.mask.lineTo(this._width, this._height);
-            this.mask.lineTo(0, this._height);
-            this.mask.lineTo(0, 0);
-
+            this.mask.moveTo(-of, -of);
+            this.mask.lineTo(this._width + of, -of);
+            this.mask.lineTo(this._width + of, this._height + of);
+            this.mask.lineTo(-of, this._height + of);
         }
         else {
-            this.mask.drawRoundedRect(0, 0, this._width, this.height, this.cornerRadius);
+            this.mask.drawRoundedRect(-of, -of, this._width + of, this.height + of, this.radius);
         }
         this.mask.endFill();
         this._lastWidth = this._width;
@@ -107,12 +119,48 @@ ScrollingContainer.prototype.initScrolling = function () {
 
     this.forcePctPosition = function (direction, pct) {
         if (this.scrollX && direction == "x") {
-            this.innerContainer.position[direction] = -((this.innerContainer.width - this._width) * pct);
+            container.position[direction] = -((container.width - this._width) * pct);
         }
         if (this.scrollY && direction == "y") {
-            this.innerContainer.position[direction] = -((this.innerContainer.height - this._height) * pct);
+            container.position[direction] = -((container.height - this._height) * pct);
         }
-        Position[direction] = targetPosition[direction] = this.innerContainer.position[direction];
+        Position[direction] = targetPosition[direction] = container.position[direction];
+    };
+
+    this.focusPosition = function (pos) {
+        var dif;
+        if (this.scrollX) {
+            var x = Math.max(0, (Math.min(container.width, pos.x)));
+            if (x + container.x > this._width) {
+                dif = x - this._width;
+                container.x = -dif;
+            }
+            else if (x + container.x < 0) {
+                dif = x + container.x;
+                container.x -= dif;
+            }
+        }
+
+        if (this.scrollY) {
+            var y = Math.max(0, (Math.min(container.height, pos.y)));
+            
+            if (y + container.y > this._height) {
+                dif = y - this._height;
+                console.log(dif);
+
+                container.y = -dif;
+            }
+            else if (y + container.y < 0) {
+                dif = y + container.y;
+                container.y -= dif;
+            }
+        }
+
+        lastPosition.copy(container.position);
+        targetPosition.copy(container.position);
+        Position.copy(container.position);
+        this.updateScrollBars();
+
     };
 
     this.setScrollPosition = function (speed) {
@@ -139,6 +187,8 @@ ScrollingContainer.prototype.initScrolling = function () {
     };
 
     this.updateDirection = function (direction, delta) {
+
+
         var min;
         if (direction == "y")
             min = Math.round(Math.min(0, this._height - container.height));
@@ -147,7 +197,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) !== 0) {
             targetPosition[direction] += Speed[direction];
-            Speed[direction] = MathHelper.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.smoothness, 0.01)) * delta);
+            Speed[direction] = MathHelper.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.softness, 0.01)) * delta);
 
             if (targetPosition[direction] > 0) {
                 targetPosition[direction] = 0;
@@ -161,7 +211,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) === 0 && (container[direction] > 0 || container[direction] < min)) {
             var target = Position[direction] > 0 ? 0 : min;
-            Position[direction] = MathHelper.Lerp(Position[direction], target, (40 - (30 * this.smoothness)) * delta);
+            Position[direction] = MathHelper.Lerp(Position[direction], target, (40 - (30 * this.softness)) * delta);
             stop = false;
         }
         else if (this.scrolling || Math.round(Speed[direction]) !== 0) {
@@ -170,14 +220,13 @@ ScrollingContainer.prototype.initScrolling = function () {
                 Speed[direction] = Position[direction] - lastPosition[direction];
                 lastPosition.copy(Position);
             }
-
             if (targetPosition[direction] > 0) {
                 Speed[direction] = 0;
-                Position[direction] = 100 * this.smoothness * (1 - Math.exp(targetPosition[direction] / -200));
+                Position[direction] = 100 * this.softness * (1 - Math.exp(targetPosition[direction] / -200));
             }
             else if (targetPosition[direction] < min) {
                 Speed[direction] = 0;
-                Position[direction] = min - (100 * this.smoothness * (1 - Math.exp((min - targetPosition[direction]) / -200)));
+                Position[direction] = min - (100 * this.softness * (1 - Math.exp((min - targetPosition[direction]) / -200)));
             }
             else {
                 Position[direction] = targetPosition[direction];
@@ -193,27 +242,28 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
     //Drag scroll
-    var drag = new DragEvent(this);
-    drag.onDragStart = function (e) {
-        if (!this.scrolling) {
-            containerStart.copy(container.position);
-            Position.copy(container.position);
-            this.scrolling = true;
-            this.setScrollPosition();
-        }
-    };
+    if (this.dragScrolling) {
+        var drag = new DragEvent(this);
+        drag.onDragStart = function (e) {
+            if (!this.scrolling) {
+                containerStart.copy(container.position);
+                Position.copy(container.position);
+                this.scrolling = true;
+                this.setScrollPosition();
+            }
+        };
 
-    drag.onDragMove = function (e, offset) {
-        if (this.scrollX)
-            targetPosition.x = containerStart.x + offset.x;
-        if (this.scrollY)
-            targetPosition.y = containerStart.y + offset.y;
-    };
+        drag.onDragMove = function (e, offset) {
+            if (this.scrollX)
+                targetPosition.x = containerStart.x + offset.x;
+            if (this.scrollY)
+                targetPosition.y = containerStart.y + offset.y;
+        };
 
-    drag.onDragEnd = function (e) {
-        this.scrolling = false;
-    };
-
+        drag.onDragEnd = function (e) {
+            this.scrolling = false;
+        };
+    }
 
     //Mouse scroll
     var scrollSpeed = new PIXI.Point();

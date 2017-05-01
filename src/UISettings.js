@@ -6,43 +6,47 @@
  */
 function UISettings() {
     this.width = 0;
-    this.widthPct = null;
     this.height = 0;
-    this.heightPct = null;
-    this.minWidth = 0;
-    this.minWidthPct = null;
     this.minHeight = 0;
-    this.minHeightPct = null;
     this.maxWidth = null;
-    this.maxWidthPct = null;
     this.maxHeight = null;
-    this.maxHeightPct = null;
     this.left = null;
-    this.leftPct = null;
     this.right = null;
-    this.rightPct = null;
     this.top = null;
-    this.topPct = null;
     this.bottom = null;
-    this.bottomPct = null;
     this.anchorLeft = null;
-    this.anchorLeftPct = null;
     this.anchorRight = null;
-    this.anchorRightPct = null;
     this.anchorTop = null;
-    this.anchorTopPct = null;
     this.anchorBottom = null;
+
+    this.widthPct = null;
+    this.heightPct = null;
+    this.minWidthPct = null;
+    this.minHeightPct = null;
+    this.maxWidthPct = null;
+    this.maxHeightPct = null;
+    this.minWidth = 0;
+    this.leftPct = null;
+    this.rightPct = null;
+    this.topPct = null;
+    this.bottomPct = null;
+    this.anchorLeftPct = null;
+    this.anchorRightPct = null;
+    this.anchorTopPct = null;
     this.anchorBottomPct = null;
-    this.pivotX = null;
-    this.pivotY = null;
-    this.scaleX = null;
-    this.scaleY = null;
+
+    this.pivotX = 0;
+    this.pivotY = 0;
+    this.scaleX = 1;
+    this.scaleY = 1;
     this.verticalAlign = null;
     this.horizontalAlign = null;
     this.rotation = null;
     this.blendMode = null;
     this.tint = null;
-    this.alpha = null;
+    this.alpha = 1;
+
+
     this.draggable = null;
     this.dragRestricted = false;
     this.dragRestrictAxis = null; //x, y

@@ -9,12 +9,12 @@
     Slider: require('./Slider'),
     ScrollBar: require('./ScrollBar'),
     Text: require('./Text'),
+    TextInput: require('./TextInput'),
     MathHelper: require('./MathHelper'),
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
     Interaction: require('./Interaction/Interaction'),
     Ticker: require('./Ticker').shared,
-    _draggedItems: []
 };
 
 
