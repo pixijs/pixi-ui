@@ -16,7 +16,7 @@ function InputBase(width, height, tabIndex, tabGroup) {
     var self = this;
     this._focused = false;
     this._useTab = this._usePrev = this._useNext = true;
-
+    this.container.interactive = true;
     InputController.registrer(this, tabIndex, tabGroup);
 
 

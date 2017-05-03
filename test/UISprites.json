@@ -1,16 +1,56 @@
 {"frames": {
 
-"UI/horizontal-gradient.png":
+"UI/cb-1-bg.png":
 {
-	"frame": {"x":1,"y":1,"w":24,"h":23},
+	"frame": {"x":1,"y":1,"w":44,"h":44},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":44,"h":44},
+	"sourceSize": {"w":44,"h":44}
+},
+"UI/cb-1-mark.png":
+{
+	"frame": {"x":92,"y":37,"w":28,"h":23},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":28,"h":23},
+	"sourceSize": {"w":28,"h":23}
+},
+"UI/cb-2-bg.png":
+{
+	"frame": {"x":47,"y":1,"w":43,"h":42},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":43,"h":42},
+	"sourceSize": {"w":43,"h":42}
+},
+"UI/cb-2-mark.png":
+{
+	"frame": {"x":122,"y":37,"w":24,"h":23},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":24,"h":23},
 	"sourceSize": {"w":24,"h":23}
 },
+"UI/horizontal-gradient.png":
+{
+	"frame": {"x":128,"y":1,"w":24,"h":23},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":24,"h":23},
+	"sourceSize": {"w":24,"h":23}
+},
+"UI/profile-image-bg.png":
+{
+	"frame": {"x":92,"y":1,"w":34,"h":34},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":34,"h":34},
+	"sourceSize": {"w":34,"h":34}
+},
 "UI/solid-box.png":
 {
-	"frame": {"x":27,"y":1,"w":18,"h":18},
+	"frame": {"x":47,"y":45,"w":18,"h":18},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":18,"h":18},
@@ -18,7 +58,7 @@
 },
 "UI/ui-box-1.png":
 {
-	"frame": {"x":27,"y":21,"w":15,"h":15},
+	"frame": {"x":1,"y":47,"w":15,"h":15},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":15},
@@ -26,7 +66,7 @@
 },
 "UI/ui-box-2.png":
 {
-	"frame": {"x":1,"y":26,"w":15,"h":15},
+	"frame": {"x":18,"y":47,"w":15,"h":15},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":15},
@@ -34,7 +74,7 @@
 },
 "UI/ui-horizontal-line-border.png":
 {
-	"frame": {"x":18,"y":26,"w":5,"h":3},
+	"frame": {"x":35,"y":47,"w":5,"h":3},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":5,"h":3},
@@ -45,8 +85,8 @@
 	"version": "1.0",
 	"image": "UISprites.png",
 	"format": "RGBA8888",
-	"size": {"w":46,"h":42},
+	"size": {"w":153,"h":64},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:c78967bfe725cc6738377107081467fe:664a19a7cf6b4f2c46651bf16fa4592d:1a4b9dce9e084a51b4415f1145cee46f$"
+	"smartupdate": "$TexturePacker:SmartUpdate:b48f8e8e614bae2a899cc20a6d615e2c:c2e8ab40143c5317a66f8a75c2c96893:1a4b9dce9e084a51b4415f1145cee46f$"
 }
 }

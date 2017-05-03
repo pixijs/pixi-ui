@@ -324,7 +324,6 @@ function TextInput(options) {
     var _sp = new PIXI.Point();
     var scrollToPosition = function (pos) {
         _sp.copy(pos);
-        console.log("y", _sp.y, paddingTop);
         if (multiLine && _sp.y >= lineHeight)
             _sp.y += lineHeight;
         textContainer.focusPosition(_sp);
@@ -642,7 +641,7 @@ function TextInput(options) {
             _pui_tempInput.addEventListener('textInput', inputEvent, false);
 
             setTimeout(function () {
-                if (!caret.visible && !self.selection.visible)
+                if (!caret.visible && !self.selection.visible && !multiLine)
                     self.setCaretIndex(chars.length);
             }, 0);
 
@@ -837,6 +836,7 @@ Object.defineProperties(TextInput.prototype, {
  * 
  * Events:
  * "change"
+ * "blur"
  * "blur"
  * "focus"
  * "focusChanged" param: [bool]focus

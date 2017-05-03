@@ -13,6 +13,9 @@ function Stage(width, height) {
     PIXI.Container.call(this);
     this.__width = width;
     this.__height = height;
+    this.minWidth = 0;
+    this.minHeight = 0;
+
     this.UIChildren = [];
     this.stage = this;
     this.interactive = true;
@@ -56,15 +59,44 @@ Stage.prototype.removeChild = function (UIObject) {
             this.UIChildren.splice(index, 1);
             UIObject.parent = null;
         }
-        
+
     }
 };
 
 Stage.prototype.resize = function (width, height) {
     if (!isNaN(height)) this.__height = height;
     if (!isNaN(width)) this.__width = width;
+
+    if (this.minWidth || this.minHeight) {
+        var rx = 1,
+            ry = 1;
+
+        if (width && width < this.minWidth) {
+            rx = this.minWidth / width;
+        }
+
+        if (height && height < this.minHeight) {
+            ry = this.minHeight / height;
+        }
+
+        if (rx > ry && rx > 1) {
+            this.scale.set(1 / rx);
+            this.__height *= rx;
+            this.__width *= rx;
+        }
+        else if (ry > 1) {
+            this.scale.set(1 / ry);
+            this.__width *= ry;
+            this.__height *= ry;
+        }
+        else if (this.scale.x !== 1) {
+            this.scale.set(1);
+        }
+    }
+
     this.hitArea.width = this.__width;
     this.hitArea.height = this.__height;
+
     for (var i = 0; i < this.UIChildren.length; i++)
         this.UIChildren[i].updatesettings(true, false);
 };

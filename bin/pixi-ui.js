@@ -1,11 +1,184 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Mon, 01 May 2017 22:38:11 UTC
+ * Compiled Wed, 03 May 2017 04:50:11 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.pixiUi = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var InputBase = require('./InputBase'),
+    ClickEvent = require('./Interaction/ClickEvent.js'),
+    InputController = require('./Interaction/InputController');
+
+/**
+ * An UI button object
+ *
+ * @class
+ * @extends PIXI.UI.InputBase
+ * @memberof PIXI.UI
+ * @param [options.checked=false] {bool} is checked
+ * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for CheckBox
+ * @param options.checkmark {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as checkmark for CheckBox
+ * @param [options.checkgroup=null] {String} CheckGroup name
+ * @param options.value {String} mostly used along with checkgroup
+ * @param [options.tabIndex=0] {Number} input tab index
+ * @param [options.tabGroup=0] {Number|String} input tab group
+ */
+
+function CheckBox(options) {
+    InputBase.call(this, options.background.width, options.background.height, options.tabIndex || 0, options.tabGroup || 0);
+    this._checked = options.checked !== undefined ? options.checked : false;
+    this._value = options.value || "";
+    this.checkGroup = options.checkgroup || null;
+
+    this.background = options.background;
+    this.addChild(this.background);
+
+    this.checkmark = options.checkmark;
+    if (this.checkmark) {
+        this.checkmark.verticalAlign = "middle";
+        this.checkmark.horizontalAlign = "center";
+        this.checkmark.alpha = this._checked ? 1 : 0;
+        this.addChild(this.checkmark);
+    }
+
+
+
+
+    this.container.buttonMode = true;
+
+    if (this.checkGroup !== null)
+        InputController.registrerCheckGroup(this);
+
+    var self = this;
+    var keyDownEvent = function (e) {
+        if (e.which === 32) { //space
+            if (self.checkGroup !== null && self.checked)
+                return;
+            self.checked = !self.checked;
+        }
+    };
+
+    var clickEvent = new ClickEvent(this.background);
+    clickEvent.onHover = function (e) {
+        self.emit("hover", true);
+    };
+
+    clickEvent.onLeave = function (e) {
+        self.emit("hover", false);
+    };
+
+    clickEvent.onPress = function (e, isPressed) {
+        if (isPressed) {
+            self.focus();
+            e.data.originalEvent.preventDefault();
+        }
+        self.emit("press", isPressed);
+    };
+
+    clickEvent.onClick = function (e) {
+        self.emit("click");
+
+        if (self.checkGroup !== null && self.checked)
+            return;
+
+        self.checked = !self.checked;
+    };
+
+    this.change = function (val) {
+        if (this.checkmark)
+            this.checkmark.alpha = val ? 1 : 0;
+    };
+
+    //public methods
+    this.focus = function () {
+        if (!this._focused) {
+            InputBase.prototype.focus.call(this);
+            document.addEventListener("keydown", keyDownEvent, false);
+        }
+
+    };
+
+    this.blur = function () {
+        if (this._focused) {
+            InputBase.prototype.blur.call(this);
+            document.removeEventListener("keydown", keyDownEvent);
+        }
+    };
+}
+
+CheckBox.prototype = Object.create(InputBase.prototype);
+CheckBox.prototype.constructor = CheckBox;
+module.exports = CheckBox;
+
+Object.defineProperties(CheckBox.prototype, {
+    checked: {
+        get: function () {
+            return this._checked;
+        },
+        set: function (val) {
+
+
+            if (val !== this._checked) {
+
+                if (this.checkGroup !== null && val)
+                    InputController.updateCheckGroupSelected(this);
+
+
+                this.change(val);
+                this.emit("change", val);
+                this._checked = val;
+
+            }
+        }
+    },
+    value: {
+        get: function () {
+            return this._value;
+        },
+        set: function (val) {
+            this._value = val;
+            if (this.checked)
+                InputController.updateCheckGroupSelected(this);
+        }
+    },
+    selectedValue: {
+        get: function () {
+            return InputController.getCheckGroupSelectedValue(this.checkGroup);
+        },
+        set: function (val) {
+            InputController.setCheckGroupSelectedValue(this.checkGroup, val);
+        }
+    }
+});
+
+
+
+/*
+ * Features:
+ * checkbox, radio button (checkgroups)
+ * 
+ * Methods:
+ * blur()
+ * focus()
+ * change(checked) //only exposed to overwrite (if you dont want to hard toggle alpha of checkmark) 
+ * 
+ * Properties:
+ * checked: get/set checkbox checked
+ * value: get/set checkbox value
+ * selectedValue: get/set selected value for checkgroup
+ * 
+ * Events:
+ * "hover"          param: [bool]isHover (hover/leave)
+ * "press"          param: [bool]isPressed (pointerdown/pointerup)
+ * "click"
+ * "blur"
+ * "focus"
+ * "focusChanged"   param: [bool]isFocussed
+ * "change"         param: [bool]isChecked
+ *  
+ */
+},{"./InputBase":6,"./Interaction/ClickEvent.js":7,"./Interaction/InputController":10}],2:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -36,7 +209,7 @@ Container.prototype.update = function () {
 };
 
 
-},{"./UIBase":26}],2:[function(require,module,exports){
+},{"./UIBase":27}],3:[function(require,module,exports){
 var Ease = {},
     EaseBase = require('./EaseBase'),
     ExponentialEase = require('./ExponentialEase'),
@@ -174,7 +347,7 @@ module.exports = Ease;
 
 
 
-},{"./EaseBase":3,"./ExponentialEase":4}],3:[function(require,module,exports){
+},{"./EaseBase":4,"./ExponentialEase":5}],4:[function(require,module,exports){
 function EaseBase() {
     this.getPosition = function (p) {
         return p;
@@ -187,7 +360,7 @@ module.exports = EaseBase;
 
 
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var EaseBase = require('./EaseBase');
 
 function ExponentialEase(power, easeIn, easeOut) {
@@ -215,7 +388,7 @@ module.exports = ExponentialEase;
 
 
 
-},{"./EaseBase":3}],5:[function(require,module,exports){
+},{"./EaseBase":4}],6:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     InputController = require('./Interaction/InputController'),
     ClickEvent = require('./Interaction/ClickEvent');
@@ -234,7 +407,7 @@ function InputBase(width, height, tabIndex, tabGroup) {
     var self = this;
     this._focused = false;
     this._useTab = this._usePrev = this._useNext = true;
-
+    this.container.interactive = true;
     InputController.registrer(this, tabIndex, tabGroup);
 
 
@@ -319,7 +492,7 @@ InputBase.prototype.blur = function () {
 
     }
 };
-},{"./Interaction/ClickEvent":6,"./Interaction/InputController":9,"./UIBase":26}],6:[function(require,module,exports){
+},{"./Interaction/ClickEvent":7,"./Interaction/InputController":10,"./UIBase":27}],7:[function(require,module,exports){
 var ClickEvent = function (obj) {
     var bound = false,
         self = this,
@@ -401,7 +574,7 @@ ClickEvent.prototype.onHover = function (event) { };
 ClickEvent.prototype.onLeave = function (event) { };
 ClickEvent.prototype.onPress = function (event, isPressed) { };
 ClickEvent.prototype.onClick = function (event) { };
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var _items = [];
 var DragDropController = {
     add: function (item, event) {
@@ -454,7 +627,7 @@ var DragDropController = {
 };
 
 module.exports = DragDropController;
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var DragEvent = function (obj) {
     var bound = false,
         start = new PIXI.Point(),
@@ -555,9 +728,12 @@ DragEvent.prototype.onPress = function (event, isPressed) { };
 DragEvent.prototype.onDragEnd = function (event) { };
 DragEvent.prototype.onDragMove = function (event, offset) { };
 DragEvent.prototype.onDragStart = function (event) { };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var _currentItem;
 var tabGroups = {};
+var checkGroups = {};
+var checkGroupValues = {};
+
 var InputController = {
     registrer: function (item, tabIndex, tabGroup) {
         var groupName = tabGroup || "default";
@@ -567,7 +743,7 @@ var InputController = {
             items = tabGroups[groupName] = [];
 
         var i = items.indexOf(item);
-        if (i === -1){
+        if (i === -1) {
             item._tabIndex = tabIndex !== undefined ? tabIndex : -1;
             item._tabGroup = items;
             items.push(item);
@@ -608,11 +784,43 @@ var InputController = {
             if (i < 0) i = 0;
             _currentItem._tabGroup[i].focus();
         }
+    },
+    registrerCheckGroup: function (cb) {
+        var name = cb.checkGroup;
+        var group = checkGroups[name];
+        if (!group) group = checkGroups[name] = {};
+        group[cb.value] = cb;
+
+        if (cb.checked)
+            checkGroupValues[name] = cb.value;
+    },
+    updateCheckGroupSelected: function (cb) {
+        var group = checkGroups[cb.checkGroup];
+        for (var val in group) {
+            var b = group[val];
+            if (b !== cb)
+                b.checked = false;
+        }
+        checkGroupValues[cb.checkGroup] = cb.value;
+    },
+    getCheckGroupSelectedValue: function (name) {
+        if (checkGroupValues[name])
+            return checkGroupValues[name];
+        return "";
+    },
+    setCheckGroupSelectedValue: function (name, val) {
+        var group = checkGroups[name];
+        if (group) {
+            var cb = group[val];
+            if (cb) {
+                cb.checked = true;
+            }
+        }
     }
 };
 
 module.exports = InputController;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var Interaction = {
     ClickEvent: require('./ClickEvent'),
     DragEvent: require('./DragEvent'),
@@ -621,7 +829,7 @@ var Interaction = {
 
 
 module.exports = Interaction;
-},{"./ClickEvent":6,"./DragEvent":8,"./MouseScrollEvent":11}],11:[function(require,module,exports){
+},{"./ClickEvent":7,"./DragEvent":9,"./MouseScrollEvent":12}],12:[function(require,module,exports){
 var MouseScrollEvent = function (obj, preventDefault) {
     var bound = false, delta = new PIXI.Point(), self = this;
     obj.container.interactive = true;
@@ -674,7 +882,7 @@ MouseScrollEvent.prototype.constructor = MouseScrollEvent;
 module.exports = MouseScrollEvent;
 
 MouseScrollEvent.prototype.onMouseScroll = function (event, delta) { };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var MathHelper = {
     Lerp: function (start, stop, amt) {
         if (amt > 1) amt = 1;
@@ -688,7 +896,7 @@ var MathHelper = {
 };
 
 module.exports = MathHelper;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var Slider = require('./Slider'),
     Tween = require('./Tween'),
     Ease = require('./Ease/Ease');
@@ -782,7 +990,7 @@ ScrollBar.prototype.toggleHidden = function (hidden) {
 
 
 
-},{"./Ease/Ease":2,"./Slider":16,"./Tween":24}],14:[function(require,module,exports){
+},{"./Ease/Ease":3,"./Slider":17,"./Tween":25}],15:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     Container = require('./Container'),
     MathHelper = require('./MathHelper'),
@@ -1066,7 +1274,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
 
-},{"./Container":1,"./Interaction/DragEvent":8,"./Interaction/MouseScrollEvent":11,"./MathHelper":12,"./Ticker":22,"./UIBase":26}],15:[function(require,module,exports){
+},{"./Container":2,"./Interaction/DragEvent":9,"./Interaction/MouseScrollEvent":12,"./MathHelper":13,"./Ticker":23,"./UIBase":27}],16:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1203,7 +1411,7 @@ module.exports = SliceSprite;
 
 
 
-},{"./UIBase":26}],16:[function(require,module,exports){
+},{"./UIBase":27}],17:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     DragEvent = require('./Interaction/DragEvent'),
     ClickEvent = require('./Interaction/ClickEvent'),
@@ -1432,7 +1640,7 @@ Object.defineProperties(Slider.prototype, {
         }
     }
 });
-},{"./Ease/Ease":2,"./Interaction/ClickEvent":6,"./Interaction/DragEvent":8,"./MathHelper":12,"./Tween":24,"./UIBase":26}],17:[function(require,module,exports){
+},{"./Ease/Ease":3,"./Interaction/ClickEvent":7,"./Interaction/DragEvent":9,"./MathHelper":13,"./Tween":25,"./UIBase":27}],18:[function(require,module,exports){
 var Container = require('./Container');
 var Tween = require('./Tween');
 /**
@@ -1554,7 +1762,7 @@ SortableList.prototype._sort = function () {
 
 
 
-},{"./Container":1,"./Tween":24}],18:[function(require,module,exports){
+},{"./Container":2,"./Tween":25}],19:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1592,7 +1800,7 @@ Sprite.prototype.update = function () {
 };
 
 
-},{"./UIBase":26}],19:[function(require,module,exports){
+},{"./UIBase":27}],20:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1608,6 +1816,9 @@ function Stage(width, height) {
     PIXI.Container.call(this);
     this.__width = width;
     this.__height = height;
+    this.minWidth = 0;
+    this.minHeight = 0;
+
     this.UIChildren = [];
     this.stage = this;
     this.interactive = true;
@@ -1651,15 +1862,44 @@ Stage.prototype.removeChild = function (UIObject) {
             this.UIChildren.splice(index, 1);
             UIObject.parent = null;
         }
-        
+
     }
 };
 
 Stage.prototype.resize = function (width, height) {
     if (!isNaN(height)) this.__height = height;
     if (!isNaN(width)) this.__width = width;
+
+    if (this.minWidth || this.minHeight) {
+        var rx = 1,
+            ry = 1;
+
+        if (width && width < this.minWidth) {
+            rx = this.minWidth / width;
+        }
+
+        if (height && height < this.minHeight) {
+            ry = this.minHeight / height;
+        }
+
+        if (rx > ry && rx > 1) {
+            this.scale.set(1 / rx);
+            this.__height *= rx;
+            this.__width *= rx;
+        }
+        else if (ry > 1) {
+            this.scale.set(1 / ry);
+            this.__width *= ry;
+            this.__height *= ry;
+        }
+        else if (this.scale.x !== 1) {
+            this.scale.set(1);
+        }
+    }
+
     this.hitArea.width = this.__width;
     this.hitArea.height = this.__height;
+
     for (var i = 0; i < this.UIChildren.length; i++)
         this.UIChildren[i].updatesettings(true, false);
 };
@@ -1688,7 +1928,7 @@ Object.defineProperties(Stage.prototype, {
         }
     }
 });
-},{"./UIBase":26}],20:[function(require,module,exports){
+},{"./UIBase":27}],21:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1764,7 +2004,7 @@ Object.defineProperties(Text.prototype, {
         }
     }
 });
-},{"./UIBase":26}],21:[function(require,module,exports){
+},{"./UIBase":27}],22:[function(require,module,exports){
 var InputBase = require('./InputBase'),
     Container = require('./Container'),
     DragEvent = require('./Interaction/DragEvent');
@@ -2091,7 +2331,6 @@ function TextInput(options) {
     var _sp = new PIXI.Point();
     var scrollToPosition = function (pos) {
         _sp.copy(pos);
-        console.log("y", _sp.y, paddingTop);
         if (multiLine && _sp.y >= lineHeight)
             _sp.y += lineHeight;
         textContainer.focusPosition(_sp);
@@ -2409,7 +2648,7 @@ function TextInput(options) {
             _pui_tempInput.addEventListener('textInput', inputEvent, false);
 
             setTimeout(function () {
-                if (!caret.visible && !self.selection.visible)
+                if (!caret.visible && !self.selection.visible && !multiLine)
                     self.setCaretIndex(chars.length);
             }, 0);
 
@@ -2605,12 +2844,13 @@ Object.defineProperties(TextInput.prototype, {
  * Events:
  * "change"
  * "blur"
+ * "blur"
  * "focus"
  * "focusChanged" param: [bool]focus
  *  
  * 
  */
-},{"./Container":1,"./InputBase":5,"./Interaction/DragEvent":8}],22:[function(require,module,exports){
+},{"./Container":2,"./InputBase":6,"./Interaction/DragEvent":9}],23:[function(require,module,exports){
 var Tween = require('./Tween');
 
 function Ticker(autoStart) {
@@ -2687,7 +2927,7 @@ Ticker.removeListener = function (event, fn) {
 
 
 Ticker.shared = new Ticker(true);
-},{"./Tween":24}],23:[function(require,module,exports){
+},{"./Tween":25}],24:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -2744,7 +2984,7 @@ Object.defineProperties(TilingSprite.prototype, {
         }
     }
 });
-},{"./UIBase":26}],24:[function(require,module,exports){
+},{"./UIBase":27}],25:[function(require,module,exports){
 var MathHelper = require('./MathHelper');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
@@ -2927,7 +3167,7 @@ var Tween = {
 
 
 module.exports = Tween;
-},{"./Ease/Ease":2,"./MathHelper":12}],25:[function(require,module,exports){
+},{"./Ease/Ease":3,"./MathHelper":13}],26:[function(require,module,exports){
 var UI = {
     Stage: require('./Stage'),
     Container: require('./Container'),
@@ -2940,6 +3180,7 @@ var UI = {
     ScrollBar: require('./ScrollBar'),
     Text: require('./Text'),
     TextInput: require('./TextInput'),
+    CheckBox: require('./CheckBox'),
     MathHelper: require('./MathHelper'),
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
@@ -2949,7 +3190,7 @@ var UI = {
 
 
 module.exports = UI;
-},{"./Container":1,"./Ease/Ease":2,"./Interaction/Interaction":10,"./MathHelper":12,"./ScrollBar":13,"./ScrollingContainer":14,"./SliceSprite":15,"./Slider":16,"./SortableList":17,"./Sprite":18,"./Stage":19,"./Text":20,"./TextInput":21,"./Ticker":22,"./TilingSprite":23,"./Tween":24}],26:[function(require,module,exports){
+},{"./CheckBox":1,"./Container":2,"./Ease/Ease":3,"./Interaction/Interaction":11,"./MathHelper":13,"./ScrollBar":14,"./ScrollingContainer":15,"./SliceSprite":16,"./Slider":17,"./SortableList":18,"./Sprite":19,"./Stage":20,"./Text":21,"./TextInput":22,"./Ticker":23,"./TilingSprite":24,"./Tween":25}],27:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI'),
     DragEvent = require('./Interaction/DragEvent'),
@@ -4060,7 +4301,7 @@ Object.defineProperties(UIBase.prototype, {
         }
     }
 });
-},{"./Interaction/DragDropController":7,"./Interaction/DragEvent":8,"./UI":25,"./UISettings":27}],27:[function(require,module,exports){
+},{"./Interaction/DragDropController":8,"./Interaction/DragEvent":9,"./UI":26,"./UISettings":28}],28:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -4126,7 +4367,7 @@ module.exports = UISettings;
 
 
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 
 var Library = {
     UI: require('./UI')
@@ -4138,7 +4379,7 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":25}]},{},[28])(28)
+},{"./UI":26}]},{},[29])(29)
 });
 
 

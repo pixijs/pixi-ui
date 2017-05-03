@@ -2,12 +2,8 @@
 <html>
 <head>
     <style>
-        body, html { margin: 0; padding: 0; width:100%; height:100%;}
-        canvas { width:100% !important;
-            height:100% !important;
-            position:fixed;
-
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        canvas { width: 100% !important; height: 100% !important; position: fixed; }
     </style>
     <script src="pixi.js"></script>
     <script src="../bin/pixi-ui.js"></script>
@@ -23,6 +19,9 @@
         var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight, { resolution: devicePixelRatio || 1, transparent: true });
         var stage = new PIXI.Container();
         var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        uiStage.minHeight = 315;
+        uiStage.minWidth = 500;
+
         var dragContainer = new PIXI.UI.Container();
         document.body.appendChild(renderer.view);
         stage.addChild(uiStage);
@@ -38,6 +37,11 @@
 
 
         function init() {
+            var cb1_bg = PIXI.Texture.fromFrame("UI/cb-1-bg.png");
+            var cb1_mark = PIXI.Texture.fromFrame("UI/cb-1-mark.png");
+            var cb2_bg = PIXI.Texture.fromFrame("UI/cb-2-bg.png");
+            var cb2_mark = PIXI.Texture.fromFrame("UI/cb-2-mark.png");
+
             var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
             var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
             var solidBox = PIXI.Texture.fromFrame("UI/solid-box.png");
@@ -50,7 +54,7 @@
             uiStage.addChild(container);
 
             textInput = new PIXI.UI.TextInput({
-            value: "Hello!\n\nYou know you're ugly when you get handed the camera every time they make a group photo.\n\nI asked my mom if by any chance I was adopted. She replied: Hilarious. Why would we choose you?\n\nWhat is the difference between a snowman and a snowwoman?\n- Snowballs.\n\nI asked my mom if by any chance I was adopted. She replied: Hilarious. Why would we choose you?",
+                value: "Hello!\n\nYou know you're ugly when you get handed the camera every time they make a group photo.\n\nI asked my mom if by any chance I was adopted. She replied: Hilarious. Why would we choose you?\n\nWhat is the difference between a snowman and a snowwoman?\n- Snowballs.\n\nI asked my mom if by any chance I was adopted. She replied: Hilarious. Why would we choose you?",
                 style: { fill: '#000000', fontSize: 20, fontFamily: 'Calibri' },
                 background: new PIXI.UI.SliceSprite(solidBox, 8),
                 width: "100%",
@@ -71,8 +75,6 @@
                 //console.log("Change:", this.value);
             });
             container.addChild(textInput);
-
-
 
             scrollbar = new PIXI.UI.ScrollBar({
                 track: new PIXI.UI.SliceSprite(whiteBG, 3),
@@ -103,80 +105,74 @@
             textInput2.on("focusChanged", function (focus) {
                 textInput2.background.alpha = focus ? 0.4 : 0.2;
             });
-            textInput2.on("change", function () {
-                //console.log("Change:", this.value);
-            });
             container.addChild(textInput2);
 
 
-            textInput3 = new PIXI.UI.TextInput({
-                value: "Hello world!",
-                style: { fill: '#000000', fontSize: 20, fontFamily: 'Calibri' },
-                background: new PIXI.UI.SliceSprite(solidBox, 8),
-                width: "100%",
-                height: 33,
-                padding: 6,
-                paddingLeft: 10,
-                tabIndex: 3
+
+
+
+
+            checkbox = new PIXI.UI.CheckBox({ checked: true, background: new PIXI.UI.Sprite(cb1_bg), checkmark: new PIXI.UI.Sprite(cb1_mark) });
+            checkbox.anchorBottom = 0;
+            checkbox.background.alpha = 0.6;
+            checkbox.on("focusChanged", function (focus) {
+                this.background.alpha = focus ? 0.9 : 0.6;
             });
-            textInput3.anchorBottom = 0;
-            textInput3.background.alpha = .2;
-            textInput3.on("focusChanged", function (focus) {
-                textInput3.background.alpha = focus ? 0.4 : 0.2;
+            container.addChild(checkbox);
+
+            checkbox2 = new PIXI.UI.CheckBox({
+                checked: true,
+                background: new PIXI.UI.Sprite(cb1_bg),
+                checkmark: new PIXI.UI.Sprite(cb1_mark)
             });
-            textInput3.on("change", function () {
-                //console.log("Change:", this.value);
+            checkbox2.anchorBottom = 0;
+            checkbox2.x = 50;
+            checkbox2.background.alpha = 0.6;
+            checkbox2.on("focusChanged", function (focus) {
+                this.background.alpha = focus ? 0.9 : 0.6;
             });
-            container.addChild(textInput3);
+
+            //override the inner change function (to avoid alpha = 0 on checkmark)
+            checkbox2.change = function (checked) {
+                if (checked)
+                    PIXI.UI.Tween.fromTo(this.checkmark, 0.4, { rotation: 1, alpha: 0, scale: 2 }, { rotation: 0, alpha: 1, scale: 1 }, PIXI.UI.Ease.Bounce.BounceOut);
+                else
+                    PIXI.UI.Tween.to(this.checkmark, 0.3, { alpha: 0, rotation:3, scale:0 }, PIXI.UI.Ease.Sine.SineOut);
+            };
 
 
+            container.addChild(checkbox2);
 
-            //textInput2 = new PIXI.UI.TextInput({
-            //    value: "Hello world!",
-            //    style: { fill: ['#000000', '#333333'], fontSize: 50, fontFamily: 'Calibri' },
-            //    background: new PIXI.UI.SliceSprite(solidBox, 8),
-            //    width: "60%",
-            //    height: 70,
-            //    padding: 10,
-            //    paddingLeft: 15,
-            //    tabIndex: 2,
-            //    caretWidth:4
-            //});
-            //textInput2.scale = 0.5;
-            //textInput2.minWidth = 300;
-            //textInput2.horizontalAlign = "center";
-            //textInput2.y = 300;
-            //textInput2.background.alpha = .2;
-            //textInput2.on("focusChanged", function (focus) {
-            //    textInput2.background.alpha = focus ? 0.4 : 0.2;
-            //});
-            //uiStage.addChild(textInput2);
-
-
-
-            //textInput3 = new PIXI.UI.TextInput({
-            //    value: "☢☣☠⚠☤⚕⚚†☯⚖☮⚘⚔☭⚒⚓⚛⚜⚡⚶☥✠✙✞✟✧⋆★☆✪✫✬",
-            //    style: { fill: ['#000000', '#333333'], fontSize: 50, fontFamily: 'Calibri' },
-            //    background: new PIXI.UI.SliceSprite(solidBox, 8),
-            //    width: "60%",
-            //    height: 70,
-            //    padding: 10,
-            //    paddingLeft: 15,
-            //    tabIndex: 3
-            //});
-            //textInput3.minWidth = 300;
-            //textInput3.horizontalAlign = "center";
-            //textInput3.y = 400;
-            //textInput3.background.alpha = .2;
-            //textInput3.on("focusChanged", function (focus) {
-            //    textInput3.background.alpha = focus ? 0.4 : 0.2;
-            //});
-            //textInput3.on("focus", function () {
-
-            //    //this.select();
-
-            //});
-            //uiStage.addChild(textInput3);
+            for (var i = 1; i <= 5; i++) {
+                (function () {
+                    var cb = new PIXI.UI.CheckBox({
+                        checked: i === 1,
+                        background: new PIXI.UI.Sprite(cb2_bg),
+                        checkmark: new PIXI.UI.Sprite(cb2_mark),
+                        checkgroup: "test",
+                        value: "checkbox " + i
+                    });
+                    cb.checkmark.pivot = 0.5;
+                    cb.checkmark.scale = 1.15;
+                    cb.anchorBottom = 0;
+                    cb.x = 50 + (50 * i);
+                    cb.background.alpha = 0.6;
+                    cb.on("focusChanged", function (focus) {
+                        cb.background.alpha = focus ? 0.9 : 0.6;
+                    });
+                    cb.on("change", function (checked) {
+                        if (checked) {
+                            textInput2.text = cb.value;
+                            PIXI.UI.Tween.fromTo(this.checkmark, 0.4, { alpha: 0, scale: 2.5 }, { alpha: 1, scale: 1.15 }, PIXI.UI.Ease.Bounce.BounceOut);
+                        }
+                        else {
+                            PIXI.UI.Tween.fromTo(this.checkmark, 0.2, { alpha: 1, scale: 1.15 }, { alpha: 0, scale: 0 }, PIXI.UI.Ease.Sine.SineOut);
+                        }
+                        
+                    });
+                    container.addChild(cb);
+                })();
+            }
 
             Update();
         }

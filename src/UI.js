@@ -10,6 +10,7 @@
     ScrollBar: require('./ScrollBar'),
     Text: require('./Text'),
     TextInput: require('./TextInput'),
+    CheckBox: require('./CheckBox'),
     MathHelper: require('./MathHelper'),
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
