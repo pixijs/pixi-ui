@@ -8,9 +8,10 @@ var UIBase = require('./UIBase');
  * @param Texture {PIXI.Texture} the texture for this SliceSprite
  * @param BorderWidth {Number} Width of the sprite borders
  * @param horizontalSlice {Boolean} Slice the sprite horizontically
- * @param horizontalSlice {Boolean} Slice the sprite vertically
+ * @param verticalSlice {Boolean} Slice the sprite vertically
+ * @param [tile=false] {Boolean} tile or streach
  */
-function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
+function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile) {
     UIBase.call(this, texture.width, texture.height);
 
     var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
@@ -55,7 +56,7 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
 
 
         //make sprites
-        sf = new PIXI.Sprite(new PIXI.Texture(t, ff));
+        sf = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ff)) : new PIXI.Sprite(new PIXI.Texture(t, ff));
         this.container.addChildAt(sf, 0);
         if (vs && hs) {
             stl = new PIXI.Sprite(new PIXI.Texture(t, ftl));
@@ -69,14 +70,14 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
 
         }
         if (hs) {
-            sl = new PIXI.Sprite(new PIXI.Texture(t, fl));
-            sr = new PIXI.Sprite(new PIXI.Texture(t, fr));
+            sl = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fl)) : new PIXI.Sprite(new PIXI.Texture(t, fl));
+            sr = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fr)) : new PIXI.Sprite(new PIXI.Texture(t, fr));
             this.container.addChildAt(sl, 0);
             this.container.addChildAt(sr, 0);
         }
         if (vs) {
-            st = new PIXI.Sprite(new PIXI.Texture(t, ft));
-            sb = new PIXI.Sprite(new PIXI.Texture(t, fb));
+            st = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ft)) : new PIXI.Sprite(new PIXI.Texture(t, ft));
+            sb = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fb)) : new PIXI.Sprite(new PIXI.Texture(t, fb));
             this.container.addChildAt(st, 0);
             this.container.addChildAt(sb, 0);
         }

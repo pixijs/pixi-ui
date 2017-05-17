@@ -132,6 +132,7 @@ UIBase.prototype.baseupdate = function () {
 
 
 
+
         //transform convertion (% etc)
         this.dirty = true;
         this._width = this.actual_width;
@@ -148,138 +149,141 @@ UIBase.prototype.baseupdate = function () {
         this._right = this.actual_right;
         this._top = this.actual_top;
         this._bottom = this.actual_bottom;
-        parentWidth = this.parent._width;
-        parentHeight = this.parent._height;
+        this._parentWidth = parentWidth = this.parent._width;
+        this._parentHeight = parentHeight = this.parent._height;
         this.dirty = false;
 
+        if (true) {
 
-
-        if (this.horizontalAlign === null) {
-            //get anchors (use left right if conflict)
-            if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
-                this._anchorRight = this._right;
-            else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null)
-                this._anchorLeft = this._left;
-            else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
-                this._anchorLeft = this._left;
-                this._anchorRight = this._right;
-            }
-
-
-            var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
-            var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
-
-            if (useLeftRight) {
-                if (this._left !== null)
-                    this.container.position.x = this._left;
-                else if (this._right !== null)
-                    this.container.position.x = parentWidth - this._right;
-            }
-            else if (useHorizontalAnchor) {
-
-                if (this._anchorLeft !== null && this._anchorRight === null)
-                    this.container.position.x = this._anchorLeft;
-                else if (this._anchorLeft === null && this._anchorRight !== null)
-                    this.container.position.x = parentWidth - this._width - this._anchorRight;
-                else if (this._anchorLeft !== null && this._anchorRight !== null) {
-                    this.container.position.x = this._anchorLeft;
-                    this._width = parentWidth - this._anchorLeft - this._anchorRight;
+            if (this.horizontalAlign === null) {
+                //get anchors (use left right if conflict)
+                if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
+                    this._anchorRight = this._right;
+                else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null)
+                    this._anchorLeft = this._left;
+                else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
+                    this._anchorLeft = this._left;
+                    this._anchorRight = this._right;
                 }
-                this.container.position.x += this.pivotX * this._width;
-            }
-            else {
-                this.container.position.x = 0;
-            }
-        }
 
 
+                var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
+                var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
 
-        if (this.verticalAlign === null) {
-            //get anchors (use top bottom if conflict)
-            if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null)
-                this._anchorBottom = this._bottom;
-            if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null)
-                this._anchorTop = this._top;
-
-            var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
-            var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
-
-            if (useTopBottom) {
-                if (this._top !== null)
-                    this.container.position.y = this._top;
-                else if (this._bottom !== null)
-                    this.container.position.y = parentHeight - this._bottom;
-            }
-            else if (useVerticalAnchor) {
-                if (this._anchorTop !== null && this._anchorBottom === null)
-                    this.container.position.y = this._anchorTop;
-                else if (this._anchorTop === null && this._anchorBottom !== null)
-                    this.container.position.y = parentHeight - this._height - this._anchorBottom;
-                else if (this._anchorTop !== null && this._anchorBottom !== null) {
-                    this.container.position.y = this._anchorTop;
-                    this._height = parentHeight - this._anchorTop - this._anchorBottom;
+                if (useLeftRight) {
+                    if (this._left !== null)
+                        this.container.position.x = this._left;
+                    else if (this._right !== null)
+                        this.container.position.x = parentWidth - this._right;
                 }
-                this.container.position.y += this.pivotY * this._height;
+                else if (useHorizontalAnchor) {
+
+                    if (this._anchorLeft !== null && this._anchorRight === null)
+                        this.container.position.x = this._anchorLeft;
+                    else if (this._anchorLeft === null && this._anchorRight !== null)
+                        this.container.position.x = parentWidth - this._width - this._anchorRight;
+                    else if (this._anchorLeft !== null && this._anchorRight !== null) {
+                        this.container.position.x = this._anchorLeft;
+                        this._width = parentWidth - this._anchorLeft - this._anchorRight;
+                    }
+                    this.container.position.x += this.pivotX * this._width;
+                }
+                else {
+                    this.container.position.x = 0;
+                }
             }
-            else {
-                this.container.position.y = 0;
+
+
+
+            if (this.verticalAlign === null) {
+                //get anchors (use top bottom if conflict)
+                if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null)
+                    this._anchorBottom = this._bottom;
+                if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null)
+                    this._anchorTop = this._top;
+
+                var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
+                var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
+
+                if (useTopBottom) {
+                    if (this._top !== null)
+                        this.container.position.y = this._top;
+                    else if (this._bottom !== null)
+                        this.container.position.y = parentHeight - this._bottom;
+                }
+                else if (useVerticalAnchor) {
+                    if (this._anchorTop !== null && this._anchorBottom === null)
+                        this.container.position.y = this._anchorTop;
+                    else if (this._anchorTop === null && this._anchorBottom !== null)
+                        this.container.position.y = parentHeight - this._height - this._anchorBottom;
+                    else if (this._anchorTop !== null && this._anchorBottom !== null) {
+                        this.container.position.y = this._anchorTop;
+                        this._height = parentHeight - this._anchorTop - this._anchorBottom;
+                    }
+                    this.container.position.y += this.pivotY * this._height;
+                }
+                else {
+                    this.container.position.y = 0;
+                }
             }
+
+            //min/max sizes
+            if (this._maxWidth !== null && this._width > this._maxWidth) this._width = this._maxWidth;
+            if (this._width < this._minWidth) this._width = this._minWidth;
+
+            if (this._maxHeight !== null && this._height > this._maxHeight) this._height = this._maxHeight;
+            if (this._height < this._minHeight) this._height = this._minHeight;
+
+
+            //pure vertical/horizontal align
+            if (this.horizontalAlign !== null) {
+                if (this.horizontalAlign == "center")
+                    this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
+                else if (this.horizontalAlign == "right")
+                    this.container.position.x = parentWidth - this._width;
+                else
+                    this.container.position.x = 0;
+                this.container.position.x += this._width * this.pivotX;
+            }
+            if (this.verticalAlign !== null) {
+                if (this.verticalAlign == "middle")
+                    this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
+                else if (this.verticalAlign == "bottom")
+                    this.container.position.y = parentHeight - this._height;
+                else
+                    this.container.position.y = 0;
+                this.container.position.y += this._height * this.pivotY;
+            }
+
+
+            //Unrestricted dragging
+            if (this.dragging && !this.setting.dragRestricted) {
+                this.container.position.x = this._dragPosition.x;
+                this.container.position.y = this._dragPosition.y;
+            }
+
+
+            //scale
+            if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
+            if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
+
+            //pivot
+            if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
+            if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
+
+            if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
+            if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
+
+            //make pixel perfect
+            if (this.pixelPerfect) {
+                this._width = Math.round(this._width);
+                this._height = Math.round(this._height);
+                this.container.position.x = Math.round(this.container.position.x);
+                this.container.position.y = Math.round(this.container.position.y);
+            }
+
         }
 
-        //min/max sizes
-        if (this._maxWidth !== null && this._width > this._maxWidth) this._width = this._maxWidth;
-        if (this._width < this._minWidth) this._width = this._minWidth;
-
-        if (this._maxHeight !== null && this._height > this._maxHeight) this._height = this._maxHeight;
-        if (this._height < this._minHeight) this._height = this._minHeight;
-
-
-        //pure vertical/horizontal align
-        if (this.horizontalAlign !== null) {
-            if (this.horizontalAlign == "center")
-                this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
-            else if (this.horizontalAlign == "right")
-                this.container.position.x = parentWidth - this._width;
-            else
-                this.container.position.x = 0;
-            this.container.position.x += this._width * this.pivotX;
-        }
-        if (this.verticalAlign !== null) {
-            if (this.verticalAlign == "middle")
-                this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
-            else if (this.verticalAlign == "bottom")
-                this.container.position.y = parentHeight - this._height;
-            else
-                this.container.position.y = 0;
-            this.container.position.y += this._height * this.pivotY;
-        }
-
-
-        //Unrestricted dragging
-        if (this.dragging && !this.setting.dragRestricted) {
-            this.container.position.x = this._dragPosition.x;
-            this.container.position.y = this._dragPosition.y;
-        }
-
-
-        //scale
-        if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
-        if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
-
-        //pivot
-        if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
-        if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
-
-        if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
-        if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
-
-        //make pixel perfect
-        if (this.pixelPerfect) {
-            this._width = Math.round(this._width);
-            this._height = Math.round(this._height);
-            this.container.position.x = Math.round(this.container.position.x);
-            this.container.position.y = Math.round(this.container.position.y);
-        }
     }
 };
 
@@ -1099,7 +1103,7 @@ Object.defineProperties(UIBase.prototype, {
             this.container.cacheAsBitmap = val;
         }
     },
-    click: {
+    onClick: {
         get: function () {
             return this.container.click;
         },

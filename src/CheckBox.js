@@ -24,13 +24,17 @@ function CheckBox(options) {
     this.checkGroup = options.checkgroup || null;
 
     this.background = options.background;
+    this.background.width = "100%";
+    this.background.height = "100%";
     this.addChild(this.background);
 
     this.checkmark = options.checkmark;
     if (this.checkmark) {
         this.checkmark.verticalAlign = "middle";
         this.checkmark.horizontalAlign = "center";
-        this.checkmark.alpha = this._checked ? 1 : 0;
+        if (!this._checked) {
+            this.checkmark.alpha = 0;
+        }
         this.addChild(this.checkmark);
     }
 
@@ -45,9 +49,7 @@ function CheckBox(options) {
     var self = this;
     var keyDownEvent = function (e) {
         if (e.which === 32) { //space
-            if (self.checkGroup !== null && self.checked)
-                return;
-            self.checked = !self.checked;
+            self.click();
         }
     };
 
@@ -69,12 +71,7 @@ function CheckBox(options) {
     };
 
     clickEvent.onClick = function (e) {
-        self.emit("click");
-
-        if (self.checkGroup !== null && self.checked)
-            return;
-
-        self.checked = !self.checked;
+        self.click();
     };
 
     this.change = function (val) {
@@ -82,7 +79,15 @@ function CheckBox(options) {
             this.checkmark.alpha = val ? 1 : 0;
     };
 
-    //public methods
+    this.click = function () {
+        self.emit("click");
+        if (self.checkGroup !== null && self.checked)
+            return;
+
+        self.checked = !self.checked;
+    };
+
+
     this.focus = function () {
         if (!this._focused) {
             InputBase.prototype.focus.call(this);

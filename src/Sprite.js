@@ -18,6 +18,15 @@ Sprite.prototype = Object.create(UIBase.prototype);
 Sprite.prototype.constructor = Sprite;
 module.exports = Sprite;
 
+
+Sprite.fromFrame = function (frameId) {
+    return new Sprite(new PIXI.Texture.fromFrame(frameId));
+};
+
+Sprite.fromImage = function (imageUrl) {
+    return new Sprite(new PIXI.Texture.fromImage(imageUrl));
+};
+
 /**
  * Updates the text
  *

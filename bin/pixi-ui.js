@@ -1,11 +1,149 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Wed, 03 May 2017 04:50:11 UTC
+ * Compiled Wed, 17 May 2017 08:19:20 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.pixiUi = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var InputBase = require('./InputBase'),
+    ClickEvent = require('./Interaction/ClickEvent.js'),
+    InputController = require('./Interaction/InputController');
+
+/**
+ * An UI button object
+ *
+ * @class
+ * @extends PIXI.UI.InputBase
+ * @memberof PIXI.UI
+ * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
+ * @param [options.text=null] {PIXI.UI.Text} optional text
+ * @param [options.tabIndex=0] {Number} input tab index
+ * @param [options.tabGroup=0] {Number|String} input tab group
+ */
+
+function Button(options) {
+    InputBase.call(this, options.background.width, options.background.height, options.tabIndex || 0, options.tabGroup || 0);
+    this.background = options.background;
+    this.background.width = "100%";
+    this.background.height = "100%";
+    this.background.pivot = 0.5;
+    this.background.verticalAlign = "middle";
+    this.background.horizontalAlign = "center";
+    this.addChild(this.background);
+
+
+    this.uiText = options.text;
+    if (this.uiText) {
+        this.uiText.verticalAlign = "middle";
+        this.uiText.horizontalAlign = "center";
+        this.addChild(this.uiText);
+    }
+
+    this.container.buttonMode = true;
+
+    var self = this;
+    var keyDownEvent = function (e) {
+        if (e.which === 32) { //space
+            self.click();
+        }
+    };
+
+    var clickEvent = new ClickEvent(this.background);
+    clickEvent.onHover = function (e) {
+        self.emit("hover", true);
+    };
+
+    clickEvent.onLeave = function (e) {
+        self.emit("hover", false);
+    };
+
+    clickEvent.onPress = function (e, isPressed) {
+        if (isPressed) {
+            self.focus();
+            e.data.originalEvent.preventDefault();
+        }
+        self.emit("press", isPressed);
+    };
+
+    clickEvent.onClick = function (e) {
+        self.click();
+    };
+
+    this.click = function () {
+        self.emit("click");
+    };
+
+
+    this.focus = function () {
+        if (!this._focused) {
+            InputBase.prototype.focus.call(this);
+            document.addEventListener("keydown", keyDownEvent, false);
+        }
+
+    };
+
+    this.blur = function () {
+        if (this._focused) {
+            InputBase.prototype.blur.call(this);
+            document.removeEventListener("keydown", keyDownEvent);
+        }
+    };
+}
+
+Button.prototype = Object.create(InputBase.prototype);
+Button.prototype.constructor = Button;
+module.exports = Button;
+
+Object.defineProperties(Button.prototype, {
+    value: {
+        get: function () {
+            if (this.uiText) {
+                return this.uiText.text;
+            }
+            return "";
+        },
+        set: function (val) {
+            if (this.uiText) {
+                this.uiText.text = val;
+            }
+        }
+    },
+    text: {
+        get: function () {
+            return this.value;
+        },
+        set: function (val) {
+            this.value = val;
+        }
+    }
+});
+
+
+
+/*
+ * Features:
+ * Button, radio button (checkgroups)
+ * 
+ * Methods:
+ * blur()
+ * focus()
+ * 
+ * Properties:
+ * checked: get/set Button checked
+ * value: get/set Button value
+ * 
+ * Events:
+ * "hover"          param: [bool]isHover (hover/leave)
+ * "press"          param: [bool]isPressed (pointerdown/pointerup)
+ * "click"
+ * "blur"
+ * "focus"
+ * "focusChanged"   param: [bool]isFocussed
+ * "change"         param: [bool]isChecked
+ *  
+ */
+},{"./InputBase":8,"./Interaction/ClickEvent.js":9,"./Interaction/InputController":12}],2:[function(require,module,exports){
 var InputBase = require('./InputBase'),
     ClickEvent = require('./Interaction/ClickEvent.js'),
     InputController = require('./Interaction/InputController');
@@ -32,13 +170,17 @@ function CheckBox(options) {
     this.checkGroup = options.checkgroup || null;
 
     this.background = options.background;
+    this.background.width = "100%";
+    this.background.height = "100%";
     this.addChild(this.background);
 
     this.checkmark = options.checkmark;
     if (this.checkmark) {
         this.checkmark.verticalAlign = "middle";
         this.checkmark.horizontalAlign = "center";
-        this.checkmark.alpha = this._checked ? 1 : 0;
+        if (!this._checked) {
+            this.checkmark.alpha = 0;
+        }
         this.addChild(this.checkmark);
     }
 
@@ -53,9 +195,7 @@ function CheckBox(options) {
     var self = this;
     var keyDownEvent = function (e) {
         if (e.which === 32) { //space
-            if (self.checkGroup !== null && self.checked)
-                return;
-            self.checked = !self.checked;
+            self.click();
         }
     };
 
@@ -77,12 +217,7 @@ function CheckBox(options) {
     };
 
     clickEvent.onClick = function (e) {
-        self.emit("click");
-
-        if (self.checkGroup !== null && self.checked)
-            return;
-
-        self.checked = !self.checked;
+        self.click();
     };
 
     this.change = function (val) {
@@ -90,7 +225,15 @@ function CheckBox(options) {
             this.checkmark.alpha = val ? 1 : 0;
     };
 
-    //public methods
+    this.click = function () {
+        self.emit("click");
+        if (self.checkGroup !== null && self.checked)
+            return;
+
+        self.checked = !self.checked;
+    };
+
+
     this.focus = function () {
         if (!this._focused) {
             InputBase.prototype.focus.call(this);
@@ -178,7 +321,7 @@ Object.defineProperties(CheckBox.prototype, {
  * "change"         param: [bool]isChecked
  *  
  */
-},{"./InputBase":6,"./Interaction/ClickEvent.js":7,"./Interaction/InputController":10}],2:[function(require,module,exports){
+},{"./InputBase":8,"./Interaction/ClickEvent.js":9,"./Interaction/InputController":12}],3:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -209,7 +352,353 @@ Container.prototype.update = function () {
 };
 
 
-},{"./UIBase":27}],3:[function(require,module,exports){
+},{"./UIBase":29}],4:[function(require,module,exports){
+var UIBase = require('./UIBase');
+var Styles = {
+    "default": {
+        chars: {},
+        style: { fill: '#FFFFFF', fontSize: 20 },
+        ignoreColor: false
+    }
+};
+
+
+/**
+ * An UI text object
+ *
+ * @class
+ * @extends PIXI.UI.UIBase
+ * @memberof PIXI.UI
+ * @param Text {String} Text content
+ * @param DefaultStyleName {String} Defualt style (use DynamicText.RegisterStyle() to add styles)
+ */
+function DynamicText(text, defaultStyleName, defaultColor) {
+    UIBase.call(this, 0, 0);
+    this._inputText = text;
+
+    //dirty checks
+    this.dirtyText = true;
+    var lastWidth = 0;
+    var lastHeight = 0;
+    var chars = [];
+    var lineHeight = 0;
+
+    //temp
+    var innerContainer = new PIXI.Container();
+
+    this.update = function () {
+        if (this.dirtyText || this._width !== lastWidth || this._height !== lastHeight) {
+            this.dirtyText = false;
+            lastWidth = this._width;
+            lastHeight = this._height;
+
+
+
+            var style, color, valign, size, rotation, fonts = [{}], currentFont;
+
+            var UpdateFontStyles = function () {
+                currentFont = fonts[fonts.length - 1];
+                style = Styles[currentFont.style] || Styles[defaultStyleName] || Styles["default"];
+                color = currentFont.color || defaultColor || "#ffffff";
+                valign = parseInt(currentFont.valign || 0);
+                size = parseInt(currentFont.size || style.style.fontSize);
+                rotation = parseFloat(currentFont.rotation || 0);
+            }
+            UpdateFontStyles();
+
+
+
+            var cx = 0, cy = 0;
+            var textIndex = 0;
+            for (var i = 0; i < this._inputText.length; i++) {
+                var c = this._inputText[i];
+
+
+                //detect font tags
+                if (c === "<") {
+                    var _name = this._inputText.slice(i + 1, i + 6);
+                    if (_name === "font " || _name === "/font") {
+                        var tag = this._inputText.substring(i);
+                        tag = tag.slice(0, tag.indexOf(">") + 1);
+
+                        if (tag.length) {
+                            var matchFound = false;
+                            if (tag === "</font>") {
+                                matchFound = true;
+                                if (fonts.length > 1) {
+                                    fonts.splice(fonts.length - 1, 1);
+                                    UpdateFontStyles();
+                                }
+                            }
+                            else {
+                                var font = JSON.parse(JSON.stringify(currentFont)),
+                                    regex = /(\w+)\s*=\s*((["'])(.*?)\3|([^>\s]*)(?=\s|\/>))(?=[^<]*>)/g,
+                                    match = regex.exec(tag);
+
+                                while (match !== null) {
+                                    font[match[1]] = match[4];
+                                    match = regex.exec(tag);
+                                    matchFound = true;
+                                }
+                                if (matchFound) {
+                                    fonts.push(font);
+                                    UpdateFontStyles();
+                                }
+                            }
+
+                            if (matchFound) {
+                                i += tag.length - 1;
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+
+                //Get chardata (or create if doesn't exsist)
+                var charStyleData = style.chars[c];
+                if (!charStyleData) {
+                    var text = new PIXI.Text(c, style.style);
+                    var texture;
+                    var isSpace = c === " ";
+                    if (!isSpace)
+                        texture = ss.AddObject(text);
+                    charStyleData = style.chars[c] = {
+                        style: style,
+                        texture: texture,
+                        width: text.width,
+                        height: text.height,
+                        isSpace: isSpace
+                    }
+                }
+
+                if (!lineHeight) {
+                    lineHeight = charStyleData.height;
+                }
+
+
+                var char = chars[textIndex];
+                if (!char) {
+                    char = {}
+                    chars.push(char);
+                }
+
+
+
+
+
+                char.styleData = charStyleData;
+
+                char._orgIndex = i;
+                char.tint = color;
+                char.width = char.styleData.width * (size / style.style.fontSize);
+                char.height = char.styleData.height * (size / style.style.fontSize);
+
+
+
+                var offsetY = (lineHeight - char.height) + valign;
+
+                char.x = cx;
+                char.y = cy + offsetY;
+                char.rotation = rotation;
+                cx += char.width;
+                textIndex++;
+            }
+
+            this.width = cx;
+
+            if (chars.length >= textIndex) {
+                chars.splice(textIndex, chars.length - textIndex);
+            }
+
+
+            //ROUGH TEMP RENDER (with sprites)
+            if (innerContainer.children.length > 0) innerContainer.removeChildren(0, innerContainer.children.length);
+            for (var i = 0; i < chars.length; i++) {
+                var char = chars[i];
+
+                //no reason to render a blank space (no texture created)
+                if (char.styleData.isSpace) continue;
+
+
+                var sprite = new PIXI.Sprite(char.styleData.texture);
+
+                sprite.width = char.width;
+                sprite.height = char.height;
+                sprite.anchor.set(0.5);
+                sprite.x = char.x + (sprite.width * 0.5);
+                sprite.y = char.y + (sprite.height * 0.5);
+                sprite.tint = char.tint.replace("#", "0x");
+                sprite.rotation = char.rotation;
+                innerContainer.addChild(sprite);
+            }
+
+            window.output = innerContainer;
+            this.container.addChild(innerContainer);
+        }
+    };
+}
+
+DynamicText.prototype = Object.create(UIBase.prototype);
+DynamicText.prototype.constructor = DynamicText;
+module.exports = DynamicText;
+
+
+Object.defineProperties(DynamicText.prototype, {
+    value: {
+        get: function () {
+            return this._inputText;
+        },
+        set: function (val) {
+            this._inputText = val;
+            this.dirtyText = true;
+            this.update();
+        }
+    },
+});
+
+
+DynamicText.RegisterStyle = function (name, PixiTextStyle) {
+    if (typeof name === "string" && name.length) {
+        var s = JSON.parse(JSON.stringify(Styles["default"]));
+
+        for (var param in PixiTextStyle) {
+            s[param] = PixiTextStyle[param];
+        }
+
+        Styles[name] = {
+            chars: {},
+            style: s
+        }
+    }
+}
+
+
+
+
+
+var SpriteSheet = function (maxWidth, maxHeight, padding) {
+    var res = devicePixelRatio || 1, canvas, container, baseTexture, cx, cy, cw, ch, renderTimeout;
+    var canvasList = [];
+    this.createNewCanvas = function () {
+        canvas = new PIXI.CanvasRenderer({ width: 100, height: 100, transparent: true, resolution: res });
+        canvas.objects = [];
+        baseTexture = PIXI.BaseTexture.fromCanvas(canvas.view);
+        container = new PIXI.Container();
+        cx = cy = cw = ch = 0;
+        canvasList.push(canvas);
+        renderTimeout = undefined;
+
+
+        setTimeout(function () {
+            document.body.appendChild(canvas.view);
+            canvas.view.className = "ss";
+            canvas.view.style.right = ((canvasList.length - 1) * maxWidth + 10) + "px";
+            canvas.view.style.transform = "scale(" + (1 / devicePixelRatio) + ")";
+            canvas.view.style.transformOrigin = "100% 100%";
+        }, 100);
+
+    }
+
+    this.createNewCanvas();
+
+
+    this.render = function () {
+        //resize the canvas if texture doesnt fit
+        var resize = false;
+
+        if (cw > canvas.width / res || ch > canvas.height / res) {
+            this.reArrange()
+            canvas.resize(Math.max(cw, canvas.width / res), Math.max(ch, canvas.height / res));
+            baseTexture.update();
+            resize = true;
+        }
+
+        canvas.render(container);
+
+        //update texture frames (after resize and render)
+        for (var i = 0; i < canvas.objects.length; i++) {
+            var obj = canvas.objects[i];
+            if (obj.dirty || resize) {
+                obj.texture.frame = new PIXI.Rectangle(obj.sprite.x * res, obj.sprite.y * res, obj.sprite.width * res, obj.sprite.height * res);
+                obj.texture.update();
+
+                obj.dirty = false;
+            }
+        }
+    }
+
+    this.AddObject = function (obj, positionOnly) {
+        
+
+        
+        
+
+        
+
+        //change line
+        if (cx + obj.width > maxWidth) {
+            cy = ch + padding;
+            cx = 0;
+
+            //arrange or new canvas
+            if (!positionOnly && cy + obj.height > maxHeight) 
+                this.createNewCanvas();
+        }
+
+        
+
+        obj.x = cx;
+        obj.y = cy;
+
+
+        if (cy + obj.height > ch)
+            ch = cy + obj.height;
+        if (cx + obj.width > cw)
+            cw = cx + obj.width;
+        cx += obj.width + padding;
+
+
+        var outputTexture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(0, 0, obj.width, obj.height));
+
+        if (!positionOnly) {
+            canvas.objects.push({
+                dirty: true,
+                sprite: obj,
+                baseTexture: baseTexture,
+                texture: outputTexture
+            }); 
+            container.addChild(obj);
+        }
+
+
+        //Update the canvas 
+        var self = this;
+        if (renderTimeout === undefined) {
+            renderTimeout = setTimeout(function () {
+                self.render();
+                console.log("RENDER");
+                renderTimeout = undefined;
+            }, 0);
+        }
+
+        return outputTexture;
+    }
+
+    this.reArrange = function () {
+        canvas.objects.sort(function (a, b) {
+            return b.sprite.height - a.sprite.height;
+        });
+
+        cx = cy = ch = cw = 0
+        for (var i = 0; i < canvas.objects.length; i++) {
+            this.AddObject(canvas.objects[i].sprite, true);
+        }
+    }
+}
+var ss = DynamicText.ss = new SpriteSheet(256, 100, 1);
+
+},{"./UIBase":29}],5:[function(require,module,exports){
 var Ease = {},
     EaseBase = require('./EaseBase'),
     ExponentialEase = require('./ExponentialEase'),
@@ -347,7 +836,7 @@ module.exports = Ease;
 
 
 
-},{"./EaseBase":4,"./ExponentialEase":5}],4:[function(require,module,exports){
+},{"./EaseBase":6,"./ExponentialEase":7}],6:[function(require,module,exports){
 function EaseBase() {
     this.getPosition = function (p) {
         return p;
@@ -360,7 +849,7 @@ module.exports = EaseBase;
 
 
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var EaseBase = require('./EaseBase');
 
 function ExponentialEase(power, easeIn, easeOut) {
@@ -388,7 +877,7 @@ module.exports = ExponentialEase;
 
 
 
-},{"./EaseBase":4}],6:[function(require,module,exports){
+},{"./EaseBase":6}],8:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     InputController = require('./Interaction/InputController'),
     ClickEvent = require('./Interaction/ClickEvent');
@@ -492,11 +981,12 @@ InputBase.prototype.blur = function () {
 
     }
 };
-},{"./Interaction/ClickEvent":7,"./Interaction/InputController":10,"./UIBase":27}],7:[function(require,module,exports){
+},{"./Interaction/ClickEvent":9,"./Interaction/InputController":12,"./UIBase":29}],9:[function(require,module,exports){
 var ClickEvent = function (obj) {
     var bound = false,
         self = this,
-        id = 0;
+        id = 0,
+        ishover = false;
 
     obj.container.interactive = true;
 
@@ -536,11 +1026,17 @@ var ClickEvent = function (obj) {
     };
 
     var _onMouseOver = function (event) {
-        self.onHover.call(obj, event);
+        if (!ishover) {
+            ishover = true;
+            self.onHover.call(obj, event);
+        }
     };
 
     var _onMouseOut = function (event) {
-        self.onLeave.call(obj, event);
+        if (ishover) {
+            ishover = false;
+            self.onLeave.call(obj, event);
+        }
     };
 
     this.stopEvent = function () {
@@ -574,7 +1070,7 @@ ClickEvent.prototype.onHover = function (event) { };
 ClickEvent.prototype.onLeave = function (event) { };
 ClickEvent.prototype.onPress = function (event, isPressed) { };
 ClickEvent.prototype.onClick = function (event) { };
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var _items = [];
 var DragDropController = {
     add: function (item, event) {
@@ -627,7 +1123,7 @@ var DragDropController = {
 };
 
 module.exports = DragDropController;
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var DragEvent = function (obj) {
     var bound = false,
         start = new PIXI.Point(),
@@ -728,7 +1224,7 @@ DragEvent.prototype.onPress = function (event, isPressed) { };
 DragEvent.prototype.onDragEnd = function (event) { };
 DragEvent.prototype.onDragMove = function (event, offset) { };
 DragEvent.prototype.onDragStart = function (event) { };
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var _currentItem;
 var tabGroups = {};
 var checkGroups = {};
@@ -820,7 +1316,7 @@ var InputController = {
 };
 
 module.exports = InputController;
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var Interaction = {
     ClickEvent: require('./ClickEvent'),
     DragEvent: require('./DragEvent'),
@@ -829,7 +1325,7 @@ var Interaction = {
 
 
 module.exports = Interaction;
-},{"./ClickEvent":7,"./DragEvent":9,"./MouseScrollEvent":12}],12:[function(require,module,exports){
+},{"./ClickEvent":9,"./DragEvent":11,"./MouseScrollEvent":14}],14:[function(require,module,exports){
 var MouseScrollEvent = function (obj, preventDefault) {
     var bound = false, delta = new PIXI.Point(), self = this;
     obj.container.interactive = true;
@@ -882,7 +1378,7 @@ MouseScrollEvent.prototype.constructor = MouseScrollEvent;
 module.exports = MouseScrollEvent;
 
 MouseScrollEvent.prototype.onMouseScroll = function (event, delta) { };
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var MathHelper = {
     Lerp: function (start, stop, amt) {
         if (amt > 1) amt = 1;
@@ -896,7 +1392,7 @@ var MathHelper = {
 };
 
 module.exports = MathHelper;
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var Slider = require('./Slider'),
     Tween = require('./Tween'),
     Ease = require('./Ease/Ease');
@@ -990,7 +1486,7 @@ ScrollBar.prototype.toggleHidden = function (hidden) {
 
 
 
-},{"./Ease/Ease":3,"./Slider":17,"./Tween":25}],15:[function(require,module,exports){
+},{"./Ease/Ease":5,"./Slider":19,"./Tween":27}],17:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     Container = require('./Container'),
     MathHelper = require('./MathHelper'),
@@ -1274,7 +1770,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
 
-},{"./Container":2,"./Interaction/DragEvent":9,"./Interaction/MouseScrollEvent":12,"./MathHelper":13,"./Ticker":23,"./UIBase":27}],16:[function(require,module,exports){
+},{"./Container":3,"./Interaction/DragEvent":11,"./Interaction/MouseScrollEvent":14,"./MathHelper":15,"./Ticker":25,"./UIBase":29}],18:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1285,9 +1781,10 @@ var UIBase = require('./UIBase');
  * @param Texture {PIXI.Texture} the texture for this SliceSprite
  * @param BorderWidth {Number} Width of the sprite borders
  * @param horizontalSlice {Boolean} Slice the sprite horizontically
- * @param horizontalSlice {Boolean} Slice the sprite vertically
+ * @param verticalSlice {Boolean} Slice the sprite vertically
+ * @param [tile=false] {Boolean} tile or streach
  */
-function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
+function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile) {
     UIBase.call(this, texture.width, texture.height);
 
     var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
@@ -1332,7 +1829,7 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
 
 
         //make sprites
-        sf = new PIXI.Sprite(new PIXI.Texture(t, ff));
+        sf = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ff)) : new PIXI.Sprite(new PIXI.Texture(t, ff));
         this.container.addChildAt(sf, 0);
         if (vs && hs) {
             stl = new PIXI.Sprite(new PIXI.Texture(t, ftl));
@@ -1346,14 +1843,14 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice) {
 
         }
         if (hs) {
-            sl = new PIXI.Sprite(new PIXI.Texture(t, fl));
-            sr = new PIXI.Sprite(new PIXI.Texture(t, fr));
+            sl = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fl)) : new PIXI.Sprite(new PIXI.Texture(t, fl));
+            sr = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fr)) : new PIXI.Sprite(new PIXI.Texture(t, fr));
             this.container.addChildAt(sl, 0);
             this.container.addChildAt(sr, 0);
         }
         if (vs) {
-            st = new PIXI.Sprite(new PIXI.Texture(t, ft));
-            sb = new PIXI.Sprite(new PIXI.Texture(t, fb));
+            st = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ft)) : new PIXI.Sprite(new PIXI.Texture(t, ft));
+            sb = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fb)) : new PIXI.Sprite(new PIXI.Texture(t, fb));
             this.container.addChildAt(st, 0);
             this.container.addChildAt(sb, 0);
         }
@@ -1411,7 +1908,7 @@ module.exports = SliceSprite;
 
 
 
-},{"./UIBase":27}],17:[function(require,module,exports){
+},{"./UIBase":29}],19:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     DragEvent = require('./Interaction/DragEvent'),
     ClickEvent = require('./Interaction/ClickEvent'),
@@ -1442,6 +1939,7 @@ var UIBase = require('./UIBase'),
 function Slider(options) {
     UIBase.call(this);
     this._amt = 0;
+    this._disabled = false;
 
     //set options
     this.track = options.track;
@@ -1460,7 +1958,23 @@ function Slider(options) {
 
     this.addChild(this.track);
     if (this.fill) this.track.addChild(this.fill);
-    this.track.addChild(this.handle);
+    this.addChild(this.handle);
+    this.handle.container.buttonMode = true;
+
+    if (this.vertical) {
+        this.height = "100%";
+        this.width = this.track.width;
+        this.track.height = "100%";
+        this.handle.horizontalAlign = "center";
+        if (this.fill) this.fill.horizontalAlign = "center";
+    }
+    else {
+        this.width = "100%";
+        this.height = this.track.height;
+        this.track.width = "100%";
+        this.handle.verticalAlign = "middle";
+        if (this.fill) this.fill.verticalAlign = "middle";
+    }
 
 }
 
@@ -1505,20 +2019,7 @@ Slider.prototype.initialize = function () {
     var self = this;
     var startValue = 0;
 
-    if (this.vertical) {
-        this.height = "90%";
-        this.width = this.track.width;
-        this.track.height = "100%";
-        this.handle.horizontalAlign = "center";
-        if (this.fill) this.fill.horizontalAlign = "center";
-    }
-    else {
-        this.width = "90%";
-        this.height = this.track.height;
-        this.track.width = "100%";
-        this.handle.verticalAlign = "middle";
-        if (this.fill) this.fill.verticalAlign = "middle";
-    }
+
 
     ////Handle dragging
     var handleDrag = new DragEvent(this.handle);
@@ -1638,9 +2139,22 @@ Object.defineProperties(Slider.prototype, {
             this._maxValue = val;
             this.update();
         }
+    },
+    disabled: {
+        get: function () {
+            return this._disabled;
+        },
+        set: function (val) {
+            if (val !== this._disabled) {
+                this._disabled = val;
+                this.handle.container.buttonMode = !val;
+                this.handle.container.interactive = !val;
+                this.track.container.interactive = !val;
+            }
+        }
     }
 });
-},{"./Ease/Ease":3,"./Interaction/ClickEvent":7,"./Interaction/DragEvent":9,"./MathHelper":13,"./Tween":25,"./UIBase":27}],18:[function(require,module,exports){
+},{"./Ease/Ease":5,"./Interaction/ClickEvent":9,"./Interaction/DragEvent":11,"./MathHelper":15,"./Tween":27,"./UIBase":29}],20:[function(require,module,exports){
 var Container = require('./Container');
 var Tween = require('./Tween');
 /**
@@ -1762,7 +2276,7 @@ SortableList.prototype._sort = function () {
 
 
 
-},{"./Container":2,"./Tween":25}],19:[function(require,module,exports){
+},{"./Container":3,"./Tween":27}],21:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1783,6 +2297,15 @@ Sprite.prototype = Object.create(UIBase.prototype);
 Sprite.prototype.constructor = Sprite;
 module.exports = Sprite;
 
+
+Sprite.fromFrame = function (frameId) {
+    return new Sprite(new PIXI.Texture.fromFrame(frameId));
+};
+
+Sprite.fromImage = function (imageUrl) {
+    return new Sprite(new PIXI.Texture.fromImage(imageUrl));
+};
+
 /**
  * Updates the text
  *
@@ -1800,7 +2323,7 @@ Sprite.prototype.update = function () {
 };
 
 
-},{"./UIBase":27}],20:[function(require,module,exports){
+},{"./UIBase":29}],22:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1928,7 +2451,7 @@ Object.defineProperties(Stage.prototype, {
         }
     }
 });
-},{"./UIBase":27}],21:[function(require,module,exports){
+},{"./UIBase":29}],23:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1941,7 +2464,6 @@ var UIBase = require('./UIBase');
  * @param TextStyle {PIXI.TextStyle} Style used for the Text
  */
 function Text(text, PIXITextStyle) {
-
     this._text = new PIXI.Text(text, PIXITextStyle);
     UIBase.call(this, this._text.width, this._text.height);
     this.container.addChild(this._text);
@@ -2004,7 +2526,7 @@ Object.defineProperties(Text.prototype, {
         }
     }
 });
-},{"./UIBase":27}],22:[function(require,module,exports){
+},{"./UIBase":29}],24:[function(require,module,exports){
 var InputBase = require('./InputBase'),
     Container = require('./Container'),
     DragEvent = require('./Interaction/DragEvent');
@@ -2850,7 +3372,7 @@ Object.defineProperties(TextInput.prototype, {
  *  
  * 
  */
-},{"./Container":2,"./InputBase":6,"./Interaction/DragEvent":9}],23:[function(require,module,exports){
+},{"./Container":3,"./InputBase":8,"./Interaction/DragEvent":11}],25:[function(require,module,exports){
 var Tween = require('./Tween');
 
 function Ticker(autoStart) {
@@ -2927,7 +3449,7 @@ Ticker.removeListener = function (event, fn) {
 
 
 Ticker.shared = new Ticker(true);
-},{"./Tween":25}],24:[function(require,module,exports){
+},{"./Tween":27}],26:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -2984,7 +3506,7 @@ Object.defineProperties(TilingSprite.prototype, {
         }
     }
 });
-},{"./UIBase":27}],25:[function(require,module,exports){
+},{"./UIBase":29}],27:[function(require,module,exports){
 var MathHelper = require('./MathHelper');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
@@ -3167,7 +3689,7 @@ var Tween = {
 
 
 module.exports = Tween;
-},{"./Ease/Ease":3,"./MathHelper":13}],26:[function(require,module,exports){
+},{"./Ease/Ease":5,"./MathHelper":15}],28:[function(require,module,exports){
 var UI = {
     Stage: require('./Stage'),
     Container: require('./Container'),
@@ -3179,7 +3701,9 @@ var UI = {
     Slider: require('./Slider'),
     ScrollBar: require('./ScrollBar'),
     Text: require('./Text'),
+    DynamicText: require('./DynamicText'),
     TextInput: require('./TextInput'),
+    Button: require('./Button'),
     CheckBox: require('./CheckBox'),
     MathHelper: require('./MathHelper'),
     Tween: require('./Tween'),
@@ -3190,7 +3714,7 @@ var UI = {
 
 
 module.exports = UI;
-},{"./CheckBox":1,"./Container":2,"./Ease/Ease":3,"./Interaction/Interaction":11,"./MathHelper":13,"./ScrollBar":14,"./ScrollingContainer":15,"./SliceSprite":16,"./Slider":17,"./SortableList":18,"./Sprite":19,"./Stage":20,"./Text":21,"./TextInput":22,"./Ticker":23,"./TilingSprite":24,"./Tween":25}],27:[function(require,module,exports){
+},{"./Button":1,"./CheckBox":2,"./Container":3,"./DynamicText":4,"./Ease/Ease":5,"./Interaction/Interaction":13,"./MathHelper":15,"./ScrollBar":16,"./ScrollingContainer":17,"./SliceSprite":18,"./Slider":19,"./SortableList":20,"./Sprite":21,"./Stage":22,"./Text":23,"./TextInput":24,"./Ticker":25,"./TilingSprite":26,"./Tween":27}],29:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI'),
     DragEvent = require('./Interaction/DragEvent'),
@@ -3325,6 +3849,7 @@ UIBase.prototype.baseupdate = function () {
 
 
 
+
         //transform convertion (% etc)
         this.dirty = true;
         this._width = this.actual_width;
@@ -3341,138 +3866,141 @@ UIBase.prototype.baseupdate = function () {
         this._right = this.actual_right;
         this._top = this.actual_top;
         this._bottom = this.actual_bottom;
-        parentWidth = this.parent._width;
-        parentHeight = this.parent._height;
+        this._parentWidth = parentWidth = this.parent._width;
+        this._parentHeight = parentHeight = this.parent._height;
         this.dirty = false;
 
+        if (true) {
 
-
-        if (this.horizontalAlign === null) {
-            //get anchors (use left right if conflict)
-            if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
-                this._anchorRight = this._right;
-            else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null)
-                this._anchorLeft = this._left;
-            else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
-                this._anchorLeft = this._left;
-                this._anchorRight = this._right;
-            }
-
-
-            var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
-            var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
-
-            if (useLeftRight) {
-                if (this._left !== null)
-                    this.container.position.x = this._left;
-                else if (this._right !== null)
-                    this.container.position.x = parentWidth - this._right;
-            }
-            else if (useHorizontalAnchor) {
-
-                if (this._anchorLeft !== null && this._anchorRight === null)
-                    this.container.position.x = this._anchorLeft;
-                else if (this._anchorLeft === null && this._anchorRight !== null)
-                    this.container.position.x = parentWidth - this._width - this._anchorRight;
-                else if (this._anchorLeft !== null && this._anchorRight !== null) {
-                    this.container.position.x = this._anchorLeft;
-                    this._width = parentWidth - this._anchorLeft - this._anchorRight;
+            if (this.horizontalAlign === null) {
+                //get anchors (use left right if conflict)
+                if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
+                    this._anchorRight = this._right;
+                else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null)
+                    this._anchorLeft = this._left;
+                else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
+                    this._anchorLeft = this._left;
+                    this._anchorRight = this._right;
                 }
-                this.container.position.x += this.pivotX * this._width;
-            }
-            else {
-                this.container.position.x = 0;
-            }
-        }
 
 
+                var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
+                var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
 
-        if (this.verticalAlign === null) {
-            //get anchors (use top bottom if conflict)
-            if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null)
-                this._anchorBottom = this._bottom;
-            if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null)
-                this._anchorTop = this._top;
-
-            var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
-            var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
-
-            if (useTopBottom) {
-                if (this._top !== null)
-                    this.container.position.y = this._top;
-                else if (this._bottom !== null)
-                    this.container.position.y = parentHeight - this._bottom;
-            }
-            else if (useVerticalAnchor) {
-                if (this._anchorTop !== null && this._anchorBottom === null)
-                    this.container.position.y = this._anchorTop;
-                else if (this._anchorTop === null && this._anchorBottom !== null)
-                    this.container.position.y = parentHeight - this._height - this._anchorBottom;
-                else if (this._anchorTop !== null && this._anchorBottom !== null) {
-                    this.container.position.y = this._anchorTop;
-                    this._height = parentHeight - this._anchorTop - this._anchorBottom;
+                if (useLeftRight) {
+                    if (this._left !== null)
+                        this.container.position.x = this._left;
+                    else if (this._right !== null)
+                        this.container.position.x = parentWidth - this._right;
                 }
-                this.container.position.y += this.pivotY * this._height;
+                else if (useHorizontalAnchor) {
+
+                    if (this._anchorLeft !== null && this._anchorRight === null)
+                        this.container.position.x = this._anchorLeft;
+                    else if (this._anchorLeft === null && this._anchorRight !== null)
+                        this.container.position.x = parentWidth - this._width - this._anchorRight;
+                    else if (this._anchorLeft !== null && this._anchorRight !== null) {
+                        this.container.position.x = this._anchorLeft;
+                        this._width = parentWidth - this._anchorLeft - this._anchorRight;
+                    }
+                    this.container.position.x += this.pivotX * this._width;
+                }
+                else {
+                    this.container.position.x = 0;
+                }
             }
-            else {
-                this.container.position.y = 0;
+
+
+
+            if (this.verticalAlign === null) {
+                //get anchors (use top bottom if conflict)
+                if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null)
+                    this._anchorBottom = this._bottom;
+                if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null)
+                    this._anchorTop = this._top;
+
+                var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
+                var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
+
+                if (useTopBottom) {
+                    if (this._top !== null)
+                        this.container.position.y = this._top;
+                    else if (this._bottom !== null)
+                        this.container.position.y = parentHeight - this._bottom;
+                }
+                else if (useVerticalAnchor) {
+                    if (this._anchorTop !== null && this._anchorBottom === null)
+                        this.container.position.y = this._anchorTop;
+                    else if (this._anchorTop === null && this._anchorBottom !== null)
+                        this.container.position.y = parentHeight - this._height - this._anchorBottom;
+                    else if (this._anchorTop !== null && this._anchorBottom !== null) {
+                        this.container.position.y = this._anchorTop;
+                        this._height = parentHeight - this._anchorTop - this._anchorBottom;
+                    }
+                    this.container.position.y += this.pivotY * this._height;
+                }
+                else {
+                    this.container.position.y = 0;
+                }
             }
+
+            //min/max sizes
+            if (this._maxWidth !== null && this._width > this._maxWidth) this._width = this._maxWidth;
+            if (this._width < this._minWidth) this._width = this._minWidth;
+
+            if (this._maxHeight !== null && this._height > this._maxHeight) this._height = this._maxHeight;
+            if (this._height < this._minHeight) this._height = this._minHeight;
+
+
+            //pure vertical/horizontal align
+            if (this.horizontalAlign !== null) {
+                if (this.horizontalAlign == "center")
+                    this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
+                else if (this.horizontalAlign == "right")
+                    this.container.position.x = parentWidth - this._width;
+                else
+                    this.container.position.x = 0;
+                this.container.position.x += this._width * this.pivotX;
+            }
+            if (this.verticalAlign !== null) {
+                if (this.verticalAlign == "middle")
+                    this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
+                else if (this.verticalAlign == "bottom")
+                    this.container.position.y = parentHeight - this._height;
+                else
+                    this.container.position.y = 0;
+                this.container.position.y += this._height * this.pivotY;
+            }
+
+
+            //Unrestricted dragging
+            if (this.dragging && !this.setting.dragRestricted) {
+                this.container.position.x = this._dragPosition.x;
+                this.container.position.y = this._dragPosition.y;
+            }
+
+
+            //scale
+            if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
+            if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
+
+            //pivot
+            if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
+            if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
+
+            if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
+            if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
+
+            //make pixel perfect
+            if (this.pixelPerfect) {
+                this._width = Math.round(this._width);
+                this._height = Math.round(this._height);
+                this.container.position.x = Math.round(this.container.position.x);
+                this.container.position.y = Math.round(this.container.position.y);
+            }
+
         }
 
-        //min/max sizes
-        if (this._maxWidth !== null && this._width > this._maxWidth) this._width = this._maxWidth;
-        if (this._width < this._minWidth) this._width = this._minWidth;
-
-        if (this._maxHeight !== null && this._height > this._maxHeight) this._height = this._maxHeight;
-        if (this._height < this._minHeight) this._height = this._minHeight;
-
-
-        //pure vertical/horizontal align
-        if (this.horizontalAlign !== null) {
-            if (this.horizontalAlign == "center")
-                this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
-            else if (this.horizontalAlign == "right")
-                this.container.position.x = parentWidth - this._width;
-            else
-                this.container.position.x = 0;
-            this.container.position.x += this._width * this.pivotX;
-        }
-        if (this.verticalAlign !== null) {
-            if (this.verticalAlign == "middle")
-                this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
-            else if (this.verticalAlign == "bottom")
-                this.container.position.y = parentHeight - this._height;
-            else
-                this.container.position.y = 0;
-            this.container.position.y += this._height * this.pivotY;
-        }
-
-
-        //Unrestricted dragging
-        if (this.dragging && !this.setting.dragRestricted) {
-            this.container.position.x = this._dragPosition.x;
-            this.container.position.y = this._dragPosition.y;
-        }
-
-
-        //scale
-        if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
-        if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
-
-        //pivot
-        if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
-        if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
-
-        if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
-        if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
-
-        //make pixel perfect
-        if (this.pixelPerfect) {
-            this._width = Math.round(this._width);
-            this._height = Math.round(this._height);
-            this.container.position.x = Math.round(this.container.position.x);
-            this.container.position.y = Math.round(this.container.position.y);
-        }
     }
 };
 
@@ -4292,7 +4820,7 @@ Object.defineProperties(UIBase.prototype, {
             this.container.cacheAsBitmap = val;
         }
     },
-    click: {
+    onClick: {
         get: function () {
             return this.container.click;
         },
@@ -4301,7 +4829,7 @@ Object.defineProperties(UIBase.prototype, {
         }
     }
 });
-},{"./Interaction/DragDropController":8,"./Interaction/DragEvent":9,"./UI":26,"./UISettings":28}],28:[function(require,module,exports){
+},{"./Interaction/DragDropController":10,"./Interaction/DragEvent":11,"./UI":28,"./UISettings":30}],30:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -4367,7 +4895,7 @@ module.exports = UISettings;
 
 
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 
 var Library = {
     UI: require('./UI')
@@ -4379,7 +4907,7 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":26}]},{},[29])(29)
+},{"./UI":28}]},{},[31])(31)
 });
 
 

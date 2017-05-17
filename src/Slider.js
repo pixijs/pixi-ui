@@ -28,6 +28,7 @@ var UIBase = require('./UIBase'),
 function Slider(options) {
     UIBase.call(this);
     this._amt = 0;
+    this._disabled = false;
 
     //set options
     this.track = options.track;
@@ -46,7 +47,23 @@ function Slider(options) {
 
     this.addChild(this.track);
     if (this.fill) this.track.addChild(this.fill);
-    this.track.addChild(this.handle);
+    this.addChild(this.handle);
+    this.handle.container.buttonMode = true;
+
+    if (this.vertical) {
+        this.height = "100%";
+        this.width = this.track.width;
+        this.track.height = "100%";
+        this.handle.horizontalAlign = "center";
+        if (this.fill) this.fill.horizontalAlign = "center";
+    }
+    else {
+        this.width = "100%";
+        this.height = this.track.height;
+        this.track.width = "100%";
+        this.handle.verticalAlign = "middle";
+        if (this.fill) this.fill.verticalAlign = "middle";
+    }
 
 }
 
@@ -91,20 +108,7 @@ Slider.prototype.initialize = function () {
     var self = this;
     var startValue = 0;
 
-    if (this.vertical) {
-        this.height = "90%";
-        this.width = this.track.width;
-        this.track.height = "100%";
-        this.handle.horizontalAlign = "center";
-        if (this.fill) this.fill.horizontalAlign = "center";
-    }
-    else {
-        this.width = "90%";
-        this.height = this.track.height;
-        this.track.width = "100%";
-        this.handle.verticalAlign = "middle";
-        if (this.fill) this.fill.verticalAlign = "middle";
-    }
+
 
     ////Handle dragging
     var handleDrag = new DragEvent(this.handle);
@@ -223,6 +227,19 @@ Object.defineProperties(Slider.prototype, {
         set: function (val) {
             this._maxValue = val;
             this.update();
+        }
+    },
+    disabled: {
+        get: function () {
+            return this._disabled;
+        },
+        set: function (val) {
+            if (val !== this._disabled) {
+                this._disabled = val;
+                this.handle.container.buttonMode = !val;
+                this.handle.container.interactive = !val;
+                this.track.container.interactive = !val;
+            }
         }
     }
 });

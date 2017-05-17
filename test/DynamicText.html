@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        .canvas { width: 100% !important; height: 100% !important; position: fixed; }
+        .ss { position:absolute; bottom: 10px; right:10px; max-width: 100%; max-height: 80%; background-color: #555555; margin:10px; border:3px solid #FFFFFF; }
+    </style>
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+
+</head>
+<body>
+    <script type="text/javascript">
+        PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.LINEAR;
+        PIXI.settings.RESOLUTION = devicePixelRatio || 1;
+
+        app = new PIXI.Application({ width: window.innerWidth, height: window.innerHeight, resolution: devicePixelRatio || 1, transparent: false });
+        app.view.className = "canvas";
+        document.body.appendChild(app.view);
+
+
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        uiStage.minHeight = 100;
+        uiStage.minWidth = 100;
+        app.stage.addChild(uiStage);
+
+        //window resize
+        window.addEventListener("resize", function () {
+            app.renderer.resize(window.innerWidth, window.innerHeight);
+            uiStage.resize(window.innerWidth, window.innerHeight);
+        });
+
+        app.renderer.resize(window.innerWidth, window.innerHeight);
+        uiStage.resize(window.innerWidth, window.innerHeight);
+
+        //Register styles
+        PIXI.UI.DynamicText.RegisterStyle("impact25", { fill: '#FFFFFF', fontSize: 25, fontFamily: 'Impact' });
+        PIXI.UI.DynamicText.RegisterStyle("wingdings50", { fill: '#FFFFFF', fontSize: 50, fontFamily: 'wingdings' });
+
+        PIXI.loader.add('UISprites.json').load(function () {
+            container = new PIXI.UI.Container();
+            container.anchorBottom = container.anchorRight = container.anchorLeft = 0;
+            container.anchorTop = 100;
+            container.minHeight = 285;
+            uiStage.addChild(container);
+
+            textInput = new PIXI.UI.TextInput({
+                multiLine: true,
+                padding: 10,
+                style: { fontSize: 14 },
+                background: new PIXI.UI.SliceSprite(PIXI.Texture.fromFrame("UI/solid-box.png"), 8),
+                width: "100%",
+                height: 100,
+                value: "<font size='25'><font rotation='-0.2'>Bit</font> crazy <font rotation='0.3'>but</font>... <font style='impact25'>H<font valign='-2' size='22'>e<font valign='-4' size='20'>l<font valign='-6' size='18'>l<font valign='-8'>o W</font></font>o</font>r</font>ld</font><font color='#00baff'>! <font style='wingdings50' color='#ff5a00'>Q33 <font size='75' valign='10'>NY</font></font></font>"
+            })
+            uiStage.addChild(textInput);
+
+            textInput.on("change", function () {
+                dynamicText.value = this.value;
+            });
+
+
+            dynamicText = new PIXI.UI.DynamicText(textInput.value);
+            dynamicText.verticalAlign = "middle";
+            dynamicText.horizontalAlign = "center";
+            container.addChild(dynamicText);
+        });
+
+    </script>
+</body>
+</html>

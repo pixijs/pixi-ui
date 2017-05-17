@@ -10,7 +10,6 @@ var UIBase = require('./UIBase');
  * @param TextStyle {PIXI.TextStyle} Style used for the Text
  */
 function Text(text, PIXITextStyle) {
-
     this._text = new PIXI.Text(text, PIXITextStyle);
     UIBase.call(this, this._text.width, this._text.height);
     this.container.addChild(this._text);

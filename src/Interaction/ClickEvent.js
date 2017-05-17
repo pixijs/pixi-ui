@@ -1,7 +1,8 @@
 ﻿var ClickEvent = function (obj) {
     var bound = false,
         self = this,
-        id = 0;
+        id = 0,
+        ishover = false;
 
     obj.container.interactive = true;
 
@@ -41,11 +42,17 @@
     };
 
     var _onMouseOver = function (event) {
-        self.onHover.call(obj, event);
+        if (!ishover) {
+            ishover = true;
+            self.onHover.call(obj, event);
+        }
     };
 
     var _onMouseOut = function (event) {
-        self.onLeave.call(obj, event);
+        if (ishover) {
+            ishover = false;
+            self.onLeave.call(obj, event);
+        }
     };
 
     this.stopEvent = function () {
