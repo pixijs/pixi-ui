@@ -131,10 +131,8 @@ UIBase.prototype.baseupdate = function () {
 
 
 
-
-
         //transform convertion (% etc)
-        this.dirty = true;
+        this.dirty = true; 
         this._width = this.actual_width;
         this._height = this.actual_height;
         this._minWidth = this.actual_minWidth;
@@ -153,136 +151,135 @@ UIBase.prototype.baseupdate = function () {
         this._parentHeight = parentHeight = this.parent._height;
         this.dirty = false;
 
-        if (true) {
 
-            if (this.horizontalAlign === null) {
-                //get anchors (use left right if conflict)
-                if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
-                    this._anchorRight = this._right;
-                else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null)
-                    this._anchorLeft = this._left;
-                else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
-                    this._anchorLeft = this._left;
-                    this._anchorRight = this._right;
-                }
-
-
-                var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
-                var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
-
-                if (useLeftRight) {
-                    if (this._left !== null)
-                        this.container.position.x = this._left;
-                    else if (this._right !== null)
-                        this.container.position.x = parentWidth - this._right;
-                }
-                else if (useHorizontalAnchor) {
-
-                    if (this._anchorLeft !== null && this._anchorRight === null)
-                        this.container.position.x = this._anchorLeft;
-                    else if (this._anchorLeft === null && this._anchorRight !== null)
-                        this.container.position.x = parentWidth - this._width - this._anchorRight;
-                    else if (this._anchorLeft !== null && this._anchorRight !== null) {
-                        this.container.position.x = this._anchorLeft;
-                        this._width = parentWidth - this._anchorLeft - this._anchorRight;
-                    }
-                    this.container.position.x += this.pivotX * this._width;
-                }
-                else {
-                    this.container.position.x = 0;
-                }
+        if (this.horizontalAlign === null) {
+            //get anchors (use left right if conflict)
+            if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
+                this._anchorRight = this._right;
+            else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null)
+                this._anchorLeft = this._left;
+            else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
+                this._anchorLeft = this._left;
+                this._anchorRight = this._right;
             }
 
 
+            var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
+            var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
 
-            if (this.verticalAlign === null) {
-                //get anchors (use top bottom if conflict)
-                if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null)
-                    this._anchorBottom = this._bottom;
-                if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null)
-                    this._anchorTop = this._top;
+            if (useLeftRight) {
+                if (this._left !== null)
+                    this.container.position.x = this._left;
+                else if (this._right !== null)
+                    this.container.position.x = parentWidth - this._right;
+            }
+            else if (useHorizontalAnchor) {
 
-                var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
-                var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
-
-                if (useTopBottom) {
-                    if (this._top !== null)
-                        this.container.position.y = this._top;
-                    else if (this._bottom !== null)
-                        this.container.position.y = parentHeight - this._bottom;
+                if (this._anchorLeft !== null && this._anchorRight === null)
+                    this.container.position.x = this._anchorLeft;
+                else if (this._anchorLeft === null && this._anchorRight !== null)
+                    this.container.position.x = parentWidth - this._width - this._anchorRight;
+                else if (this._anchorLeft !== null && this._anchorRight !== null) {
+                    this.container.position.x = this._anchorLeft;
+                    this._width = parentWidth - this._anchorLeft - this._anchorRight;
                 }
-                else if (useVerticalAnchor) {
-                    if (this._anchorTop !== null && this._anchorBottom === null)
-                        this.container.position.y = this._anchorTop;
-                    else if (this._anchorTop === null && this._anchorBottom !== null)
-                        this.container.position.y = parentHeight - this._height - this._anchorBottom;
-                    else if (this._anchorTop !== null && this._anchorBottom !== null) {
-                        this.container.position.y = this._anchorTop;
-                        this._height = parentHeight - this._anchorTop - this._anchorBottom;
-                    }
-                    this.container.position.y += this.pivotY * this._height;
-                }
-                else {
-                    this.container.position.y = 0;
-                }
+                this.container.position.x += this.pivotX * this._width;
             }
-
-            //min/max sizes
-            if (this._maxWidth !== null && this._width > this._maxWidth) this._width = this._maxWidth;
-            if (this._width < this._minWidth) this._width = this._minWidth;
-
-            if (this._maxHeight !== null && this._height > this._maxHeight) this._height = this._maxHeight;
-            if (this._height < this._minHeight) this._height = this._minHeight;
-
-
-            //pure vertical/horizontal align
-            if (this.horizontalAlign !== null) {
-                if (this.horizontalAlign == "center")
-                    this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
-                else if (this.horizontalAlign == "right")
-                    this.container.position.x = parentWidth - this._width;
-                else
-                    this.container.position.x = 0;
-                this.container.position.x += this._width * this.pivotX;
+            else {
+                this.container.position.x = 0;
             }
-            if (this.verticalAlign !== null) {
-                if (this.verticalAlign == "middle")
-                    this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
-                else if (this.verticalAlign == "bottom")
-                    this.container.position.y = parentHeight - this._height;
-                else
-                    this.container.position.y = 0;
-                this.container.position.y += this._height * this.pivotY;
-            }
-
-
-            //Unrestricted dragging
-            if (this.dragging && !this.setting.dragRestricted) {
-                this.container.position.x = this._dragPosition.x;
-                this.container.position.y = this._dragPosition.y;
-            }
-
-
-            //scale
-            if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
-            if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
-
-            //pivot
-            if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
-            if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
-
-            if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
-            if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
-
-            //make pixel perfect
-            if (this.pixelPerfect) {
-                this._width = Math.round(this._width);
-                this._height = Math.round(this._height);
-                this.container.position.x = Math.round(this.container.position.x);
-                this.container.position.y = Math.round(this.container.position.y);
-            }
-
         }
+
+
+
+        if (this.verticalAlign === null) {
+            //get anchors (use top bottom if conflict)
+            if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null)
+                this._anchorBottom = this._bottom;
+            if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null)
+                this._anchorTop = this._top;
+
+            var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
+            var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
+
+            if (useTopBottom) {
+                if (this._top !== null)
+                    this.container.position.y = this._top;
+                else if (this._bottom !== null)
+                    this.container.position.y = parentHeight - this._bottom;
+            }
+            else if (useVerticalAnchor) {
+                if (this._anchorTop !== null && this._anchorBottom === null)
+                    this.container.position.y = this._anchorTop;
+                else if (this._anchorTop === null && this._anchorBottom !== null)
+                    this.container.position.y = parentHeight - this._height - this._anchorBottom;
+                else if (this._anchorTop !== null && this._anchorBottom !== null) {
+                    this.container.position.y = this._anchorTop;
+                    this._height = parentHeight - this._anchorTop - this._anchorBottom;
+                }
+                this.container.position.y += this.pivotY * this._height;
+            }
+            else {
+                this.container.position.y = 0;
+            }
+        }
+
+        //min/max sizes
+        if (this._maxWidth !== null && this._width > this._maxWidth) this._width = this._maxWidth;
+        if (this._width < this._minWidth) this._width = this._minWidth;
+
+        if (this._maxHeight !== null && this._height > this._maxHeight) this._height = this._maxHeight;
+        if (this._height < this._minHeight) this._height = this._minHeight;
+
+
+        //pure vertical/horizontal align
+        if (this.horizontalAlign !== null) {
+            if (this.horizontalAlign == "center")
+                this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
+            else if (this.horizontalAlign == "right")
+                this.container.position.x = parentWidth - this._width;
+            else
+                this.container.position.x = 0;
+            this.container.position.x += this._width * this.pivotX;
+        }
+        if (this.verticalAlign !== null) {
+            if (this.verticalAlign == "middle")
+                this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
+            else if (this.verticalAlign == "bottom")
+                this.container.position.y = parentHeight - this._height;
+            else
+                this.container.position.y = 0;
+            this.container.position.y += this._height * this.pivotY;
+        }
+
+
+        //Unrestricted dragging
+        if (this.dragging && !this.setting.dragRestricted) {
+            this.container.position.x = this._dragPosition.x;
+            this.container.position.y = this._dragPosition.y;
+        }
+
+
+        //scale
+        if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
+        if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
+
+        //pivot
+        if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
+        if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
+
+        if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
+        if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
+
+        //make pixel perfect
+        if (this.pixelPerfect) {
+            this._width = Math.round(this._width);
+            this._height = Math.round(this._height);
+            this.container.position.x = Math.round(this.container.position.x);
+            this.container.position.y = Math.round(this.container.position.y);
+        }
+
+
 
     }
 };
@@ -482,14 +479,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.width;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.width = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.widthPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.width = val;
+            else
                 this.setting.widthPct = null;
-            }
+            
+            this.setting.width = val;
             this.updatesettings(true);
         }
     },
@@ -511,14 +506,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.height;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.height = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.heightPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.height = val;
+            else
                 this.setting.heightPct = null;
-            }
+            
+            this.setting.height = val;
             this.updatesettings(true);
         }
     },
@@ -540,14 +533,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.minWidth;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.minWidth = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.minWidthPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.minWidth = val;
+            else
                 this.setting.minWidthPct = null;
-            }
+            
+            this.setting.minWidth = val;
             this.updatesettings(true);
         }
     },
@@ -569,14 +560,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.minHeight;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.minHeight = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.minHeightPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.minHeight = val;
+            else
                 this.setting.minHeightPct = null;
-            }
+            
+            this.setting.minHeight = val;
             this.updatesettings(true);
         }
     },
@@ -598,14 +587,13 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.maxWidth;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.maxWidth = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.maxWidthPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.maxWidth = val;
+            else
                 this.setting.maxWidthPct = null;
-            }
+            
+
+            this.setting.maxWidth = val;
             this.updatesettings(true);
         }
     },
@@ -627,14 +615,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.maxHeight;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.maxHeight = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.maxHeightPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.maxHeight = val;
+            else
                 this.setting.maxHeightPct = null;
-            }
+            
+            this.setting.maxHeight = val;
             this.updatesettings(true);
         }
     },
@@ -656,14 +642,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorLeft;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.anchorLeft = val;
+            if (isNaN(val) && val.indexOf('%') !== -1) 
                 this.setting.anchorLeftPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.anchorLeft = val;
+            else 
                 this.setting.anchorLeftPct = null;
-            }
+            
+            this.setting.anchorLeft = val;
             this.updatesettings(true);
         }
     },
@@ -685,14 +669,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorRight;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.anchorRight = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.anchorRightPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.anchorRight = val;
+            else
                 this.setting.anchorRightPct = null;
-            }
+            
+            this.setting.anchorRight = val;
             this.updatesettings(true);
         }
     },
@@ -714,14 +696,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorTop;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.anchorTop = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.anchorTopPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.anchorTop = val;
+            else
                 this.setting.anchorTopPct = null;
-            }
+            
+            this.setting.anchorTop = val;
             this.updatesettings(true);
         }
     },
@@ -743,14 +723,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.anchorBottom;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.anchorBottom = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.anchorBottomPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.anchorBottom = val;
+            else 
                 this.setting.anchorBottomPct = null;
-            }
+            
+            this.setting.anchorBottom = val;
             this.updatesettings(true);
         }
     },
@@ -772,14 +750,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.left;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.left = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.leftPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.left = val;
+            else
                 this.setting.leftPct = null;
-            }
+            
+            this.setting.left = val;
             this.updatesettings(true);
         }
     },
@@ -801,14 +777,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.right;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.right = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.rightPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.right = val;
+            else
                 this.setting.rightPct = null;
-            }
+
+            this.setting.right = val;
             this.updatesettings(true);
         }
     },
@@ -830,14 +804,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.top;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.top = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.topPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.top = val;
+            else
                 this.setting.topPct = null;
-            }
+
+            this.setting.top = val;
             this.updatesettings(true);
         }
     },
@@ -859,14 +831,12 @@ Object.defineProperties(UIBase.prototype, {
             return this.setting.bottom;
         },
         set: function (val) {
-            if (isNaN(val) && val.indexOf('%') !== -1) {
-                this.setting.bottom = val;
+            if (isNaN(val) && val.indexOf('%') !== -1)
                 this.setting.bottomPct = parseFloat(val.replace('%', '')) * 0.01;
-            }
-            else {
-                this.setting.bottom = val;
+            else
                 this.setting.bottomPct = null;
-            }
+
+            this.setting.bottom = val;
             this.updatesettings(true);
         }
     },
