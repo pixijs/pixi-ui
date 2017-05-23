@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+    <script>
+        var webfontReady = false;
+        WebFont.load({
+            google: {
+                families: ['Tangerine', 'Droid Serif']
+            },
+            active: function () {
+                console.log("done loading fonts");
+                webfontReady = true;
+            }
+        });
+    </script>
+    <style>
+        body { font-family: 'Segoe UI'; }
+        .SpriteSheet { background-color: #808080; max-width: 900px; position: absolute; top: 115px; left: calc(50% - 450px); }
+        .messureAtlas { background-color: #808080; }
+        table { padding: 0; margin: 0; width: 300px; position: absolute; left: calc(50% + 150px); top: 115px; }
+        td { text-align: right; line-height: 30px; padding: 5px; }
+        tr:nth-child(2n+1) { background-color: #d3d3d3; }
+        td:nth-child(2n+1) { text-align: left; }
+
+        .InputContainer { width: 900px; height: 80px; position: absolute; margin: auto; left: 0; right: 0; top: 30px; background-color: #f2f2f2; }
+        input, select { float: left; position: absolute; height: 50px; top: 10px; bottom: 10px; font-size: 30px; text-align: center; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div class="InputContainer">
+        <input type="text" id="text" value="A" style="left: 10px; width:200px;" />
+        <input type="number" id="size" value="60" style="left: 220px; width:60px;" />
+        <select id="font" style="left: 290px; width:200px;">
+            <option value="Arial">Arial</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Tangerine">Tangerine</option>
+            <option value="Droid Serif">Droid Serif</option>
+            <option value="Segoe UI" selected="selected">Segoe UI</option>
+
+        </select>
+    </div>
+    <div id="data"></div>
+
+
+    <script>
+
+    </script>
+
+
+    <script>
+        var container = document.getElementById('data');
+        var input_text = document.getElementById("text");
+        var input_size = document.getElementById("size");
+        var input_font = document.getElementById("font");
+        
+        var stage = new PIXI.UI.Stage();
+        
+        var test = new PIXI.UI.DynamicText("");
+        stage.addChild(test);
+
+        input_text.addEventListener("input", setText);
+
+        input_text.addEventListener("keydown", function () {
+            input_text.value = "";
+        });
+
+        input_font.addEventListener("change", setText);
+        input_size.addEventListener("input", setText);
+
+
+
+        function setText() {
+            //alert("hej");
+            if (!webfontReady) {
+                return setTimeout(setText, 5);
+            }
+
+            test.defaultStyle.fontFamily = input_font.options[input_font.selectedIndex].value;
+            test.defaultStyle.fontSize = Math.max(1, (input_size.value || 20));
+
+            //var data = me.getFontMetrics(input_text.value, input_font.options[input_font.selectedIndex].value, Math.max(1,(input_size.value || 20)), false);
+            
+            ss.debug = true;
+
+
+
+            test.value+= input_text.value;
+            test.update();
+
+            return;
+            var obj = ss.getCharObject(input_text.value, input_font.options[input_font.selectedIndex].value, (input_size.value || 50), "bold", "italic", "#000000 0.5 3 2 1, #FFF000 0.5 -3 2 1")
+
+
+
+            data = obj.metrics;
+            var output = "<table cellspacing='0' cellpadding='0'>";
+            for (var param in data) {
+                if (typeof data[param] !== "object") {
+                    output += "<tr><td>" + param + ":</td><td><b>" + parseFloat(data[param].toFixed(3)) + "</b></td></tr>";
+                }
+            }
+            output += "</table>";
+
+            container.innerHTML = output;
+        }
+
+
+
+
+
+
+
+
+
+
+        setText();
+    </script>
+
+
+
+
+</body>
+</html>

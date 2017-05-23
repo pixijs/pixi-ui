@@ -1,11 +1,19 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Wed, 17 May 2017 08:19:20 UTC
+ * Compiled Tue, 23 May 2017 19:39:26 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.pixiUi = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+"use strict";
+
+module.exports = function () {
+	// https://mathiasbynens.be/notes/es-unicode-property-escapes#emoji
+	return (/\uD83D\uDC69(?:\u200D(?:(?:\uD83D\uDC69\u200D)?\uD83D\uDC67|(?:\uD83D\uDC69\u200D)?\uD83D\uDC66)|\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC69\u200D(?:\uD83D\uDC69\u200D)?\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D(?:\uD83D\uDC69\u200D)?\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]\uFE0F|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC6F\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3C-\uDD3E\uDDD6-\uDDDF])\u200D[\u2640\u2642]\uFE0F|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF6\uD83C\uDDE6|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uFE0F\u200D[\u2640\u2642]|(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642])\uFE0F|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2695\u2696\u2708]|\uD83D\uDC69\u200D[\u2695\u2696\u2708]|\uD83D\uDC68(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708]))\uFE0F|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83D\uDC69\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69]))|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67)\uDB40\uDC7F|\uD83D\uDC68(?:\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC66\u200D\uD83D\uDC66|(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92])|(?:\uD83C[\uDFFB-\uDFFF])\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]))|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDD1-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC68(?:\u200D(?:(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC67|(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC66)|\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC69\uDC6E\uDC70-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD18-\uDD1C\uDD1E\uDD1F\uDD26\uDD30-\uDD39\uDD3D\uDD3E\uDDD1-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])?|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDEEB\uDEEC\uDEF4-\uDEF8]|\uD83E[\uDD10-\uDD3A\uDD3C-\uDD3E\uDD40-\uDD45\uDD47-\uDD4C\uDD50-\uDD6B\uDD80-\uDD97\uDDC0\uDDD0-\uDDE6])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u2660\u2663\u2665\u2666\u2668\u267B\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEF8]|\uD83E[\uDD10-\uDD3A\uDD3C-\uDD3E\uDD40-\uDD45\uDD47-\uDD4C\uDD50-\uDD6B\uDD80-\uDD97\uDDC0\uDDD0-\uDDE6])\uFE0F/g
+	);
+};
+},{}],2:[function(require,module,exports){
 var InputBase = require('./InputBase'),
     ClickEvent = require('./Interaction/ClickEvent.js'),
     InputController = require('./Interaction/InputController');
@@ -143,7 +151,7 @@ Object.defineProperties(Button.prototype, {
  * "change"         param: [bool]isChecked
  *  
  */
-},{"./InputBase":8,"./Interaction/ClickEvent.js":9,"./Interaction/InputController":12}],2:[function(require,module,exports){
+},{"./InputBase":9,"./Interaction/ClickEvent.js":10,"./Interaction/InputController":13}],3:[function(require,module,exports){
 var InputBase = require('./InputBase'),
     ClickEvent = require('./Interaction/ClickEvent.js'),
     InputController = require('./Interaction/InputController');
@@ -321,7 +329,7 @@ Object.defineProperties(CheckBox.prototype, {
  * "change"         param: [bool]isChecked
  *  
  */
-},{"./InputBase":8,"./Interaction/ClickEvent.js":9,"./Interaction/InputController":12}],3:[function(require,module,exports){
+},{"./InputBase":9,"./Interaction/ClickEvent.js":10,"./Interaction/InputController":13}],4:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -352,197 +360,468 @@ Container.prototype.update = function () {
 };
 
 
-},{"./UIBase":29}],4:[function(require,module,exports){
+},{"./UIBase":30}],5:[function(require,module,exports){
 var UIBase = require('./UIBase');
-var Styles = {
-    "default": {
-        chars: {},
-        style: { fill: '#FFFFFF', fontSize: 20 },
-        ignoreColor: false
+var emojiRegex = require('emoji-regex');
+var atlas = null;
+
+//helper function for floats
+var float = function (val, def) {
+    if (isNaN(val)) return def;
+    return parseFloat(val);
+}
+
+//helper function for ints
+var int = function (val, def) {
+    if (isNaN(val)) return def;
+    return parseInt(val);
+}
+
+//helper function for strings
+var string = function (val, def) {
+    if (typeof val === 'string' && val.length) return val;
+    return def;
+}
+
+//helper function to convert hex to rgba
+function hexToRgba(hex, alpha) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    alpha = float(alpha, 1);
+    return result ? "rgba(" + parseInt(result[1], 16) + "," + parseInt(result[2], 16) + "," + parseInt(result[3], 16) + "," + alpha + ")" : false;
+}
+
+
+
+function DynamicTextStyle() {
+    this.scale = 1;
+
+    this.align = 'left';
+    this.fontFamily = 'Arial';
+    this.fontSize = 26;
+    this.fontWeight = 'normal';
+    this.fontStyle = 'normal',
+    this.letterSpacing = 0;
+    this.lineHeight = 0;
+    this.verticalAlign = 0;
+    this.rotation = 0;
+    this.skew = 0;
+    this.tint = "#FFFFFF";
+
+    this.fill = '#FFFFFF';
+    this.shadow = '';
+    this.stroke = 0;
+    this.strokeFill = '';
+    this.strokeShadow = '';
+}
+
+
+DynamicTextStyle.prototype.clone = function () {
+    var style = new DynamicTextStyle();
+    style.merge(this);
+    return style;
+}
+
+DynamicTextStyle.prototype.merge = function (style) {
+    if (typeof style === 'object') {
+        for (var param in style) {
+            var val = style[param];
+            if (typeof val !== 'function')
+                this[param] = val;
+        }
     }
-};
+}
+
+DynamicTextStyle.prototype.ctxKey = function (char) {
+    return [char, this.fill, this.shadow, this.stroke, this.strokeFill, this.strokeShadow].join('|');
+}
+
+DynamicTextStyle.prototype.ctxFont = function () {
+    var fontSize = Math.min(200, Math.max(1, int(this.fontSize, 26))) + "px ";
+    var fontWeight = this.fontWeight === "bold" ? this.fontWeight + " " : "";
+    var fontStyle = this.fontStyle === "italic" || this.fontStyle === "oblique" ? this.fontStyle + " " : "";
+    return fontWeight + fontStyle + fontSize + this.fontFamily;
+}
+
+
+
+
+function DynamicChar(style) {
+    //styledata (texture, orig width, orig height)
+    this.style = style;
+
+    //char data
+    this.data = null;
+
+    //is this char space?
+    this.space = false;
+
+    //is this char newline?
+    this.newline = false;
+
+    //charcode
+    this.charcode = 0;
+
+    //char string value
+    this.value = "";
+
+    //word index
+    this.wordIndex = -1;
+
+    //line index of char
+    this.lineIndex = -1;
+
+    //cache for sprite
+    this.sprite = null;
+}
 
 
 /**
- * An UI text object
- *
- * @class
- * @extends PIXI.UI.UIBase
- * @memberof PIXI.UI
- * @param Text {String} Text content
- * @param DefaultStyleName {String} Defualt style (use DynamicText.RegisterStyle() to add styles)
- */
-function DynamicText(text, defaultStyleName, defaultColor) {
-    UIBase.call(this, 0, 0);
+* An dynamic text object with auto generated atlas
+*
+* @class
+* @extends PIXI.UI.UIBase
+* @memberof PIXI.UI
+* @param text {String} Text content
+* @param [width=0] {Number|String} width of textbox. 0 = autoWidth
+* @param [height=0] {Number|String} height of textbox. 0 = autoHeight
+* @param [allowTags=true] {boolean} Allow inline styling
+* @param [options=null] {DynamicTextStyle} Additional text settings
+*/
+
+function DynamicText(text, width, height, allowTags, options) {
+    UIBase.call(this, width || 0, height || 0);
+    var autoWidth = width ? false : true;
+    var autoHeight = height ? false : true;
+
+
+    //create atlas
+    if (atlas === null)
+        atlas = window["ss"] = new DynamicAtlas(1);
+
+
+    //defaultstyle for this textobject
+    var defaultStyle = this.defaultStyle = new DynamicTextStyle();
+    defaultStyle.merge(options);
+
+    //collection of all processed char
+    var chars = this.chars = [];
+    var renderChars = [];
+    var charContainer = new PIXI.Container();
+    this.container.addChild(charContainer);
+
+    //the input text
     this._inputText = text;
 
-    //dirty checks
+    //list of rendered sprites (temp)
+    var sprites = [];
+
+    //read font tags
+    var allowTags = allowTags !== false;
+
+    //states
+    var lastWidth = 0, lastHeight = 0;
     this.dirtyText = true;
-    var lastWidth = 0;
-    var lastHeight = 0;
-    var chars = [];
-    var lineHeight = 0;
+    this.dirtyAlignment = true;
 
-    //temp
-    var innerContainer = new PIXI.Container();
+    //dictionary for line data
+    var lineWidthData = [];
+    var lineHeightData = [];
+    var lineFontSizeData = [];
+    var lineAlignmentData = [];
+    var renderCount = 0;
 
-    this.update = function () {
-        if (this.dirtyText || this._width !== lastWidth || this._height !== lastHeight) {
-            this.dirtyText = false;
-            lastWidth = this._width;
-            lastHeight = this._height;
+    //ROUGH TEMP RENDER (with sprites)
+    this.render = function () {
+        //console.log("render");
+        var yOffset = 0,
+            xOffset = 0,
+            currentLine = -1,
+            i;
 
 
 
-            var style, color, valign, size, rotation, fonts = [{}], currentFont;
-
-            var UpdateFontStyles = function () {
-                currentFont = fonts[fonts.length - 1];
-                style = Styles[currentFont.style] || Styles[defaultStyleName] || Styles["default"];
-                color = currentFont.color || defaultColor || "#ffffff";
-                valign = parseInt(currentFont.valign || 0);
-                size = parseInt(currentFont.size || style.style.fontSize);
-                rotation = parseFloat(currentFont.rotation || 0);
+        //console.log(renderChars.length, renderCount);
+        if (renderChars.length > renderCount) {
+            for (i = renderCount; i < renderChars.length; i++) {
+                var removeChar = renderChars[i];
+                if (removeChar.sprite && removeChar.sprite.parent)
+                    charContainer.removeChild(removeChar.sprite);
             }
-            UpdateFontStyles();
+            renderChars.splice(renderCount, renderChars.length - renderCount);
+        }
+
+
+        for (i = 0; i < renderCount; i++) {
+            var char = renderChars[i];
+
+            //get line data
+            if (currentLine !== char.lineIndex) {
+                var count = char.lineIndex - currentLine;
+                currentLine = char.lineIndex;
+                yOffset += lineHeightData[currentLine] * count;
 
 
 
-            var cx = 0, cy = 0;
-            var textIndex = 0;
-            for (var i = 0; i < this._inputText.length; i++) {
-                var c = this._inputText[i];
+                switch (lineAlignmentData[currentLine]) {
+                    case 'right': xOffset = this._width - lineWidthData[currentLine]; break;
+                    case 'center': xOffset = (this._width - lineWidthData[currentLine]) * 0.5; break;
+                    default: xOffset = 0;
+                }
+            }
+
+            //no reason to render a blank space or 0x0 letters (no texture created)
+            if (!char.data.texture || char.space || char.newline) {
+                if (char.sprite && char.sprite.parent)
+                    charContainer.removeChild(char.sprite);
+                continue;
+            }
+
+            //add new sprite
+            var tex = char.data.texture, sprite = char.sprite;
 
 
-                //detect font tags
-                if (c === "<") {
-                    var _name = this._inputText.slice(i + 1, i + 6);
-                    if (_name === "font " || _name === "/font") {
-                        var tag = this._inputText.substring(i);
-                        tag = tag.slice(0, tag.indexOf(">") + 1);
+            if (sprite === null) {
+                char.sprite = sprite = new PIXI.Sprite(tex);
+                sprite.anchor.set(0.5);
+            }
+            else
+                sprite.texture = tex;
 
-                        if (tag.length) {
-                            var matchFound = false;
-                            if (tag === "</font>") {
-                                matchFound = true;
-                                if (fonts.length > 1) {
-                                    fonts.splice(fonts.length - 1, 1);
-                                    UpdateFontStyles();
+            sprite.x = char.x + xOffset + tex.width * 0.5;
+            sprite.y = char.y + yOffset - tex.height * 0.5 - (lineHeightData[currentLine] - lineFontSizeData[currentLine]) * 0.5;
+
+
+            sprite.tint = char.emoji ? 0xffffff : char.style.tint.replace("#", "0x");
+            sprite.rotation = isNaN(char.style.rotation) ? 0 : parseFloat(char.style.rotation);
+            sprite.skew.x = isNaN(char.style.skew) ? 0 : parseFloat(char.style.skew);
+
+            if (!sprite.parent)
+                charContainer.addChild(sprite);
+        }
+
+
+
+
+
+    };
+
+    //updates the renderChar array and position chars for render
+    this.prepareForRender = function () {
+        //clear output array
+
+
+        var pos = new PIXI.Point(),
+            wordIndex = 0,
+            lineHeight = 0,
+            lineFontSize = 0,
+            lineIndex = 0,
+            lineAlignment = defaultStyle.align;
+
+        //reset width
+        if (autoWidth) this._width = 0;
+
+        for (var i = 0; i < renderCount; i++) {
+            var char = chars[i];
+
+            //set word index
+            if (char.space || char.newline) wordIndex++;
+            else char.wordIndex = wordIndex;
+
+            //lineheight
+            lineHeight = Math.max(lineHeight, defaultStyle.lineHeight || char.style.lineHeight || char.data.lineHeight);
+
+            //textheight
+            lineFontSize = Math.max(lineFontSize, char.style.fontSize);
+
+            //lineindex
+            char.lineIndex = lineIndex;
+
+            //lineAlignment
+            if (char.style.align !== defaultStyle.align) lineAlignment = char.style.align;
+
+            //position
+            char.x = pos.x + char.data.xOffset;
+            char.y = parseFloat(char.style.verticalAlign) + char.data.yOffset;
+
+            pos.x += Math.round(char.data.width) + parseFloat(char.style.letterSpacing);
+
+
+            //textbox width
+            if (autoWidth) this._width = Math.max(pos.x, this._width);
+
+            //new line
+            if (char.newline || i === renderCount - 1) {
+                lineWidthData[lineIndex] = pos.x;
+                lineHeightData[lineIndex] = Math.max(lineHeight, defaultStyle.lineHeight || char.style.lineHeight || char.data.lineHeight);
+                lineFontSizeData[lineIndex] = lineFontSize;
+                lineAlignmentData[lineIndex] = lineAlignment;
+
+                var lastChar = chars[i - 1];
+                if (lastChar) {
+                    lineWidthData[lineIndex] -= lastChar.style.letterSpacing;
+                    if (lastChar.space)
+                        lineWidthData[lineIndex] -= lastChar.data.width;
+                }
+
+
+
+                wordIndex = lineHeight = pos.x = 0;
+                lineAlignment = defaultStyle.align;
+                lineIndex++;
+            }
+
+            renderChars[i] = char;
+        }
+
+
+        this.dirtyAlignment = false;
+    };
+
+    //phrases the input text and prepares the char array
+    this.processInputText = function () {
+        var styleTree = [defaultStyle],
+            charIndex = 0,
+            inputTextIndex = 0,
+            inputArray = Array.from(this._inputText);
+
+
+        var closeTags = ['</i>', '</b>', '</font>', '</center>'];
+
+
+        for (var i = 0; i < inputArray.length; i++) {
+            var c = inputArray[i],
+                charcode = c.charCodeAt(0),
+                newline = false,
+                space = false,
+                emoji = false;
+
+            //Extract Tags
+            if (/(?:\r\n|\r|\n)/.test(c))
+                newline = true;
+            else if (/(\s)/.test(c))
+                space = true;
+            else if (allowTags && c === "<") {
+                var tag = this._inputText.substring(inputTextIndex);
+                tag = tag.slice(0, tag.indexOf(">") + 1);
+                var FoundTag = true;
+                if (tag.length) {
+                    if (tag === "<i>") {
+                        var style = styleTree[styleTree.length - 1].clone();
+                        style.fontStyle = 'italic';
+                        styleTree.push(style);
+                    }
+                    else if (tag === "<b>") {
+                        var style = styleTree[styleTree.length - 1].clone();
+                        style.fontWeight = 'bold';
+                        styleTree.push(style);
+                    }
+                    else if (tag === "<center>") {
+                        var style = styleTree[styleTree.length - 1].clone();
+                        style.align = 'center';
+                        styleTree.push(style);
+                    }
+                    else if (closeTags.indexOf(tag) !== -1) {
+                        if (styleTree.length > 1) styleTree.splice(styleTree.length - 1, 1);
+                    }
+                    else if (tag.startsWith("<font ")) {
+                        regex = /(\w+)\s*=\s*((["'])(.*?)\3|([^>\s]*)(?=\s|\/>))(?=[^<]*>)/g,
+                        match = regex.exec(tag);
+
+                        if (match !== null) {
+                            var style = styleTree[styleTree.length - 1].clone();
+                            while (match !== null) {
+                                switch (match[1]) {
+                                    case 'family': match[1] = 'fontFamily'; break;
+                                    case 'size': match[1] = 'fontSize'; break;
+                                    case 'weight': match[1] = 'fontWeight'; break;
+                                    case 'style': match[1] = 'fontStyle'; break;
+                                    case 'valign': match[1] = 'verticalAlign'; break;
+                                    case 'spacing': match[1] = 'letterSpacing'; break;
+                                    case 'color': match[1] = 'tint'; break;
+
                                 }
-                            }
-                            else {
-                                var font = JSON.parse(JSON.stringify(currentFont)),
-                                    regex = /(\w+)\s*=\s*((["'])(.*?)\3|([^>\s]*)(?=\s|\/>))(?=[^<]*>)/g,
-                                    match = regex.exec(tag);
 
-                                while (match !== null) {
-                                    font[match[1]] = match[4];
-                                    match = regex.exec(tag);
-                                    matchFound = true;
-                                }
-                                if (matchFound) {
-                                    fonts.push(font);
-                                    UpdateFontStyles();
-                                }
-                            }
 
-                            if (matchFound) {
-                                i += tag.length - 1;
-                                continue;
+                                style[match[1]] = match[4];
+                                match = regex.exec(tag);
                             }
+                            styleTree.push(style);
                         }
                     }
-                }
+                    else {
+                        FoundTag = false;
+                    }
 
 
-                //Get chardata (or create if doesn't exsist)
-                var charStyleData = style.chars[c];
-                if (!charStyleData) {
-                    var text = new PIXI.Text(c, style.style);
-                    var texture;
-                    var isSpace = c === " ";
-                    if (!isSpace)
-                        texture = ss.AddObject(text);
-                    charStyleData = style.chars[c] = {
-                        style: style,
-                        texture: texture,
-                        width: text.width,
-                        height: text.height,
-                        isSpace: isSpace
+                    if (FoundTag) {
+                        inputTextIndex += tag.length;
+                        i += tag.length - 1;
+                        continue;
                     }
                 }
-
-                if (!lineHeight) {
-                    lineHeight = charStyleData.height;
+            }
+            else {
+                //detect emoji
+                var emojiMatch = emojiRegex().exec(c);
+                if (emojiMatch !== null) {
+                    i--; c = '';
+                    while (emojiMatch !== null && c !== emojiMatch[0]) {
+                        i++;
+                        c = emojiMatch[0];
+                        emojiMatch = emojiRegex().exec(c + inputArray[i + 1]);
+                    }
+                    emoji = true;
                 }
-
-
-                var char = chars[textIndex];
-                if (!char) {
-                    char = {}
-                    chars.push(char);
-                }
-
-
-
-
-
-                char.styleData = charStyleData;
-
-                char._orgIndex = i;
-                char.tint = color;
-                char.width = char.styleData.width * (size / style.style.fontSize);
-                char.height = char.styleData.height * (size / style.style.fontSize);
-
-
-
-                var offsetY = (lineHeight - char.height) + valign;
-
-                char.x = cx;
-                char.y = cy + offsetY;
-                char.rotation = rotation;
-                cx += char.width;
-                textIndex++;
-            }
-
-            this.width = cx;
-
-            if (chars.length >= textIndex) {
-                chars.splice(textIndex, chars.length - textIndex);
             }
 
 
-            //ROUGH TEMP RENDER (with sprites)
-            if (innerContainer.children.length > 0) innerContainer.removeChildren(0, innerContainer.children.length);
-            for (var i = 0; i < chars.length; i++) {
-                var char = chars[i];
-
-                //no reason to render a blank space (no texture created)
-                if (char.styleData.isSpace) continue;
-
-
-                var sprite = new PIXI.Sprite(char.styleData.texture);
-
-                sprite.width = char.width;
-                sprite.height = char.height;
-                sprite.anchor.set(0.5);
-                sprite.x = char.x + (sprite.width * 0.5);
-                sprite.y = char.y + (sprite.height * 0.5);
-                sprite.tint = char.tint.replace("#", "0x");
-                sprite.rotation = char.rotation;
-                innerContainer.addChild(sprite);
+            //Prepare DynamicChar object
+            var char = chars[charIndex];
+            if (!char) {
+                char = new DynamicChar(styleTree[styleTree.length - 1].clone());
+                chars[charIndex] = char;
+            }
+            else {
+                char.style.merge(styleTree[styleTree.length - 1]);
             }
 
-            window.output = innerContainer;
-            this.container.addChild(innerContainer);
+            if (emoji) {
+                char.style.fontFamily = DynamicText.defaultEmojiFont;
+            }
+
+            char.data = atlas.getCharObject(c, char.style);
+            char.value = c;
+            char.space = space;
+            char.newline = newline;
+            char.emoji = emoji;
+
+            charIndex++;
+            inputTextIndex += c.length;
+        }
+        renderCount = charIndex;
+
+        this.dirtyText = false;
+    };
+
+    //PIXIUI update, called every time parent emits a change
+    this.update = function () {
+        if (this.dirtyText || this.dirtyAlignment || lastWidth !== this._width || lastHeight !== this._height) {
+            lastWidth = this._width;
+            lastHeight = this._height
+
+            if (this.dirtyText)
+                this.processInputText();
+
+            this.prepareForRender();
+            this.render();
         }
     };
 }
 
 DynamicText.prototype = Object.create(UIBase.prototype);
 DynamicText.prototype.constructor = DynamicText;
+DynamicText.defaultEmojiFont = "Segoe UI Emoji"; //force one font family for emojis so we dont rerender them multiple times
 module.exports = DynamicText;
-
 
 Object.defineProperties(DynamicText.prototype, {
     value: {
@@ -550,155 +829,625 @@ Object.defineProperties(DynamicText.prototype, {
             return this._inputText;
         },
         set: function (val) {
-            this._inputText = val;
-            this.dirtyText = true;
-            this.update();
+            if (val !== this._inputText) {
+                this._inputText = val;
+                this.dirtyText = true;
+                this.update();
+            }
         }
     },
+    text: {
+        get: function () {
+            return this.value;
+        },
+        set: function (val) {
+            this.value = val;
+        }
+    },
+    align: {
+        get: function () {
+            return this.defaultStyle.align;
+        },
+        set: function (val) {
+            this.defaultStyle.align = val;
+
+            for (var i = 0; i < this.chars.length; i++)
+                this.chars[i].style.align = val;
+
+            this.dirtyAlignment = true;
+            this.update();
+        }
+    }
 });
 
 
-DynamicText.RegisterStyle = function (name, PixiTextStyle) {
-    if (typeof name === "string" && name.length) {
-        var s = JSON.parse(JSON.stringify(Styles["default"]));
-
-        for (var param in PixiTextStyle) {
-            s[param] = PixiTextStyle[param];
-        }
-
-        Styles[name] = {
-            chars: {},
-            style: s
-        }
-    }
-}
 
 
 
 
 
-var SpriteSheet = function (maxWidth, maxHeight, padding) {
-    var res = devicePixelRatio || 1, canvas, container, baseTexture, cx, cy, cw, ch, renderTimeout;
-    var canvasList = [];
-    this.createNewCanvas = function () {
-        canvas = new PIXI.CanvasRenderer({ width: 100, height: 100, transparent: true, resolution: res });
-        canvas.objects = [];
-        baseTexture = PIXI.BaseTexture.fromCanvas(canvas.view);
-        container = new PIXI.Container();
-        cx = cy = cw = ch = 0;
-        canvasList.push(canvas);
-        renderTimeout = undefined;
 
 
-        setTimeout(function () {
-            document.body.appendChild(canvas.view);
-            canvas.view.className = "ss";
-            canvas.view.style.right = ((canvasList.length - 1) * maxWidth + 10) + "px";
-            canvas.view.style.transform = "scale(" + (1 / devicePixelRatio) + ")";
-            canvas.view.style.transformOrigin = "100% 100%";
-        }, 100);
-
-    }
-
-    this.createNewCanvas();
 
 
-    this.render = function () {
-        //resize the canvas if texture doesnt fit
-        var resize = false;
 
-        if (cw > canvas.width / res || ch > canvas.height / res) {
-            this.reArrange()
-            canvas.resize(Math.max(cw, canvas.width / res), Math.max(ch, canvas.height / res));
-            baseTexture.update();
-            resize = true;
-        }
+var _canvas = document.createElement("canvas");
+var _ctx = _canvas.getContext("2d");
+_canvas.width = 100;
+_canvas.height = 100;
 
-        canvas.render(container);
+//setTimeout(function () {
+//    _canvas.className = "messureAtlas";
+//    document.body.appendChild(_canvas);
+//}, 100);
 
-        //update texture frames (after resize and render)
-        for (var i = 0; i < canvas.objects.length; i++) {
-            var obj = canvas.objects[i];
-            if (obj.dirty || resize) {
-                obj.texture.frame = new PIXI.Rectangle(obj.sprite.x * res, obj.sprite.y * res, obj.sprite.width * res, obj.sprite.height * res);
-                obj.texture.update();
+var AtlasNode = function (w, h, parent) {
+    var children = this.children = [];
+    this.rect = new PIXI.Rectangle(0, 0, w || 0, h || 0);
+    this.data = null;
+    this.parent = parent || null;
+    this.vertical = false;
 
-                obj.dirty = false;
+    this.resize = function (width, height) {
+        if (this.data === null) {
+            var wDif = width - this.rect.width;
+            var hDif = height - this.rect.height;
+
+            this.rect.width = width;
+            this.rect.height = height;
+
+
+            for (var i = 0; i < this.children.length; i++) {
+                var child = this.children[i];
+                if (child.vertical)
+                    child.resize(this.rect.width, child.rect.height + hDif);
+                else
+                    child.resize(child.rect.width + wDif, this.rect.height);                    
             }
         }
     }
 
-    this.AddObject = function (obj, positionOnly) {
-        
 
-        
-        
-
-        
-
-        //change line
-        if (cx + obj.width > maxWidth) {
-            cy = ch + padding;
-            cx = 0;
-
-            //arrange or new canvas
-            if (!positionOnly && cy + obj.height > maxHeight) 
-                this.createNewCanvas();
-        }
-
-        
-
-        obj.x = cx;
-        obj.y = cy;
+    this.insert = function (width, height, obj) {
 
 
-        if (cy + obj.height > ch)
-            ch = cy + obj.height;
-        if (cx + obj.width > cw)
-            cw = cx + obj.width;
-        cx += obj.width + padding;
+        if (children.length > 0) {
+            var newNode = children[0].insert(width, height, obj);
+            if (newNode != null) return newNode;
 
+            return children[1].insert(width, height, obj);
+        } else {
+            if (this.data != null) return null;
+            if (width > this.rect.width || height > this.rect.height) return null;
+            if (width == this.rect.width && height == this.rect.height) {
+                this.data = obj;
+                obj.frame.x = this.rect.x;
+                obj.frame.y = this.rect.y;
+                obj._dirtyNode = true;
+                return this;
+            }
 
-        var outputTexture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(0, 0, obj.width, obj.height));
+            children.push(new AtlasNode(0, 0, this));
+            children.push(new AtlasNode(0, 0, this));
 
-        if (!positionOnly) {
-            canvas.objects.push({
-                dirty: true,
-                sprite: obj,
-                baseTexture: baseTexture,
-                texture: outputTexture
-            }); 
-            container.addChild(obj);
-        }
+            var dw = this.rect.width - width;
+            var dh = this.rect.height - height;
 
+            if (dw > dh) {
+                children[0].rect = new PIXI.Rectangle(this.rect.x, this.rect.y, width, this.rect.height);
+                children[1].rect = new PIXI.Rectangle(this.rect.x + width, this.rect.y, this.rect.width - width, this.rect.height);
+                children[0].vertical = true;
+                children[1].vertical = false;
+            } else {
+                children[0].rect = new PIXI.Rectangle(this.rect.x, this.rect.y, this.rect.width, height);
+                children[1].rect = new PIXI.Rectangle(this.rect.x, this.rect.y + height, this.rect.width, this.rect.height - height);
+                children[0].vertical = false;
+                children[1].vertical = true;
+            }
 
-        //Update the canvas 
-        var self = this;
-        if (renderTimeout === undefined) {
-            renderTimeout = setTimeout(function () {
-                self.render();
-                console.log("RENDER");
-                renderTimeout = undefined;
-            }, 0);
-        }
-
-        return outputTexture;
-    }
-
-    this.reArrange = function () {
-        canvas.objects.sort(function (a, b) {
-            return b.sprite.height - a.sprite.height;
-        });
-
-        cx = cy = ch = cw = 0
-        for (var i = 0; i < canvas.objects.length; i++) {
-            this.AddObject(canvas.objects[i].sprite, true);
+            return children[0].insert(width, height, obj);
         }
     }
 }
-var ss = DynamicText.ss = new SpriteSheet(256, 100, 1);
 
-},{"./UIBase":29}],5:[function(require,module,exports){
+var DynamicAtlas = function (padding) {
+    var renderNode = function (node, childIndex) {
+
+        //atlasCtx.strokeStyle = rootNode.data !== null ? "#FF0000" : "#00FF00";
+
+        if (node.rect) {
+            atlasCtx.lineWidth = childIndex == 0 ? 10 : 2;
+            //atlasCtx.beginPath();
+            atlasCtx.fillStyle = childIndex == 0 ? "green" : "blue";
+            atlasCtx.strokeStyle = childIndex == 0 ? "green" : "blue";
+            //atlasCtx.fillRect(node.rect.x, node.rect.y, node.rect.width, node.rect.height);
+            atlasCtx.strokeRect(node.rect.x, node.rect.y, node.rect.width, node.rect.height);
+            atlasCtx.stroke();
+
+        }
+        //atlasCtx.closePath();
+        for (var i = 0; i < node.children.length; i++)
+            renderNode(node.children[i], i)
+    }
+
+
+
+
+    var res = devicePixelRatio || 1,
+        atlasCanvas,
+        atlasCtx,
+        resize,
+        objects,
+        rearrange,
+        baseTexture,
+        renderTimeout,
+        rootNode,
+        canvasList = [],
+        atlasdim,
+        startdim = 256,
+        maxdim = 2048;
+    this.debug = false;
+
+    var addCanvas = function () {
+        //make sure previous canvas is updated
+        renderTimeout = undefined;
+        if (atlasCanvas !== undefined) drawAllObjects(true);
+
+        //create new canvas
+        atlasCanvas = document.createElement("canvas");
+        atlasCtx = atlasCanvas.getContext("2d");
+        //atlasCtx.scale(PIXI.settings.RESOLUTION, PIXI.settings.RESOLUTION);
+        canvasList.push(atlasCanvas);
+
+        //reset dimentions
+        atlasdim = startdim;
+        atlasCanvas.width = atlasCanvas.height = atlasdim;
+        rootNode = new AtlasNode(atlasdim, atlasdim);
+
+        //reset array with canvas objects and create new atlas
+        objects = [];
+
+
+        //set new basetexture
+        baseTexture = PIXI.BaseTexture.fromCanvas(atlasCanvas);
+        //baseTexture.resolution = PIXI.settings.RESOLUTION;
+        baseTexture.mipmap = false;
+        baseTexture.update();
+
+
+        //temp (visual spritesheet)
+        setTimeout(function () {
+            var r = 10;
+            var s = 1;
+            for (var i = 0; i < canvasList.length; i++) {
+                c = canvasList[i];
+                document.body.appendChild(c);
+                c.className = "SpriteSheet";
+                //c.setAttribute("style", " position: absolute; left: calc(50% - 450px); top: 115px; border: 1px solid #d3d3d3; background-color: #808080;")
+                previewTimeout = undefined;
+                r += (c.width * ((1 / devicePixelRatio) * 0.5)) + 10;
+            }
+        }, 100);
+    }
+    addCanvas();
+
+    this.fontFamilyCache = {};
+
+
+    var drawAllObjects = function (force) {
+        if (resize) {
+            atlasCanvas.width = atlasCanvas.height = atlasdim;
+            baseTexture.update();
+            resize = false;
+        }
+        else if (rearrange) {
+            atlasCtx.clearRect(0, 0, atlasCanvas.width, atlasCanvas.height);
+            rearrange = false;
+        }
+        else if (!force) return;
+
+        for (var i = 0; i < objects.length; i++) {
+            drawObject(objects[i]);
+
+        }
+    }
+
+    var drawObject = function (obj) {
+        atlasCtx.drawImage(obj._cache, obj.frame.x, obj.frame.y)
+
+        if (!obj.texture) {
+            obj.texture = new PIXI.Texture(baseTexture, obj.frame);
+        }
+        else {
+            obj.texture.frame = obj.frame;
+        }
+
+        obj.texture.update();
+        obj._dirtyNode = false;
+
+
+
+
+
+        if (ss.debug) {
+            console.log("OKOOKKOK");
+            for (var i = 0; i < rootNode.children.length; i++) {
+                renderNode(rootNode.children[i], i)
+            }
+        }
+    }
+
+    var insertObject = function (obj) {
+        var w = obj.frame.width,
+            h = obj.frame.height;
+        if (w > maxdim || h > maxdim) {
+            console.warn("Texture is bigger than spritesheet");
+            return;
+        }
+
+        var node = rootNode.insert(w + padding, h + padding, obj);
+
+
+
+        //resize atlas
+        if (node == null) {
+            //Create new canvasl
+            //if (atlasdim * 2 > maxdim) {
+            //rearrange = true;
+            //rearrangeCanvas(atlasdim);
+
+            console.log("resizing");
+
+            atlasdim *= 2;
+            rootNode.resize(atlasdim, atlasdim);
+            resize = true;
+            atlasCanvas.width = atlasCanvas.height = atlasdim;
+            baseTexture.update();
+
+            node = rootNode.insert(w + padding, h + padding, obj);
+
+            drawObject(obj);
+            drawAllObjects();
+            return;
+
+            //if (node == null) {
+            //    addCanvas();
+            //    return insertObject(obj);
+            //}
+            //}
+
+            //if (!rearrange) {
+            //    resize = true;
+            //    atlasdim *= 2;
+            //    rearrangeCanvas(atlasdim);
+            //    node = rootNode.insert(w + padding, h + padding, obj);
+            //}
+
+        }
+
+        //if (node == null) return;
+        //add to current canvas and collection
+        drawObject(obj);
+        objects.push(obj);
+    }
+
+    this.getCharObject = function (char, style) {
+        var font = style.ctxFont();
+
+
+        //create new cache for fontFamily
+        var familyCache = this.fontFamilyCache[font];
+        if (!familyCache) {
+            familyCache = {};
+            this.fontFamilyCache[font] = familyCache;
+        }
+
+
+
+        //get char data
+        var key = style.ctxKey(char);
+        var obj = familyCache[key];
+        if (!obj) {
+            //create char object
+            var metrics = generateCharData(char, style);
+
+            //todo: cleanup when we know whats needed
+            obj = {
+                metrics: metrics,
+                font: font,
+                value: char,
+                frame: metrics.rect,
+                texture: undefined,
+                xOffset: metrics.bounds ? metrics.bounds.minx : 0,
+                yOffset: metrics.descent || 0,
+                width: metrics.width || 0,
+                lineHeight: metrics.lineHeight || 0,
+                _cache: metrics.canvas,
+                _dirtyNode: true
+            };
+
+            //add to collections
+            familyCache[key] = obj;
+
+
+            //add to atlas if visible char
+            if (metrics.rect)
+                insertObject(obj);
+        }
+
+        return obj;
+    }
+
+
+    var rearrangeCanvas = this.rearrangeCanvas = function (dim) {
+
+        if (!dim)
+            dim = atlasdim;
+        atlasdim = dim;
+        rootNode = new AtlasNode(dim, dim);
+
+        objects.sort(function (a, b) {
+            if (a.frame.height < b.frame.height)
+                return 1;
+
+            if (a.frame.height > b.frame.height)
+                return -1;
+
+
+            if (a.frame.width < b.frame.width)
+                return 1;
+
+            if (a.frame.width > b.frame.width)
+                return -1;
+
+
+            return 0;
+        });
+
+
+        for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            rootNode.insert(obj.frame.width + padding, obj.frame.height + padding, obj);
+        }
+
+
+
+
+
+
+
+
+
+        drawAllObjects();
+    }
+
+
+    var generateCharData = function (char, style) {
+
+        var fontSize = style.fontSize,
+            lineHeight = fontSize * 1.3;
+
+
+        //Start our returnobject
+        var data = {
+            fontSize: fontSize,
+            lineHeight: lineHeight
+        };
+
+        //Return if newline
+        if (!char || /(?:\r\n|\r|\n)/.test(char))
+            return data;
+
+        //Ctx font string
+        var font = style.ctxFont();
+        _ctx.font = font;
+
+        //Get char width
+        data.width = _ctx.measureText(char).width;
+
+        //Return if char = space
+        if (/(\s)/.test(char)) return data;
+
+        //set canvas size (with padding so we can messure)
+        var paddingY = Math.round(fontSize * 0.7), paddingX = Math.max(5, Math.round(fontSize * 0.7));
+        _canvas.width = Math.ceil(data.width) + paddingX * 2;
+        _canvas.height = 1.5 * fontSize;
+        var w = _canvas.width, h = _canvas.height, baseline = (h / 2) + (paddingY * 0.5);
+
+        //set font again after resize
+        _ctx.font = font;
+
+        //make sure canvas is clean
+        _ctx.clearRect(0, 0, w, h);
+
+        //save clean state with font
+        _ctx.save();
+
+        //convert shadow string to shadow data
+        var shadowData = function (str) {
+            var data = str.trim().split(' ');
+            return {
+                color: string(data[0], "#000000"),
+                alpha: float(data[1], 0.5),
+                xOffset: float(data[2], 3),
+                yOffset: float(data[3], 3),
+                blur: float(data[4], 5)
+            }
+        }
+
+        //convert fill string to fill data
+        var fillData = function (str) {
+            var data = str.trim().split(' ');
+            var c = string(data[0], "#FFFFFF");
+            var a = float(data[1], 1);
+            return {
+                color: c,
+                alpha: a,
+                position: float(data[2], -1),
+                rgba: hexToRgba(c, a)
+            }
+        }
+
+        //create fill style from fill string
+        var getFillStyle = function (str) {
+            var fills = str.split(',').filter(function (s) { return s !== '' });
+
+            //convert to fill data
+            for (var i = 0; i < fills.length; i++) fills[i] = fillData(fills[i]);
+
+            switch (fills.length) {
+                case 0: return "white";
+                case 1: return fills[0].rgba ? fills[0].rgba : fills[0].color || "#FFFFFF";
+                default:
+                    //make gradient
+                    try {
+                        var gradEnd = baseline + ((lineHeight - fontSize) * 0.5),
+                            gradient = _ctx.createLinearGradient(0, gradEnd - fontSize, 0, gradEnd);
+
+                        for (var i = 0; i < fills.length; i++)
+                            gradient.addColorStop(fills[i].position !== -1 ? fills[i].position : i / (fills.length - 1), fills[i].rgba || fills[i].color);
+
+                        return gradient;
+                    }
+                    catch (e) {
+                        return "#FFFFFF";
+                    }
+            }
+        }
+
+
+        //function to draw shadows
+        var drawShadows = function (shadowString, stroke) {
+            var shadows = shadowString.trim().split(',').filter(function (s) { return s !== '' });
+            if (shadows.length) {
+                for (var i = 0; i < shadows.length; i++) {
+                    var s = shadowData(shadows[i]);
+                    _ctx.globalAlpha = s.alpha;
+                    _ctx.shadowColor = s.color;
+                    _ctx.shadowOffsetX = s.xOffset + w;
+                    _ctx.shadowOffsetY = s.yOffset;
+                    _ctx.shadowBlur = s.blur;
+
+                    if (stroke) {
+                        _ctx.lineWidth = style.stroke;
+                        _ctx.strokeText(char, paddingX - w, baseline);
+                    }
+                    else _ctx.fillText(char, paddingX - w, baseline);
+                }
+                _ctx.restore();
+            }
+        }
+
+        if (style.shadow.length)
+            drawShadows(style.shadow, false);
+
+        if (style.stroke && style.strokeShadow.length) {
+            drawShadows(style.strokeShadow, true);
+            console.log("drawing stroke shadow");
+        }
+
+
+
+        //fill text
+        _ctx.fillStyle = getFillStyle(style.fill);
+        _ctx.fillText(char, paddingX, baseline);
+        _ctx.restore();
+
+        //stroke
+        if (style.stroke) {
+
+            _ctx.strokeStyle = getFillStyle(style.strokeFill.length ? style.strokeFill : "#000000");
+            _ctx.lineWidth = style.stroke;
+            _ctx.strokeText(char, paddingX, baseline);
+            _ctx.restore();
+        }
+
+
+
+
+
+
+        var pixelData = _ctx.getImageData(0, 0, w, h).data;
+
+
+        var i = 3,
+            w4 = w * 4,
+            len = pixelData.length;
+
+
+
+        //scanline on alpha
+        while (i < len && pixelData[i] === 0) { i += 4 }
+        var ascent = (i / w4) | 0;
+
+
+        if (i < len) {
+            //rev scanline on alpha
+            i = len - 1;
+            while (i > 0 && pixelData[i] === 0) { i -= 4 }
+            var descent = (i / w4) | 0;
+
+
+            //left to right scanline on alpha
+            for (i = 3; i < len && pixelData[i] === 0;) {
+                i += w4;
+                if (i >= len) { i = (i - len) + 4; }
+            }
+            var minx = ((i % w4) / 4) | 0;
+
+            //right to left scanline on alpha
+            var step = 1;
+            for (i = len - 1; i >= 0 && pixelData[i] === 0;) {
+                i -= w4;
+                if (i < 0) { i = (len - 1) - (step++) * 4; }
+            }
+            var maxx = ((i % w4) / 4) + 1 | 0;
+
+
+
+
+            // set font metrics
+            data.ascent = (baseline - ascent);
+            data.descent = (descent - baseline);
+            data.height = 1 + (descent - ascent);
+            data.bounds = {
+                minx: minx - paddingX,
+                maxx: maxx - paddingX,
+                miny: 0,
+                maxy: descent - ascent
+            };
+            data.rect = {
+                x: data.bounds.minx,
+                y: -data.ascent - 2,
+                width: data.bounds.maxx - data.bounds.minx + 2,
+                height: data.ascent + data.descent + 4
+            }
+
+
+            //cache (for fast rearrange later)
+            data.canvas = document.createElement("canvas");
+            data.canvas.width = data.rect.width;
+            data.canvas.height = data.rect.height;
+            var c = data.canvas.getContext("2d");
+            c.drawImage(_canvas, -paddingX - data.rect.x, -baseline - data.rect.y);
+
+            //reset rect position
+            data.rect.x = data.rect.y = 0;
+
+        }
+        return data;
+    }
+}
+
+
+
+
+
+
+
+
+
+},{"./UIBase":30,"emoji-regex":1}],6:[function(require,module,exports){
 var Ease = {},
     EaseBase = require('./EaseBase'),
     ExponentialEase = require('./ExponentialEase'),
@@ -836,7 +1585,7 @@ module.exports = Ease;
 
 
 
-},{"./EaseBase":6,"./ExponentialEase":7}],6:[function(require,module,exports){
+},{"./EaseBase":7,"./ExponentialEase":8}],7:[function(require,module,exports){
 function EaseBase() {
     this.getPosition = function (p) {
         return p;
@@ -849,7 +1598,7 @@ module.exports = EaseBase;
 
 
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var EaseBase = require('./EaseBase');
 
 function ExponentialEase(power, easeIn, easeOut) {
@@ -877,7 +1626,7 @@ module.exports = ExponentialEase;
 
 
 
-},{"./EaseBase":6}],8:[function(require,module,exports){
+},{"./EaseBase":7}],9:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     InputController = require('./Interaction/InputController'),
     ClickEvent = require('./Interaction/ClickEvent');
@@ -981,7 +1730,7 @@ InputBase.prototype.blur = function () {
 
     }
 };
-},{"./Interaction/ClickEvent":9,"./Interaction/InputController":12,"./UIBase":29}],9:[function(require,module,exports){
+},{"./Interaction/ClickEvent":10,"./Interaction/InputController":13,"./UIBase":30}],10:[function(require,module,exports){
 var ClickEvent = function (obj) {
     var bound = false,
         self = this,
@@ -1070,7 +1819,7 @@ ClickEvent.prototype.onHover = function (event) { };
 ClickEvent.prototype.onLeave = function (event) { };
 ClickEvent.prototype.onPress = function (event, isPressed) { };
 ClickEvent.prototype.onClick = function (event) { };
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var _items = [];
 var DragDropController = {
     add: function (item, event) {
@@ -1123,7 +1872,7 @@ var DragDropController = {
 };
 
 module.exports = DragDropController;
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var DragEvent = function (obj) {
     var bound = false,
         start = new PIXI.Point(),
@@ -1224,7 +1973,7 @@ DragEvent.prototype.onPress = function (event, isPressed) { };
 DragEvent.prototype.onDragEnd = function (event) { };
 DragEvent.prototype.onDragMove = function (event, offset) { };
 DragEvent.prototype.onDragStart = function (event) { };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var _currentItem;
 var tabGroups = {};
 var checkGroups = {};
@@ -1316,7 +2065,7 @@ var InputController = {
 };
 
 module.exports = InputController;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var Interaction = {
     ClickEvent: require('./ClickEvent'),
     DragEvent: require('./DragEvent'),
@@ -1325,7 +2074,7 @@ var Interaction = {
 
 
 module.exports = Interaction;
-},{"./ClickEvent":9,"./DragEvent":11,"./MouseScrollEvent":14}],14:[function(require,module,exports){
+},{"./ClickEvent":10,"./DragEvent":12,"./MouseScrollEvent":15}],15:[function(require,module,exports){
 var MouseScrollEvent = function (obj, preventDefault) {
     var bound = false, delta = new PIXI.Point(), self = this;
     obj.container.interactive = true;
@@ -1378,7 +2127,7 @@ MouseScrollEvent.prototype.constructor = MouseScrollEvent;
 module.exports = MouseScrollEvent;
 
 MouseScrollEvent.prototype.onMouseScroll = function (event, delta) { };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var MathHelper = {
     Lerp: function (start, stop, amt) {
         if (amt > 1) amt = 1;
@@ -1392,7 +2141,7 @@ var MathHelper = {
 };
 
 module.exports = MathHelper;
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var Slider = require('./Slider'),
     Tween = require('./Tween'),
     Ease = require('./Ease/Ease');
@@ -1486,7 +2235,7 @@ ScrollBar.prototype.toggleHidden = function (hidden) {
 
 
 
-},{"./Ease/Ease":5,"./Slider":19,"./Tween":27}],17:[function(require,module,exports){
+},{"./Ease/Ease":6,"./Slider":20,"./Tween":28}],18:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     Container = require('./Container'),
     MathHelper = require('./MathHelper'),
@@ -1513,14 +2262,16 @@ var UIBase = require('./UIBase'),
  * @param [options.overflowX=0] {Number} how much can be scrolled past content dimensions
  */
 function ScrollingContainer(options) {
+    options = options || {};
     Container.call(this, options.width, options.height);
     this.mask = new PIXI.Graphics();
     this.innerContainer = new PIXI.Container();
+    this.innerBounds = new PIXI.Rectangle();
     this.container.addChild(this.mask);
     this.container.addChild(this.innerContainer);
     this.container.mask = this.mask;
     this.scrollX = options.scrollX !== undefined ? options.scrollX : false;
-    this.scrollY = options.scrollY !== undefined ? options.scrollY : false;
+    this.scrollY = options.scrollY !== undefined ? options.scrollY : true;
     this.dragScrolling = options.dragScrolling !== undefined ? options.dragScrolling : true;
     this.softness = options.softness !== undefined ? Math.max(Math.min(options.softness || 0, 1), 0) : 0.5;
     this.radius = options.radius || 0;
@@ -1607,19 +2358,23 @@ ScrollingContainer.prototype.initScrolling = function () {
         self = this;
 
     this.forcePctPosition = function (direction, pct) {
+        var bounds = this.getInnerBounds();
+
         if (this.scrollX && direction == "x") {
-            container.position[direction] = -((container.width - this._width) * pct);
+            container.position[direction] = -((bounds.width - this._width) * pct);
         }
         if (this.scrollY && direction == "y") {
-            container.position[direction] = -((container.height - this._height) * pct);
+            container.position[direction] = -((bounds.height - this._height) * pct);
         }
         Position[direction] = targetPosition[direction] = container.position[direction];
     };
 
     this.focusPosition = function (pos) {
+        var bounds = this.getInnerBounds();
+
         var dif;
         if (this.scrollX) {
-            var x = Math.max(0, (Math.min(container.width, pos.x)));
+            var x = Math.max(0, (Math.min(bounds.width, pos.x)));
             if (x + container.x > this._width) {
                 dif = x - this._width;
                 container.x = -dif;
@@ -1631,7 +2386,7 @@ ScrollingContainer.prototype.initScrolling = function () {
         }
 
         if (this.scrollY) {
-            var y = Math.max(0, (Math.min(container.height, pos.y)));
+            var y = Math.max(0, (Math.min(bounds.height, pos.y)));
             
             if (y + container.y > this._height) {
                 dif = y - this._height;
@@ -1673,14 +2428,25 @@ ScrollingContainer.prototype.initScrolling = function () {
         }
     };
 
-    this.updateDirection = function (direction, delta) {
 
+    this.getInnerBounds = function () {
+        this.innerContainer.getBounds(true, this.innerBounds);
+        this.innerContainer.getBounds(true, this.innerBounds);
+
+        this.innerBounds.height = this.innerBounds.y - this.innerContainer.y + this.innerContainer.height;
+        this.innerBounds.width = this.innerBounds.x - this.innerContainer.x + this.innerContainer.width;
+
+        return this.innerBounds;
+    }
+
+    this.updateDirection = function (direction, delta) {
+        var bounds = this.getInnerBounds();
 
         var min;
         if (direction == "y")
-            min = Math.round(Math.min(0, this._height - container.height));
+            min = Math.round(Math.min(0, this._height - bounds.height));
         else
-            min = Math.round(Math.min(0, this._width - container.width));
+            min = Math.round(Math.min(0, this._width - bounds.width));
 
         if (!this.scrolling && Math.round(Speed[direction]) !== 0) {
             targetPosition[direction] += Speed[direction];
@@ -1770,7 +2536,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
 
-},{"./Container":3,"./Interaction/DragEvent":11,"./Interaction/MouseScrollEvent":14,"./MathHelper":15,"./Ticker":25,"./UIBase":29}],18:[function(require,module,exports){
+},{"./Container":4,"./Interaction/DragEvent":12,"./Interaction/MouseScrollEvent":15,"./MathHelper":16,"./Ticker":26,"./UIBase":30}],19:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1908,7 +2674,7 @@ module.exports = SliceSprite;
 
 
 
-},{"./UIBase":29}],19:[function(require,module,exports){
+},{"./UIBase":30}],20:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     DragEvent = require('./Interaction/DragEvent'),
     ClickEvent = require('./Interaction/ClickEvent'),
@@ -2154,7 +2920,7 @@ Object.defineProperties(Slider.prototype, {
         }
     }
 });
-},{"./Ease/Ease":5,"./Interaction/ClickEvent":9,"./Interaction/DragEvent":11,"./MathHelper":15,"./Tween":27,"./UIBase":29}],20:[function(require,module,exports){
+},{"./Ease/Ease":6,"./Interaction/ClickEvent":10,"./Interaction/DragEvent":12,"./MathHelper":16,"./Tween":28,"./UIBase":30}],21:[function(require,module,exports){
 var Container = require('./Container');
 var Tween = require('./Tween');
 /**
@@ -2276,7 +3042,7 @@ SortableList.prototype._sort = function () {
 
 
 
-},{"./Container":3,"./Tween":27}],21:[function(require,module,exports){
+},{"./Container":4,"./Tween":28}],22:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -2323,7 +3089,7 @@ Sprite.prototype.update = function () {
 };
 
 
-},{"./UIBase":29}],22:[function(require,module,exports){
+},{"./UIBase":30}],23:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -2451,7 +3217,7 @@ Object.defineProperties(Stage.prototype, {
         }
     }
 });
-},{"./UIBase":29}],23:[function(require,module,exports){
+},{"./UIBase":30}],24:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -2526,7 +3292,7 @@ Object.defineProperties(Text.prototype, {
         }
     }
 });
-},{"./UIBase":29}],24:[function(require,module,exports){
+},{"./UIBase":30}],25:[function(require,module,exports){
 var InputBase = require('./InputBase'),
     Container = require('./Container'),
     DragEvent = require('./Interaction/DragEvent');
@@ -3372,7 +4138,7 @@ Object.defineProperties(TextInput.prototype, {
  *  
  * 
  */
-},{"./Container":3,"./InputBase":8,"./Interaction/DragEvent":11}],25:[function(require,module,exports){
+},{"./Container":4,"./InputBase":9,"./Interaction/DragEvent":12}],26:[function(require,module,exports){
 var Tween = require('./Tween');
 
 function Ticker(autoStart) {
@@ -3449,7 +4215,7 @@ Ticker.removeListener = function (event, fn) {
 
 
 Ticker.shared = new Ticker(true);
-},{"./Tween":27}],26:[function(require,module,exports){
+},{"./Tween":28}],27:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -3506,7 +4272,7 @@ Object.defineProperties(TilingSprite.prototype, {
         }
     }
 });
-},{"./UIBase":29}],27:[function(require,module,exports){
+},{"./UIBase":30}],28:[function(require,module,exports){
 var MathHelper = require('./MathHelper');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
@@ -3689,7 +4455,7 @@ var Tween = {
 
 
 module.exports = Tween;
-},{"./Ease/Ease":5,"./MathHelper":15}],28:[function(require,module,exports){
+},{"./Ease/Ease":6,"./MathHelper":16}],29:[function(require,module,exports){
 var UI = {
     Stage: require('./Stage'),
     Container: require('./Container'),
@@ -3714,7 +4480,7 @@ var UI = {
 
 
 module.exports = UI;
-},{"./Button":1,"./CheckBox":2,"./Container":3,"./DynamicText":4,"./Ease/Ease":5,"./Interaction/Interaction":13,"./MathHelper":15,"./ScrollBar":16,"./ScrollingContainer":17,"./SliceSprite":18,"./Slider":19,"./SortableList":20,"./Sprite":21,"./Stage":22,"./Text":23,"./TextInput":24,"./Ticker":25,"./TilingSprite":26,"./Tween":27}],29:[function(require,module,exports){
+},{"./Button":2,"./CheckBox":3,"./Container":4,"./DynamicText":5,"./Ease/Ease":6,"./Interaction/Interaction":14,"./MathHelper":16,"./ScrollBar":17,"./ScrollingContainer":18,"./SliceSprite":19,"./Slider":20,"./SortableList":21,"./Sprite":22,"./Stage":23,"./Text":24,"./TextInput":25,"./Ticker":26,"./TilingSprite":27,"./Tween":28}],30:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI'),
     DragEvent = require('./Interaction/DragEvent'),
@@ -4829,7 +5595,7 @@ Object.defineProperties(UIBase.prototype, {
         }
     }
 });
-},{"./Interaction/DragDropController":10,"./Interaction/DragEvent":11,"./UI":28,"./UISettings":30}],30:[function(require,module,exports){
+},{"./Interaction/DragDropController":11,"./Interaction/DragEvent":12,"./UI":29,"./UISettings":31}],31:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *
@@ -4895,7 +5661,7 @@ module.exports = UISettings;
 
 
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 
 var Library = {
     UI: require('./UI')
@@ -4907,7 +5673,7 @@ Object.assign(PIXI, Library);
 
 module.exports = Library;
 
-},{"./UI":28}]},{},[31])(31)
+},{"./UI":29}]},{},[32])(32)
 });
 
 

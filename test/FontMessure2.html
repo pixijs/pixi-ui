@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        /**
+  This library rewrites the Canvas2D "measureText" function
+  so that it returns a more complete metrics object.
+
+  Author: Mike "Pomax" Kamermans
+**/
+        (function () {
+            var NAME = "FontMetrics Library"
+            var VERSION = "1-2011.0927.1431";
+            var debug = true;
+
+            // if there is no getComputedStyle, this library won't work.
+            if (!document.defaultView.getComputedStyle) {
+                throw ("ERROR: 'document.defaultView.getComputedStyle' not found. This library only works in browsers that can report computed CSS values.");
+            }
+
+            // store the old text metrics function on the Canvas2D prototype
+            CanvasRenderingContext2D.prototype.measureTextWidth = CanvasRenderingContext2D.prototype.measureText;
+
+            /**
+             *  shortcut function for getting computed CSS values
+             */
+            var getCSSValue = function (element, property) {
+                return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
+            };
+
+            // debug function
+            var show = function (canvas, ctx, xstart, w, h, metrics) {
+                document.body.appendChild(canvas);
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+
+                ctx.beginPath();
+                ctx.moveTo(xstart, 0);
+                ctx.lineTo(xstart, h);
+                ctx.closePath();
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(xstart + metrics.bounds.maxx, 0);
+                ctx.lineTo(xstart + metrics.bounds.maxx, h);
+                ctx.closePath();
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, h / 2 - metrics.ascent);
+                ctx.lineTo(w, h / 2 - metrics.ascent);
+                ctx.closePath();
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, h / 2 + metrics.descent);
+                ctx.lineTo(w, h / 2 + metrics.descent);
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            /**
+             * The new text metrics function
+             */
+
+            var canvas = document.createElement("canvas");
+            var ctx = canvas.getContext("2d");
+            CanvasRenderingContext2D.prototype.measureText = function (textstring) {
+                textstring = textstring || "M";
+                
+                fontFamily = "Tangerine",
+                fontSize = 60;
+                
+                
+                canvas.width = 500;
+                canvas.height = 500;
+                ctx.font = fontSize + "px " + fontFamily;
+                var metrics = ctx.measureTextWidth(textstring);
+                metrics.fontsize = fontSize;
+
+
+                var padding = 100;
+                canvas.width = metrics.width + padding;
+                canvas.height = 3 * fontSize;
+                canvas.style.opacity = 1;
+                canvas.style.fontFamily = fontFamily;
+                canvas.style.fontSize = fontSize;
+                
+                ctx.font = fontSize + "px " + fontFamily;
+
+                // for text lead values, we meaure a multiline text container.
+                var leadDiv = document.createElement("div");
+                leadDiv.style.position = "absolute";
+                leadDiv.style.opacity = 0;
+                leadDiv.style.font = fontSize + "px " + fontFamily;
+                leadDiv.innerHTML = textstring + "<br/>" + textstring;
+                document.body.appendChild(leadDiv);
+
+                var w = canvas.width,
+                    h = canvas.height,
+                    baseline = h / 2;
+
+                // Set all canvas pixeldata values to 255, with all the content
+                // data being 0. This lets us scan for data[i] != 255.
+                ctx.fillStyle = "white";
+                ctx.fillRect(-1, -1, w + 2, h + 2);
+                ctx.fillStyle = "black";
+                ctx.fillText(textstring, padding / 2, baseline);
+                var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+                // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+                // consecutive values in the array, rather than stored as 32 bit ints.
+                var i = 0,
+                    w4 = w * 4,
+                    len = pixelData.length;
+
+                // Finding the ascent uses a normal, forward scanline
+                while (++i < len && pixelData[i] === 255) { }
+                var ascent = (i / w4) | 0;
+
+                // Finding the descent uses a reverse scanline
+                i = len - 1;
+                while (--i > 0 && pixelData[i] === 255) { }
+                var descent = (i / w4) | 0;
+
+                // find the min-x coordinate
+                for (i = 0; i < len && pixelData[i] === 255;) {
+                    i += w4;
+                    if (i >= len) { i = (i - len) + 4; }
+                }
+                var minx = ((i % w4) / 4) | 0;
+
+                // find the max-x coordinate
+                var step = 1;
+                for (i = len - 3; i >= 0 && pixelData[i] === 255;) {
+                    i -= w4;
+                    if (i < 0) { i = (len - 3) - (step++) * 4; }
+                }
+                var maxx = ((i % w4) / 4) + 1 | 0;
+
+                // set font metrics
+                metrics.ascent = (baseline - ascent);
+                metrics.descent = (descent - baseline);
+                metrics.bounds = {
+                    minx: minx - (padding / 2),
+                    maxx: maxx - (padding / 2),
+                    miny: 0,
+                    maxy: descent - ascent
+                };
+                metrics.height = 1 + (descent - ascent);
+
+                // make some initial guess at the text leading (using the standard TeX ratio)
+                metrics.leading = 1.2 * fontSize;
+
+                // then we try to get the real value from the browser
+                var leadDivHeight = getCSSValue(leadDiv, "height");
+                leadDivHeight = leadDivHeight.replace("px", "");
+                if (leadDivHeight >= fontSize * 2) { metrics.leading = (leadDivHeight / 2) | 0; }
+                document.body.removeChild(leadDiv);
+
+                // show the canvas and bounds if required
+                if (debug) { show(canvas, ctx, 50, w, h, metrics); }
+
+                return metrics;
+            };
+        }());
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+    <script>
+        var webfontReady = false;
+        WebFont.load({
+            google: {
+                families: ['Tangerine', 'Droid Serif']
+            },
+            active: function () {
+                console.log("done loading fonts");
+                webfontReady = true;
+            }
+        });
+    </script>
+    <style>
+        body { font-family: 'Segoe UI'; }
+        canvas { position: absolute; left: calc(50% - 450px); top: 115px; border: 1px solid #d3d3d3; }
+        table { padding: 0; margin: 0; width: 300px; position: absolute; left: calc(50% + 150px); top: 115px; }
+        td { text-align: right; line-height: 30px; padding: 5px; }
+        tr:nth-child(2n+1) { background-color: #d3d3d3; }
+        td:nth-child(2n+1) { text-align: left; }
+
+        .InputContainer { width: 900px; height: 80px; position: absolute; margin: auto; left: 0; right: 0; top: 30px; background-color: #f2f2f2; }
+        input, select { float: left; position: absolute; height: 50px; top: 10px; bottom: 10px; font-size: 30px; text-align: center; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div class="InputContainer">
+        <input type="text" id="text" value="A" style="left: 10px; width:200px;" />
+        <input type="number" id="size" value="60" style="left: 220px; width:60px;" />
+        <select id="font" style="left: 290px; width:200px;">
+            <option value="Arial">Arial</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Tangerine">Tangerine</option>
+            <option value="Droid Serif">Droid Serif</option>
+            <option value="Segoe UI" selected="selected">Segoe UI</option>
+
+        </select>
+    </div>
+    <canvas id="myCanvas" width="598" height="480">
+        Your browser does not support the HTML5 canvas tag.
+    </canvas>
+    <div id="data"></div>
+
+
+
+    <script>
+        var c = document.getElementById("myCanvas");
+        var container = document.getElementById('data');
+        var input_text = document.getElementById("text");
+        var input_size = document.getElementById("size");
+        var input_font = document.getElementById("font");
+        var ctx = c.getContext("2d");
+
+        input_text.addEventListener("input", setText);
+        input_font.addEventListener("change", setText);
+        input_size.addEventListener("input", setText);
+
+
+        var ox = 0, oy = 0;
+        function posX(val) {
+            return val + 300 - ox;
+        }
+
+        function posY(val) {
+            return val + 240 - oy;
+        }
+
+        function drawRect(x, y, w, h, color, width) {
+            ctx.beginPath();
+            ctx.rect(x - (width * 0.5), y - (width * 0.5), w + width, h + width);
+            ctx.strokeStyle = color || "#000000";
+            ctx.lineWidth = width | 1;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+
+        function drawLine(x1, y1, x2, y2, color, width) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color || "#000000";
+            ctx.lineWidth = width | 1;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function setText() {
+            //alert("hej");
+            if (!webfontReady) {
+                return setTimeout(setText, 5);
+            }
+
+            ctx.font = (input_size.value || 50) + "px " + input_font.options[input_font.selectedIndex].value;
+            console.log("1:", ctx.font);
+            var data = metrics = ctx.measureText(input_text.value);//, input_font.options[input_font.selectedIndex].value, (input_size.value || 50), false);
+            //var data = ctx.measureText(input_text.value);
+
+            oy = data.actualBoundingBoxDescent;
+            ox = data.actualBoundingBoxRight * 0.5;
+
+
+            ctx.moveTo(100, 100);
+            ctx.clearRect(0, 0, 600, 600);
+            ctx.fillText(input_text.value, posX(0), posY(data.actualBoundingBoxDescent));
+
+
+            var baseline = data.fontBoundingBoxAscent
+
+
+            drawRect(posX(0), posY(0), data.actualBoundingBoxRight, data.actualBoundingBoxDescent, "#ededed", 3);
+            drawLine(0, posY(data.hangingBaseline), 600, posY(data.hangingBaseline));
+
+
+            var w = 598;
+            var h = 480;
+            var xstart = posX(0);
+           
+
+            ctx.beginPath();
+            ctx.moveTo(xstart, 0);
+            ctx.lineTo(xstart, h);
+            ctx.closePath();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(xstart + metrics.bounds.maxx, 0);
+            ctx.lineTo(xstart + metrics.bounds.maxx, h);
+            ctx.closePath();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2 - metrics.ascent);
+            ctx.lineTo(w, h / 2 - metrics.ascent);
+            ctx.closePath();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2 + metrics.descent);
+            ctx.lineTo(w, h / 2 + metrics.descent);
+            ctx.closePath();
+            ctx.stroke();
+
+            var output = "<table cellspacing='0' cellpadding='0'>";
+            for (var param in data) {
+                if (typeof data[param] === "object") {
+                    for (var param2 in data[param]) {
+                        output += "<tr><td>" + param2 + ":</td><td><b>" + parseFloat(data[param][param2]) + "</b></td></tr>";
+                    }
+                }
+                else {
+                    output += "<tr><td>" + param + ":</td><td><b>" + parseFloat(data[param]) + "</b></td></tr>";
+                }
+                
+
+            }
+            output += "</table>";
+
+            container.innerHTML = output;
+        }
+
+
+
+
+
+
+
+
+
+
+        setText();
+    </script>
+
+
+
+
+</body>
+</html>

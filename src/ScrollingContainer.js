@@ -24,14 +24,16 @@ var UIBase = require('./UIBase'),
  * @param [options.overflowX=0] {Number} how much can be scrolled past content dimensions
  */
 function ScrollingContainer(options) {
+    options = options || {};
     Container.call(this, options.width, options.height);
     this.mask = new PIXI.Graphics();
     this.innerContainer = new PIXI.Container();
+    this.innerBounds = new PIXI.Rectangle();
     this.container.addChild(this.mask);
     this.container.addChild(this.innerContainer);
     this.container.mask = this.mask;
     this.scrollX = options.scrollX !== undefined ? options.scrollX : false;
-    this.scrollY = options.scrollY !== undefined ? options.scrollY : false;
+    this.scrollY = options.scrollY !== undefined ? options.scrollY : true;
     this.dragScrolling = options.dragScrolling !== undefined ? options.dragScrolling : true;
     this.softness = options.softness !== undefined ? Math.max(Math.min(options.softness || 0, 1), 0) : 0.5;
     this.radius = options.radius || 0;
@@ -118,19 +120,23 @@ ScrollingContainer.prototype.initScrolling = function () {
         self = this;
 
     this.forcePctPosition = function (direction, pct) {
+        var bounds = this.getInnerBounds();
+
         if (this.scrollX && direction == "x") {
-            container.position[direction] = -((container.width - this._width) * pct);
+            container.position[direction] = -((bounds.width - this._width) * pct);
         }
         if (this.scrollY && direction == "y") {
-            container.position[direction] = -((container.height - this._height) * pct);
+            container.position[direction] = -((bounds.height - this._height) * pct);
         }
         Position[direction] = targetPosition[direction] = container.position[direction];
     };
 
     this.focusPosition = function (pos) {
+        var bounds = this.getInnerBounds();
+
         var dif;
         if (this.scrollX) {
-            var x = Math.max(0, (Math.min(container.width, pos.x)));
+            var x = Math.max(0, (Math.min(bounds.width, pos.x)));
             if (x + container.x > this._width) {
                 dif = x - this._width;
                 container.x = -dif;
@@ -142,7 +148,7 @@ ScrollingContainer.prototype.initScrolling = function () {
         }
 
         if (this.scrollY) {
-            var y = Math.max(0, (Math.min(container.height, pos.y)));
+            var y = Math.max(0, (Math.min(bounds.height, pos.y)));
             
             if (y + container.y > this._height) {
                 dif = y - this._height;
@@ -184,14 +190,25 @@ ScrollingContainer.prototype.initScrolling = function () {
         }
     };
 
-    this.updateDirection = function (direction, delta) {
 
+    this.getInnerBounds = function () {
+        this.innerContainer.getBounds(true, this.innerBounds);
+        this.innerContainer.getBounds(true, this.innerBounds);
+
+        this.innerBounds.height = this.innerBounds.y - this.innerContainer.y + this.innerContainer.height;
+        this.innerBounds.width = this.innerBounds.x - this.innerContainer.x + this.innerContainer.width;
+
+        return this.innerBounds;
+    }
+
+    this.updateDirection = function (direction, delta) {
+        var bounds = this.getInnerBounds();
 
         var min;
         if (direction == "y")
-            min = Math.round(Math.min(0, this._height - container.height));
+            min = Math.round(Math.min(0, this._height - bounds.height));
         else
-            min = Math.round(Math.min(0, this._width - container.width));
+            min = Math.round(Math.min(0, this._width - bounds.width));
 
         if (!this.scrolling && Math.round(Speed[direction]) !== 0) {
             targetPosition[direction] += Speed[direction];
