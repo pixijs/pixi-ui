@@ -5,7 +5,7 @@
     this.fontFamily = 'Arial';
     this.fontSize = 26;
     this.fontWeight = 'normal';
-    this.fontStyle = 'normal',
+    this.fontStyle = 'normal';
     this.letterSpacing = 0;
     this.lineHeight = 0;
     this.verticalAlign = 0;
@@ -25,7 +25,7 @@ DynamicTextStyle.prototype.clone = function () {
     var style = new DynamicTextStyle();
     style.merge(this);
     return style;
-}
+};
 
 DynamicTextStyle.prototype.merge = function (style) {
     if (typeof style === 'object') {
@@ -35,18 +35,18 @@ DynamicTextStyle.prototype.merge = function (style) {
                 this[param] = val;
         }
     }
-}
+};
 
 DynamicTextStyle.prototype.ctxKey = function (char) {
     return [char, this.fill, this.shadow, this.stroke, this.strokeFill, this.strokeShadow].join('|');
-}
+};
 
 DynamicTextStyle.prototype.ctxFont = function () {
     var fontSize = Math.min(200, Math.max(1, this.fontSize || 26)) + "px ";
     var fontWeight = this.fontWeight === "bold" ? this.fontWeight + " " : "";
     var fontStyle = this.fontStyle === "italic" || this.fontStyle === "oblique" ? this.fontStyle + " " : "";
     return fontWeight + fontStyle + fontSize + this.fontFamily;
-}
+};
 
 DynamicTextStyle.prototype.constructor = DynamicTextStyle;
 module.exports = DynamicTextStyle;

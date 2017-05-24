@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Wed, 24 May 2017 04:40:47 UTC
+ * Compiled Wed, 24 May 2017 20:15:41 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -438,11 +438,11 @@ function DynamicText(text, width, height, allowTags, options) {
     //list of rendered sprites (temp)
     var sprites = [];
 
-    //read font tags
-    var allowTags = allowTags !== false;
-
     //states
-    var lastWidth = 0, lastHeight = 0;
+    var lastWidth = 0,
+        lastHeight = 0,
+        renderedMaxWidth = 0,
+        renderedMaxHeight = 0;
     this.dirtyText = true;
     this.dirtyAlignment = true;
 
@@ -455,6 +455,9 @@ function DynamicText(text, width, height, allowTags, options) {
 
     //ROUGH TEMP RENDER (with sprites)
     this.render = function () {
+        renderedMaxWidth = 0;
+        renderedMaxHeight = 0;
+
         var yOffset = 0,
             xOffset = 0,
             currentLine = -1,
@@ -469,20 +472,23 @@ function DynamicText(text, width, height, allowTags, options) {
             renderChars.splice(renderCount, renderChars.length - renderCount);
         }
 
+        var char, lineWidth = 0, lineHeight = 0;
+
         for (i = 0; i < renderCount; i++) {
-            var char = renderChars[i];
+            char = renderChars[i];
 
             //get line data
             if (currentLine !== char.lineIndex) {
-                var count = char.lineIndex - currentLine;
                 currentLine = char.lineIndex;
-                yOffset += lineHeightData[currentLine] * count;
+                lineWidth = lineWidthData[currentLine];
+                lineHeight = lineHeightData[currentLine];
+                yOffset += lineHeight;
 
 
 
                 switch (lineAlignmentData[currentLine]) {
-                    case 'right': xOffset = this._width - lineWidthData[currentLine]; break;
-                    case 'center': xOffset = (this._width - lineWidthData[currentLine]) * 0.5; break;
+                    case 'right': xOffset = this._width - lineWidth; break;
+                    case 'center': xOffset = (this._width - lineWidth) * 0.5; break;
                     default: xOffset = 0;
                 }
             }
@@ -493,6 +499,9 @@ function DynamicText(text, width, height, allowTags, options) {
                     charContainer.removeChild(char.sprite);
                 continue;
             }
+
+            renderedMaxHeight = Math.max(renderedMaxHeight, yOffset);
+            renderedMaxWidth = Math.max(renderedMaxWidth, lineWidth);
 
             //add new sprite
             var tex = char.data.texture, sprite = char.sprite;
@@ -506,7 +515,7 @@ function DynamicText(text, width, height, allowTags, options) {
                 sprite.texture = tex;
 
             sprite.x = char.x + xOffset + tex.width * 0.5;
-            sprite.y = char.y + yOffset - tex.height * 0.5 - (lineHeightData[currentLine] - lineFontSizeData[currentLine]) * 0.5;
+            sprite.y = char.y + yOffset - tex.height * 0.5 - (lineHeight - lineFontSizeData[currentLine]) * 0.5;
 
 
             sprite.tint = char.emoji ? 0xffffff : hexToInt(char.style.tint, 0xffffff);
@@ -580,9 +589,6 @@ function DynamicText(text, width, height, allowTags, options) {
                 }
                 forceNewline = true;
             }
-            else {
-                
-            }
 
 
             //textbox width
@@ -590,7 +596,7 @@ function DynamicText(text, width, height, allowTags, options) {
 
             //new line
             if (forceNewline || char.newline || i === renderCount - 1) {
-                forceNewline = false;
+
                 lineWidthData[lineIndex] = pos.x;
                 lineHeightData[lineIndex] = Math.max(lineHeight, defaultStyle.lineHeight || char.style.lineHeight || char.data.lineHeight);
                 lineFontSizeData[lineIndex] = lineFontSize;
@@ -603,12 +609,13 @@ function DynamicText(text, width, height, allowTags, options) {
                         lineWidthData[lineIndex] -= lastChar.data.width;
                 }
 
-                wordIndex = lineHeight = pos.x = 0;
+                wordIndex = lineHeight = pos.x = lastSpaceLineWidth = 0;
                 lineAlignment = defaultStyle.align;
+                lastSpaceIndex = -1;
                 lineIndex++;
-            }            
+                forceNewline = false;
+            }
         }
-
         this.dirtyAlignment = false;
     };
 
@@ -618,7 +625,8 @@ function DynamicText(text, width, height, allowTags, options) {
         var styleTree = [defaultStyle],
             charIndex = 0,
             inputTextIndex = 0,
-            inputArray = Array.from(this._inputText);
+            inputArray = Array.from(this._inputText),
+            style = defaultStyle;
 
         for (var i = 0; i < inputArray.length; i++) {
             var c = inputArray[i],
@@ -626,6 +634,7 @@ function DynamicText(text, width, height, allowTags, options) {
                 newline = false,
                 space = false,
                 emoji = false;
+
 
             //Extract Tags
             if (/(?:\r\n|\r|\n)/.test(c))
@@ -638,17 +647,17 @@ function DynamicText(text, width, height, allowTags, options) {
                 var FoundTag = true;
                 if (tag.length) {
                     if (tag === "<i>") {
-                        var style = styleTree[styleTree.length - 1].clone();
+                        style = style.clone();
                         style.fontStyle = 'italic';
                         styleTree.push(style);
                     }
                     else if (tag === "<b>") {
-                        var style = styleTree[styleTree.length - 1].clone();
+                        style = style.clone();
                         style.fontWeight = 'bold';
                         styleTree.push(style);
                     }
                     else if (tag === "<center>") {
-                        var style = styleTree[styleTree.length - 1].clone();
+                        style = style.clone();
                         style.align = 'center';
                         styleTree.push(style);
                     }
@@ -656,11 +665,11 @@ function DynamicText(text, width, height, allowTags, options) {
                         if (styleTree.length > 1) styleTree.splice(styleTree.length - 1, 1);
                     }
                     else if (tag.startsWith("<font ")) {
-                        regex = /(\w+)\s*=\s*((["'])(.*?)\3|([^>\s]*)(?=\s|\/>))(?=[^<]*>)/g,
-                        match = regex.exec(tag);
+                        var regex = /(\w+)\s*=\s*((["'])(.*?)\3|([^>\s]*)(?=\s|\/>))(?=[^<]*>)/g,
+                            match = regex.exec(tag);
 
                         if (match !== null) {
-                            var style = styleTree[styleTree.length - 1].clone();
+                            style = style.clone();
                             while (match !== null) {
                                 switch (match[1]) {
                                     case 'family': match[1] = 'fontFamily'; break;
@@ -710,7 +719,7 @@ function DynamicText(text, width, height, allowTags, options) {
                 char = new DynamicChar();
                 chars[charIndex] = char;
             }
-            char.style = styleTree[styleTree.length - 1];
+            char.style = style;
 
 
             if (emoji) {
@@ -733,13 +742,11 @@ function DynamicText(text, width, height, allowTags, options) {
 
     //PIXIUI update, called every time parent emits a change
     this.update = function () {
-        if (this.dirtyText || this.dirtyAlignment || lastWidth !== this._width || lastHeight !== this._height) {
+        if (this.dirtyText || this.dirtyAlignment || this._width < lastWidth || this._height != lastHeight) {
             lastWidth = this._width;
-            lastHeight = this._height
+            lastHeight = this.height;
 
-            if (this.dirtyText)
-                this.processInputText();
-
+            if (this.dirtyText) this.processInputText();
             this.prepareForRender();
             this.render();
         }
@@ -807,7 +814,7 @@ var DynamicAtlas = function (padding) {
         objects,
         newObjects = [],
         baseTexture,
-        lazyTimeout = undefined,
+        lazyTimeout,
         rootNode,
         canvasList = [],
         atlasdim,
@@ -823,11 +830,11 @@ var DynamicAtlas = function (padding) {
         this.insert = function (width, height, obj) {
             if (children.length > 0) {
                 var newNode = children[0].insert(width, height, obj);
-                if (newNode != null) return newNode;
+                if (newNode !== null) return newNode;
 
                 return children[1].insert(width, height, obj);
             } else {
-                if (this.data != null) return null;
+                if (this.data !== null) return null;
                 if (width > this.rect.width || height > this.rect.height) return null;
                 if (width == this.rect.width && height == this.rect.height) {
                     this.data = obj;
@@ -852,8 +859,8 @@ var DynamicAtlas = function (padding) {
 
                 return children[0].insert(width, height, obj);
             }
-        }
-    }
+        };
+    };
 
     var addCanvas = function () {
         //create new canvas
@@ -874,7 +881,7 @@ var DynamicAtlas = function (padding) {
         baseTexture.mipmap = false; //if not, pixi bug resizing POW2
         baseTexture.resolution = 1; //todo: support all resolutions
         baseTexture.update();
-        
+
 
 
         //temp (visual spritesheet)
@@ -890,22 +897,22 @@ var DynamicAtlas = function (padding) {
                 r += (c.width * ((1 / devicePixelRatio) * 0.5)) + 10;
             }
         }, 100);
-    }
+    };
     addCanvas();
 
     this.fontFamilyCache = {};
 
     var drawObjects = function (arr, resized) {
         if (resized) baseTexture.update();
-        for (var i = 0; i < arr.length; i++) 
-                drawObject(arr[i]);
-    }
+        for (var i = 0; i < arr.length; i++)
+            drawObject(arr[i]);
+    };
 
     var drawObject = function (obj) {
-        context.drawImage(obj._cache, obj.frame.x, obj.frame.y)
+        context.drawImage(obj._cache, obj.frame.x, obj.frame.y);
         obj.texture.frame = obj.frame;
         obj.texture.update();
-    }
+    };
 
     this.getCharObject = function (char, style) {
         var font = style.ctxFont();
@@ -972,7 +979,7 @@ var DynamicAtlas = function (padding) {
         }
 
         return obj;
-    }
+    };
 
     var compareFunction = function (a, b) {
         if (a.frame.height < b.frame.height)
@@ -1007,10 +1014,12 @@ var DynamicAtlas = function (padding) {
                 continue;
             }
 
+            //step one back (so it will be added after resize/new canvas)
+            i--;
+
             if (atlasdim < maxdim) {
                 _resized = true;
                 resizeCanvas(atlasdim * 2);
-                i--;
                 continue;
             }
 
@@ -1023,7 +1032,7 @@ var DynamicAtlas = function (padding) {
 
         drawObjects(_resized || _newcanvas ? objects : newObjects, _resized);
         newObjects = [];
-    }
+    };
 
     var resizeCanvas = function (dim) {
         canvas.width = canvas.height = atlasdim = dim;
@@ -1035,11 +1044,11 @@ var DynamicAtlas = function (padding) {
             var obj = objects[i];
             rootNode.insert(obj.frame.width + padding, obj.frame.height + padding, obj);
         }
-    }
+    };
 
     var generateCharData = function (char, style) {
 
-        var fontSize = Math.max(1, int(style.fontSize,26)),
+        var fontSize = Math.max(1, int(style.fontSize, 26)),
             lineHeight = fontSize * 1.3;
 
 
@@ -1087,8 +1096,8 @@ var DynamicAtlas = function (padding) {
                 xOffset: float(data[2], 3),
                 yOffset: float(data[3], 3),
                 blur: float(data[4], 5)
-            }
-        }
+            };
+        };
 
         //convert fill string to fill data
         var fillData = function (str) {
@@ -1100,15 +1109,15 @@ var DynamicAtlas = function (padding) {
                 alpha: a,
                 position: float(data[2], -1),
                 rgba: hexToRgba(c, a)
-            }
-        }
+            };
+        };
 
         //create fill style from fill string
         var getFillStyle = function (str) {
-            var fills = str.split(',').filter(function (s) { return s !== '' });
+            var fills = str.split(',').filter(function (s) { return s !== ''; }), i;
 
             //convert to fill data
-            for (var i = 0; i < fills.length; i++) fills[i] = fillData(fills[i]);
+            for (i = 0; i < fills.length; i++) fills[i] = fillData(fills[i]);
 
             switch (fills.length) {
                 case 0: return "white";
@@ -1119,7 +1128,7 @@ var DynamicAtlas = function (padding) {
                         var gradEnd = baseline + ((lineHeight - fontSize) * 0.5),
                             gradient = metricsContext.createLinearGradient(0, gradEnd - fontSize, 0, gradEnd);
 
-                        for (var i = 0; i < fills.length; i++)
+                        for (i = 0; i < fills.length; i++)
                             gradient.addColorStop(fills[i].position !== -1 ? fills[i].position : i / (fills.length - 1), fills[i].rgba || fills[i].color);
 
                         return gradient;
@@ -1128,12 +1137,12 @@ var DynamicAtlas = function (padding) {
                         return "#FFFFFF";
                     }
             }
-        }
+        };
 
 
         //function to draw shadows
         var drawShadows = function (shadowString, stroke) {
-            var shadows = shadowString.trim().split(',').filter(function (s) { return s !== '' });
+            var shadows = shadowString.trim().split(',').filter(function (s) { return s !== ''; });
             if (shadows.length) {
                 for (var i = 0; i < shadows.length; i++) {
                     var s = shadowData(shadows[i]);
@@ -1151,7 +1160,7 @@ var DynamicAtlas = function (padding) {
                 }
                 metricsContext.restore();
             }
-        }
+        };
 
         //draw text shadows
         if (style.shadow.length)
@@ -1186,14 +1195,14 @@ var DynamicAtlas = function (padding) {
 
 
         //scanline on alpha
-        while (i < len && !pixelData[i]) { i += 4 }
+        while (i < len && !pixelData[i]) { i += 4; }
         var ascent = (i / line) | 0;
 
 
         if (i < len) {
             //rev scanline on alpha
             i = len - 1;
-            while (i > 0 && !pixelData[i]) { i -= 4 }
+            while (i > 0 && !pixelData[i]) { i -= 4; }
             var descent = (i / line) | 0;
 
 
@@ -1228,7 +1237,7 @@ var DynamicAtlas = function (padding) {
                 y: -data.ascent - 2,
                 width: data.bounds.maxx - data.bounds.minx + 2,
                 height: data.ascent + data.descent + 4
-            }
+            };
 
 
             //cache (for fast rearrange later)
@@ -1243,31 +1252,31 @@ var DynamicAtlas = function (padding) {
 
         }
         return data;
-    }
-}
+    };
+};
 
 
 
 //helper function for float or default
-var float = function (val, def) {
+function float(val, def) {
     if (isNaN(val)) return def;
     return parseFloat(val);
 }
 
 //helper function for int or default
-var int = function (val, def) {
+function int(val, def) {
     if (isNaN(val)) return def;
     return parseInt(val);
 }
 
 //helper function for string or default
-var string = function (val, def) {
+function string(val, def) {
     if (typeof val === 'string' && val.length) return val;
     return def;
 }
 
 //helper function to convert string hex to int or default
-var hexToInt = function (str, def) {
+function hexToInt(str, def) {
     if (typeof str === 'number')
         return str;
 
@@ -1298,7 +1307,7 @@ function DynamicTextStyle() {
     this.fontFamily = 'Arial';
     this.fontSize = 26;
     this.fontWeight = 'normal';
-    this.fontStyle = 'normal',
+    this.fontStyle = 'normal';
     this.letterSpacing = 0;
     this.lineHeight = 0;
     this.verticalAlign = 0;
@@ -1318,7 +1327,7 @@ DynamicTextStyle.prototype.clone = function () {
     var style = new DynamicTextStyle();
     style.merge(this);
     return style;
-}
+};
 
 DynamicTextStyle.prototype.merge = function (style) {
     if (typeof style === 'object') {
@@ -1328,18 +1337,18 @@ DynamicTextStyle.prototype.merge = function (style) {
                 this[param] = val;
         }
     }
-}
+};
 
 DynamicTextStyle.prototype.ctxKey = function (char) {
     return [char, this.fill, this.shadow, this.stroke, this.strokeFill, this.strokeShadow].join('|');
-}
+};
 
 DynamicTextStyle.prototype.ctxFont = function () {
     var fontSize = Math.min(200, Math.max(1, this.fontSize || 26)) + "px ";
     var fontWeight = this.fontWeight === "bold" ? this.fontWeight + " " : "";
     var fontStyle = this.fontStyle === "italic" || this.fontStyle === "oblique" ? this.fontStyle + " " : "";
     return fontWeight + fontStyle + fontSize + this.fontFamily;
-}
+};
 
 DynamicTextStyle.prototype.constructor = DynamicTextStyle;
 module.exports = DynamicTextStyle;
@@ -2333,7 +2342,7 @@ ScrollingContainer.prototype.initScrolling = function () {
         this.innerBounds.width = this.innerBounds.x - this.innerContainer.x + this.innerContainer.width;
 
         return this.innerBounds;
-    }
+    };
 
     this.updateDirection = function (direction, delta) {
         var bounds = this.getInnerBounds();

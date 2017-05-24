@@ -199,7 +199,7 @@ ScrollingContainer.prototype.initScrolling = function () {
         this.innerBounds.width = this.innerBounds.x - this.innerContainer.x + this.innerContainer.width;
 
         return this.innerBounds;
-    }
+    };
 
     this.updateDirection = function (direction, delta) {
         var bounds = this.getInnerBounds();
