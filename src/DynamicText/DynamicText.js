@@ -24,7 +24,7 @@ function DynamicText(text, width, height, allowTags, options) {
 
     //create atlas
     if (atlas === null)
-        atlas = window["ss"] = new DynamicAtlas(1);
+        atlas = new DynamicAtlas(1);
 
 
     //defaultstyle for this textobject
@@ -418,7 +418,6 @@ var DynamicAtlas = function (padding) {
         atlasdim,
         startdim = 1024,
         maxdim = 2048;
-    this.debug = false;
 
 
     var AtlasNode = function (w, h) {
@@ -478,7 +477,9 @@ var DynamicAtlas = function (padding) {
         //set new basetexture
         baseTexture = PIXI.BaseTexture.fromCanvas(canvas);
         baseTexture.mipmap = false; //if not, pixi bug resizing POW2
+        baseTexture.resolution = 1; //todo: support all resolutions
         baseTexture.update();
+        
 
 
         //temp (visual spritesheet)
