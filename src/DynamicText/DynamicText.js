@@ -1,115 +1,8 @@
-var UIBase = require('./UIBase');
-var emojiRegex = require('emoji-regex');
-var atlas = null;
-
-//helper function for floats
-var float = function (val, def) {
-    if (isNaN(val)) return def;
-    return parseFloat(val);
-}
-
-//helper function for ints
-var int = function (val, def) {
-    if (isNaN(val)) return def;
-    return parseInt(val);
-}
-
-//helper function for strings
-var string = function (val, def) {
-    if (typeof val === 'string' && val.length) return val;
-    return def;
-}
-
-//helper function to convert hex to rgba
-function hexToRgba(hex, alpha) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    alpha = float(alpha, 1);
-    return result ? "rgba(" + parseInt(result[1], 16) + "," + parseInt(result[2], 16) + "," + parseInt(result[3], 16) + "," + alpha + ")" : false;
-}
-
-
-
-function DynamicTextStyle() {
-    this.scale = 1;
-
-    this.align = 'left';
-    this.fontFamily = 'Arial';
-    this.fontSize = 26;
-    this.fontWeight = 'normal';
-    this.fontStyle = 'normal',
-    this.letterSpacing = 0;
-    this.lineHeight = 0;
-    this.verticalAlign = 0;
-    this.rotation = 0;
-    this.skew = 0;
-    this.tint = "#FFFFFF";
-
-    this.fill = '#FFFFFF';
-    this.shadow = '';
-    this.stroke = 0;
-    this.strokeFill = '';
-    this.strokeShadow = '';
-}
-
-
-DynamicTextStyle.prototype.clone = function () {
-    var style = new DynamicTextStyle();
-    style.merge(this);
-    return style;
-}
-
-DynamicTextStyle.prototype.merge = function (style) {
-    if (typeof style === 'object') {
-        for (var param in style) {
-            var val = style[param];
-            if (typeof val !== 'function')
-                this[param] = val;
-        }
-    }
-}
-
-DynamicTextStyle.prototype.ctxKey = function (char) {
-    return [char, this.fill, this.shadow, this.stroke, this.strokeFill, this.strokeShadow].join('|');
-}
-
-DynamicTextStyle.prototype.ctxFont = function () {
-    var fontSize = Math.min(200, Math.max(1, int(this.fontSize, 26))) + "px ";
-    var fontWeight = this.fontWeight === "bold" ? this.fontWeight + " " : "";
-    var fontStyle = this.fontStyle === "italic" || this.fontStyle === "oblique" ? this.fontStyle + " " : "";
-    return fontWeight + fontStyle + fontSize + this.fontFamily;
-}
-
-
-
-
-function DynamicChar(style) {
-    //styledata (texture, orig width, orig height)
-    this.style = style;
-
-    //char data
-    this.data = null;
-
-    //is this char space?
-    this.space = false;
-
-    //is this char newline?
-    this.newline = false;
-
-    //charcode
-    this.charcode = 0;
-
-    //char string value
-    this.value = "";
-
-    //word index
-    this.wordIndex = -1;
-
-    //line index of char
-    this.lineIndex = -1;
-
-    //cache for sprite
-    this.sprite = null;
-}
+var UIBase = require('../UIBase'),
+    DynamicTextStyle = require('./DynamicTextStyle'),
+    DynamicChar = require('./DynamicChar'),
+    emojiRegex = require('emoji-regex'),
+    atlas = null;
 
 
 /**
@@ -124,12 +17,10 @@ function DynamicChar(style) {
 * @param [allowTags=true] {boolean} Allow inline styling
 * @param [options=null] {DynamicTextStyle} Additional text settings
 */
-
 function DynamicText(text, width, height, allowTags, options) {
-    UIBase.call(this, width || 0, height || 0);
+    UIBase.call(this, int(width, 0), int(height, 0));
     var autoWidth = width ? false : true;
     var autoHeight = height ? false : true;
-
 
     //create atlas
     if (atlas === null)
@@ -169,15 +60,11 @@ function DynamicText(text, width, height, allowTags, options) {
 
     //ROUGH TEMP RENDER (with sprites)
     this.render = function () {
-        //console.log("render");
         var yOffset = 0,
             xOffset = 0,
             currentLine = -1,
             i;
 
-
-
-        //console.log(renderChars.length, renderCount);
         if (renderChars.length > renderCount) {
             for (i = renderCount; i < renderChars.length; i++) {
                 var removeChar = renderChars[i];
@@ -186,7 +73,6 @@ function DynamicText(text, width, height, allowTags, options) {
             }
             renderChars.splice(renderCount, renderChars.length - renderCount);
         }
-
 
         for (i = 0; i < renderCount; i++) {
             var char = renderChars[i];
@@ -228,34 +114,31 @@ function DynamicText(text, width, height, allowTags, options) {
             sprite.y = char.y + yOffset - tex.height * 0.5 - (lineHeightData[currentLine] - lineFontSizeData[currentLine]) * 0.5;
 
 
-            sprite.tint = char.emoji ? 0xffffff : char.style.tint.replace("#", "0x");
-            sprite.rotation = isNaN(char.style.rotation) ? 0 : parseFloat(char.style.rotation);
-            sprite.skew.x = isNaN(char.style.skew) ? 0 : parseFloat(char.style.skew);
+            sprite.tint = char.emoji ? 0xffffff : hexToInt(char.style.tint, 0xffffff);
+            sprite.rotation = float(char.style.rotation, 0);
+            sprite.skew.x = float(char.style.skew, 0);
 
             if (!sprite.parent)
                 charContainer.addChild(sprite);
         }
-
-
-
-
-
     };
 
     //updates the renderChar array and position chars for render
     this.prepareForRender = function () {
-        //clear output array
-
-
         var pos = new PIXI.Point(),
             wordIndex = 0,
             lineHeight = 0,
             lineFontSize = 0,
             lineIndex = 0,
-            lineAlignment = defaultStyle.align;
+            lineAlignment = defaultStyle.align,
+            lastSpaceIndex = -1,
+            lastSpaceLineWidth = 0,
+            forceNewline = false;
 
         //reset width
         if (autoWidth) this._width = 0;
+
+
 
         for (var i = 0; i < renderCount; i++) {
             var char = chars[i];
@@ -280,14 +163,39 @@ function DynamicText(text, width, height, allowTags, options) {
             char.x = pos.x + char.data.xOffset;
             char.y = parseFloat(char.style.verticalAlign) + char.data.yOffset;
 
-            pos.x += Math.round(char.data.width) + parseFloat(char.style.letterSpacing);
+            var addWidth = Math.round(char.data.width) + parseFloat(char.style.letterSpacing);
+            pos.x += addWidth;
+
+
+            if (char.space) {
+                lastSpaceIndex = i;
+                lastSpaceLineWidth = pos.x - addWidth;
+            }
+
+            renderChars[i] = char;
+            if (!autoWidth && pos.x > this._width) {
+                if (lastSpaceIndex !== -1) {
+                    i = lastSpaceIndex;
+                    lastSpaceIndex = -1;
+                    pos.x = lastSpaceLineWidth;
+                }
+                else {
+                    i--;
+                    pos.x -= addWidth;
+                }
+                forceNewline = true;
+            }
+            else {
+                
+            }
 
 
             //textbox width
             if (autoWidth) this._width = Math.max(pos.x, this._width);
 
             //new line
-            if (char.newline || i === renderCount - 1) {
+            if (forceNewline || char.newline || i === renderCount - 1) {
+                forceNewline = false;
                 lineWidthData[lineIndex] = pos.x;
                 lineHeightData[lineIndex] = Math.max(lineHeight, defaultStyle.lineHeight || char.style.lineHeight || char.data.lineHeight);
                 lineFontSizeData[lineIndex] = lineFontSize;
@@ -300,30 +208,22 @@ function DynamicText(text, width, height, allowTags, options) {
                         lineWidthData[lineIndex] -= lastChar.data.width;
                 }
 
-
-
                 wordIndex = lineHeight = pos.x = 0;
                 lineAlignment = defaultStyle.align;
                 lineIndex++;
-            }
-
-            renderChars[i] = char;
+            }            
         }
-
 
         this.dirtyAlignment = false;
     };
 
     //phrases the input text and prepares the char array
+    var closeTags = ['</i>', '</b>', '</font>', '</center>'];
     this.processInputText = function () {
         var styleTree = [defaultStyle],
             charIndex = 0,
             inputTextIndex = 0,
             inputArray = Array.from(this._inputText);
-
-
-        var closeTags = ['</i>', '</b>', '</font>', '</center>'];
-
 
         for (var i = 0; i < inputArray.length; i++) {
             var c = inputArray[i],
@@ -377,8 +277,6 @@ function DynamicText(text, width, height, allowTags, options) {
                                     case 'color': match[1] = 'tint'; break;
 
                                 }
-
-
                                 style[match[1]] = match[4];
                                 match = regex.exec(tag);
                             }
@@ -388,7 +286,6 @@ function DynamicText(text, width, height, allowTags, options) {
                     else {
                         FoundTag = false;
                     }
-
 
                     if (FoundTag) {
                         inputTextIndex += tag.length;
@@ -415,14 +312,14 @@ function DynamicText(text, width, height, allowTags, options) {
             //Prepare DynamicChar object
             var char = chars[charIndex];
             if (!char) {
-                char = new DynamicChar(styleTree[styleTree.length - 1].clone());
+                char = new DynamicChar();
                 chars[charIndex] = char;
             }
-            else {
-                char.style.merge(styleTree[styleTree.length - 1]);
-            }
+            char.style = styleTree[styleTree.length - 1];
+
 
             if (emoji) {
+                char.style = char.style.clone();
                 char.style.fontFamily = DynamicText.defaultEmojiFont;
             }
 
@@ -436,7 +333,6 @@ function DynamicText(text, width, height, allowTags, options) {
             inputTextIndex += c.length;
         }
         renderCount = charIndex;
-
         this.dirtyText = false;
     };
 
@@ -502,153 +398,86 @@ Object.defineProperties(DynamicText.prototype, {
 
 
 
+//Atlas
+var metricsCanvas = document.createElement("canvas");
+var metricsContext = metricsCanvas.getContext("2d");
+metricsCanvas.width = 100;
+metricsCanvas.height = 100;
 
-
-
-
-
-
-var _canvas = document.createElement("canvas");
-var _ctx = _canvas.getContext("2d");
-_canvas.width = 100;
-_canvas.height = 100;
-
-//setTimeout(function () {
-//    _canvas.className = "messureAtlas";
-//    document.body.appendChild(_canvas);
-//}, 100);
-
-var AtlasNode = function (w, h, parent) {
-    var children = this.children = [];
-    this.rect = new PIXI.Rectangle(0, 0, w || 0, h || 0);
-    this.data = null;
-    this.parent = parent || null;
-    this.vertical = false;
-
-    //this.resize = function (width, height) {
-    //    if (this.data === null) {
-    //        var wDif = width - this.rect.width;
-    //        var hDif = height - this.rect.height;
-
-    //        this.rect.width = width;
-    //        this.rect.height = height;
-
-
-    //        for (var i = 0; i < this.children.length; i++) {
-    //            var child = this.children[i];
-    //            if (child.vertical)
-    //                child.resize(this.rect.width, child.rect.height + hDif);
-    //            else
-    //                child.resize(child.rect.width + wDif, this.rect.height);                    
-    //        }
-    //    }
-    //}
-
-
-    this.insert = function (width, height, obj) {
-
-
-        if (children.length > 0) {
-            var newNode = children[0].insert(width, height, obj);
-            if (newNode != null) return newNode;
-
-            return children[1].insert(width, height, obj);
-        } else {
-            if (this.data != null) return null;
-            if (width > this.rect.width || height > this.rect.height) return null;
-            if (width == this.rect.width && height == this.rect.height) {
-                this.data = obj;
-                obj.frame.x = this.rect.x;
-                obj.frame.y = this.rect.y;
-                obj._dirtyNode = true;
-                return this;
-            }
-
-            children.push(new AtlasNode(0, 0, this));
-            children.push(new AtlasNode(0, 0, this));
-
-            var dw = this.rect.width - width;
-            var dh = this.rect.height - height;
-
-            if (dw > dh) {
-                children[0].rect = new PIXI.Rectangle(this.rect.x, this.rect.y, width, this.rect.height);
-                children[1].rect = new PIXI.Rectangle(this.rect.x + width, this.rect.y, this.rect.width - width, this.rect.height);
-                //children[0].vertical = true;
-                //children[1].vertical = false;
-            } else {
-                children[0].rect = new PIXI.Rectangle(this.rect.x, this.rect.y, this.rect.width, height);
-                children[1].rect = new PIXI.Rectangle(this.rect.x, this.rect.y + height, this.rect.width, this.rect.height - height);
-                //children[0].vertical = false;
-                //children[1].vertical = true;
-            }
-
-            return children[0].insert(width, height, obj);
-        }
-    }
-}
 
 var DynamicAtlas = function (padding) {
-    var renderNode = function (node, childIndex) {
-
-        //atlasCtx.strokeStyle = rootNode.data !== null ? "#FF0000" : "#00FF00";
-
-        if (node.rect) {
-            atlasCtx.lineWidth = childIndex == 0 ? 10 : 2;
-            //atlasCtx.beginPath();
-            atlasCtx.fillStyle = childIndex == 0 ? "green" : "blue";
-            atlasCtx.strokeStyle = childIndex == 0 ? "green" : "blue";
-            //atlasCtx.fillRect(node.rect.x, node.rect.y, node.rect.width, node.rect.height);
-            atlasCtx.strokeRect(node.rect.x, node.rect.y, node.rect.width, node.rect.height);
-            atlasCtx.stroke();
-
-        }
-        //atlasCtx.closePath();
-        for (var i = 0; i < node.children.length; i++)
-            renderNode(node.children[i], i)
-    }
-
-
-
-
     var res = devicePixelRatio || 1,
-        atlasCanvas,
-        atlasCtx,
-        resize,
+        canvas,
+        context,
         objects,
-        rearrange,
+        newObjects = [],
         baseTexture,
-        renderTimeout,
+        lazyTimeout = undefined,
         rootNode,
         canvasList = [],
         atlasdim,
-        startdim = 256,
+        startdim = 1024,
         maxdim = 2048;
     this.debug = false;
 
-    var addCanvas = function () {
-        //make sure previous canvas is updated
-        renderTimeout = undefined;
-        if (atlasCanvas !== undefined) drawAllObjects(true);
 
+    var AtlasNode = function (w, h) {
+        var children = this.children = [];
+        this.rect = new PIXI.Rectangle(0, 0, w || 0, h || 0);
+        this.data = null;
+
+        this.insert = function (width, height, obj) {
+            if (children.length > 0) {
+                var newNode = children[0].insert(width, height, obj);
+                if (newNode != null) return newNode;
+
+                return children[1].insert(width, height, obj);
+            } else {
+                if (this.data != null) return null;
+                if (width > this.rect.width || height > this.rect.height) return null;
+                if (width == this.rect.width && height == this.rect.height) {
+                    this.data = obj;
+                    obj.frame.x = this.rect.x;
+                    obj.frame.y = this.rect.y;
+                    return this;
+                }
+
+                children.push(new AtlasNode());
+                children.push(new AtlasNode());
+
+                var dw = this.rect.width - width;
+                var dh = this.rect.height - height;
+
+                if (dw > dh) {
+                    children[0].rect = new PIXI.Rectangle(this.rect.x, this.rect.y, width, this.rect.height);
+                    children[1].rect = new PIXI.Rectangle(this.rect.x + width, this.rect.y, this.rect.width - width, this.rect.height);
+                } else {
+                    children[0].rect = new PIXI.Rectangle(this.rect.x, this.rect.y, this.rect.width, height);
+                    children[1].rect = new PIXI.Rectangle(this.rect.x, this.rect.y + height, this.rect.width, this.rect.height - height);
+                }
+
+                return children[0].insert(width, height, obj);
+            }
+        }
+    }
+
+    var addCanvas = function () {
         //create new canvas
-        atlasCanvas = document.createElement("canvas");
-        atlasCtx = atlasCanvas.getContext("2d");
-        //atlasCtx.scale(PIXI.settings.RESOLUTION, PIXI.settings.RESOLUTION);
-        canvasList.push(atlasCanvas);
+        canvas = document.createElement("canvas");
+        context = canvas.getContext("2d");
+        canvasList.push(canvas);
 
         //reset dimentions
         atlasdim = startdim;
-        atlasCanvas.width = atlasCanvas.height = atlasdim;
+        canvas.width = canvas.height = atlasdim;
         rootNode = new AtlasNode(atlasdim, atlasdim);
 
         //reset array with canvas objects and create new atlas
         objects = [];
 
-
         //set new basetexture
-        baseTexture = PIXI.BaseTexture.fromCanvas(atlasCanvas);
-        //baseTexture.resolution = PIXI.settings.RESOLUTION;
-        baseTexture.mipmap = false;
+        baseTexture = PIXI.BaseTexture.fromCanvas(canvas);
+        baseTexture.mipmap = false; //if not, pixi bug resizing POW2
         baseTexture.update();
 
 
@@ -670,106 +499,20 @@ var DynamicAtlas = function (padding) {
 
     this.fontFamilyCache = {};
 
-
-    var drawAllObjects = function (force) {
-        if (resize) {
-            atlasCanvas.width = atlasCanvas.height = atlasdim;
-            baseTexture.update();
-            resize = false;
-        }
-        else if (rearrange) {
-            atlasCtx.clearRect(0, 0, atlasCanvas.width, atlasCanvas.height);
-            rearrange = false;
-        }
-        else if (!force) return;
-
-        for (var i = 0; i < objects.length; i++) {
-            drawObject(objects[i]);
-        }
+    var drawObjects = function (arr, resized) {
+        if (resized) baseTexture.update();
+        for (var i = 0; i < arr.length; i++) 
+                drawObject(arr[i]);
     }
 
     var drawObject = function (obj) {
-        atlasCtx.drawImage(obj._cache, obj.frame.x, obj.frame.y)
-
-        if (!obj.texture) {
-            obj.texture = new PIXI.Texture(baseTexture, obj.frame);
-        }
-        else {
-            obj.texture.frame = obj.frame;
-        }
-
+        context.drawImage(obj._cache, obj.frame.x, obj.frame.y)
+        obj.texture.frame = obj.frame;
         obj.texture.update();
-        obj._dirtyNode = false;
-
-
-
-
-
-        if (ss.debug) {
-            console.log("OKOOKKOK");
-            for (var i = 0; i < rootNode.children.length; i++) {
-                renderNode(rootNode.children[i], i)
-            }
-        }
-    }
-
-    var insertObject = function (obj) {
-        var w = obj.frame.width,
-            h = obj.frame.height;
-        if (w > maxdim || h > maxdim) {
-            console.warn("Texture is bigger than spritesheet");
-            return;
-        }
-
-        var node = rootNode.insert(w + padding, h + padding, obj);
-
-
-
-        //resize atlas
-        if (node == null) {
-            //Create new canvasl
-            //if (atlasdim * 2 > maxdim) {
-            //rearrange = true;
-            //rearrangeCanvas(atlasdim);
-
-            console.log("resizing");
-
-            atlasdim *= 2;
-            rootNode.resize(atlasdim, atlasdim);
-            resize = true;
-            atlasCanvas.width = atlasCanvas.height = atlasdim;
-            baseTexture.update();
-
-            node = rootNode.insert(w + padding, h + padding, obj);
-
-            drawObject(obj);
-            drawAllObjects();
-            return;
-
-            //if (node == null) {
-            //    addCanvas();
-            //    return insertObject(obj);
-            //}
-            //}
-
-            //if (!rearrange) {
-            //    resize = true;
-            //    atlasdim *= 2;
-            //    rearrangeCanvas(atlasdim);
-            //    node = rootNode.insert(w + padding, h + padding, obj);
-            //}
-
-        }
-
-        //if (node == null) return;
-        //add to current canvas and collection
-        drawObject(obj);
-        objects.push(obj);
     }
 
     this.getCharObject = function (char, style) {
         var font = style.ctxFont();
-
 
         //create new cache for fontFamily
         var familyCache = this.fontFamilyCache[font];
@@ -787,19 +530,30 @@ var DynamicAtlas = function (padding) {
             //create char object
             var metrics = generateCharData(char, style);
 
+
+
+            //temp resize if doesnt fit (not nesseary when we dont need to generate textures)
+            if (metrics.rect) {
+                if (canvas.width < metrics.rect.width || canvas.height < metrics.rect.height) {
+                    canvas.width = canvas.height = Math.max(metrics.rect.width, metrics.rect.height);
+                    baseTexture.update();
+                }
+            }
+
+
             //todo: cleanup when we know whats needed
             obj = {
                 metrics: metrics,
                 font: font,
                 value: char,
                 frame: metrics.rect,
-                texture: undefined,
+                baseTexture: metrics.rect ? baseTexture : null,
                 xOffset: metrics.bounds ? metrics.bounds.minx : 0,
                 yOffset: metrics.descent || 0,
                 width: metrics.width || 0,
                 lineHeight: metrics.lineHeight || 0,
                 _cache: metrics.canvas,
-                _dirtyNode: true
+                texture: metrics.rect ? new PIXI.Texture(baseTexture, metrics.rect) : null //temp texture
             };
 
             //add to collections
@@ -807,60 +561,89 @@ var DynamicAtlas = function (padding) {
 
 
             //add to atlas if visible char
-            if (metrics.rect)
-                insertObject(obj);
+            if (metrics.rect) {
+                newObjects.push(obj);
+
+
+
+                if (lazyTimeout === undefined)
+                    lazyTimeout = setTimeout(function () {
+                        addNewObjects();
+                        lazyTimeout = undefined;
+                    }, 0);
+
+            }
         }
 
         return obj;
     }
 
+    var compareFunction = function (a, b) {
+        if (a.frame.height < b.frame.height)
+            return 1;
 
-    var rearrangeCanvas = this.rearrangeCanvas = function (dim) {
+        if (a.frame.height > b.frame.height)
+            return -1;
 
-        if (!dim)
-            dim = atlasdim;
-        atlasdim = dim;
+
+        if (a.frame.width < b.frame.width)
+            return 1;
+
+        if (a.frame.width > b.frame.width)
+            return -1;
+
+
+        return 0;
+    };
+
+    var addNewObjects = function () {
+        newObjects.sort(compareFunction);
+        var _resized = false;
+        var _newcanvas = false;
+
+        for (var i = 0; i < newObjects.length; i++) {
+            var obj = newObjects[i];
+            var node = rootNode.insert(obj.frame.width + padding, obj.frame.height + padding, obj);
+
+            if (node !== null) {
+                if (_newcanvas) obj.texture.baseTexture = baseTexture; //update basetexture if new canvas was created (temp)
+                objects.push(obj);
+                continue;
+            }
+
+            if (atlasdim < maxdim) {
+                _resized = true;
+                resizeCanvas(atlasdim * 2);
+                i--;
+                continue;
+            }
+
+            //close current spritesheet and make a new one
+            drawObjects(objects, _resized);
+            addCanvas();
+            _newcanvas = true;
+            _resized = false;
+        }
+
+        drawObjects(_resized || _newcanvas ? objects : newObjects, _resized);
+        newObjects = [];
+    }
+
+    var resizeCanvas = function (dim) {
+        canvas.width = canvas.height = atlasdim = dim;
+
         rootNode = new AtlasNode(dim, dim);
-
-        objects.sort(function (a, b) {
-            if (a.frame.height < b.frame.height)
-                return 1;
-
-            if (a.frame.height > b.frame.height)
-                return -1;
-
-
-            if (a.frame.width < b.frame.width)
-                return 1;
-
-            if (a.frame.width > b.frame.width)
-                return -1;
-
-
-            return 0;
-        });
-
+        objects.sort(compareFunction);
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             rootNode.insert(obj.frame.width + padding, obj.frame.height + padding, obj);
         }
-
-
-
-
-
-
-
-
-
-        drawAllObjects();
     }
-
 
     var generateCharData = function (char, style) {
 
-        var fontSize = style.fontSize,
+        var fontSize = Math.max(1, int(style.fontSize,26)),
             lineHeight = fontSize * 1.3;
 
 
@@ -876,28 +659,28 @@ var DynamicAtlas = function (padding) {
 
         //Ctx font string
         var font = style.ctxFont();
-        _ctx.font = font;
+        metricsContext.font = font;
 
         //Get char width
-        data.width = _ctx.measureText(char).width;
+        data.width = metricsContext.measureText(char).width;
 
         //Return if char = space
         if (/(\s)/.test(char)) return data;
 
         //set canvas size (with padding so we can messure)
         var paddingY = Math.round(fontSize * 0.7), paddingX = Math.max(5, Math.round(fontSize * 0.7));
-        _canvas.width = Math.ceil(data.width) + paddingX * 2;
-        _canvas.height = 1.5 * fontSize;
-        var w = _canvas.width, h = _canvas.height, baseline = (h / 2) + (paddingY * 0.5);
+        metricsCanvas.width = Math.ceil(data.width) + paddingX * 2;
+        metricsCanvas.height = 1.5 * fontSize;
+        var w = metricsCanvas.width, h = metricsCanvas.height, baseline = (h / 2) + (paddingY * 0.5);
 
         //set font again after resize
-        _ctx.font = font;
+        metricsContext.font = font;
 
         //make sure canvas is clean
-        _ctx.clearRect(0, 0, w, h);
+        metricsContext.clearRect(0, 0, w, h);
 
         //save clean state with font
-        _ctx.save();
+        metricsContext.save();
 
         //convert shadow string to shadow data
         var shadowData = function (str) {
@@ -938,7 +721,7 @@ var DynamicAtlas = function (padding) {
                     //make gradient
                     try {
                         var gradEnd = baseline + ((lineHeight - fontSize) * 0.5),
-                            gradient = _ctx.createLinearGradient(0, gradEnd - fontSize, 0, gradEnd);
+                            gradient = metricsContext.createLinearGradient(0, gradEnd - fontSize, 0, gradEnd);
 
                         for (var i = 0; i < fills.length; i++)
                             gradient.addColorStop(fills[i].position !== -1 ? fills[i].position : i / (fills.length - 1), fills[i].rgba || fills[i].color);
@@ -958,88 +741,80 @@ var DynamicAtlas = function (padding) {
             if (shadows.length) {
                 for (var i = 0; i < shadows.length; i++) {
                     var s = shadowData(shadows[i]);
-                    _ctx.globalAlpha = s.alpha;
-                    _ctx.shadowColor = s.color;
-                    _ctx.shadowOffsetX = s.xOffset + w;
-                    _ctx.shadowOffsetY = s.yOffset;
-                    _ctx.shadowBlur = s.blur;
+                    metricsContext.globalAlpha = s.alpha;
+                    metricsContext.shadowColor = s.color;
+                    metricsContext.shadowOffsetX = s.xOffset + w;
+                    metricsContext.shadowOffsetY = s.yOffset;
+                    metricsContext.shadowBlur = s.blur;
 
                     if (stroke) {
-                        _ctx.lineWidth = style.stroke;
-                        _ctx.strokeText(char, paddingX - w, baseline);
+                        metricsContext.lineWidth = style.stroke;
+                        metricsContext.strokeText(char, paddingX - w, baseline);
                     }
-                    else _ctx.fillText(char, paddingX - w, baseline);
+                    else metricsContext.fillText(char, paddingX - w, baseline);
                 }
-                _ctx.restore();
+                metricsContext.restore();
             }
         }
 
+        //draw text shadows
         if (style.shadow.length)
             drawShadows(style.shadow, false);
 
+        //draw stroke shadows
         if (style.stroke && style.strokeShadow.length) {
             drawShadows(style.strokeShadow, true);
-            console.log("drawing stroke shadow");
         }
 
+        //draw text
+        metricsContext.fillStyle = getFillStyle(string(style.fill, "#000000"));
+        metricsContext.fillText(char, paddingX, baseline);
+        metricsContext.restore();
 
-
-        //fill text
-        _ctx.fillStyle = getFillStyle(style.fill);
-        _ctx.fillText(char, paddingX, baseline);
-        _ctx.restore();
-
-        //stroke
+        //draw stroke
         if (style.stroke) {
-
-            _ctx.strokeStyle = getFillStyle(style.strokeFill.length ? style.strokeFill : "#000000");
-            _ctx.lineWidth = style.stroke;
-            _ctx.strokeText(char, paddingX, baseline);
-            _ctx.restore();
+            metricsContext.strokeStyle = getFillStyle(string(style.strokeFill, "#000000"));
+            metricsContext.lineWidth = style.stroke;
+            metricsContext.strokeText(char, paddingX, baseline);
+            metricsContext.restore();
         }
 
 
-
-
-
-
-        var pixelData = _ctx.getImageData(0, 0, w, h).data;
-
+        //begin messuring
+        var pixelData = metricsContext.getImageData(0, 0, w, h).data;
 
         var i = 3,
-            w4 = w * 4,
+            line = w * 4,
             len = pixelData.length;
 
 
 
         //scanline on alpha
-        while (i < len && pixelData[i] === 0) { i += 4 }
-        var ascent = (i / w4) | 0;
+        while (i < len && !pixelData[i]) { i += 4 }
+        var ascent = (i / line) | 0;
 
 
         if (i < len) {
             //rev scanline on alpha
             i = len - 1;
-            while (i > 0 && pixelData[i] === 0) { i -= 4 }
-            var descent = (i / w4) | 0;
+            while (i > 0 && !pixelData[i]) { i -= 4 }
+            var descent = (i / line) | 0;
 
 
             //left to right scanline on alpha
-            for (i = 3; i < len && pixelData[i] === 0;) {
-                i += w4;
+            for (i = 3; i < len && !pixelData[i];) {
+                i += line;
                 if (i >= len) { i = (i - len) + 4; }
             }
-            var minx = ((i % w4) / 4) | 0;
+            var minx = ((i % line) / 4) | 0;
 
             //right to left scanline on alpha
             var step = 1;
-            for (i = len - 1; i >= 0 && pixelData[i] === 0;) {
-                i -= w4;
+            for (i = len - 1; i >= 0 && !pixelData[i];) {
+                i -= line;
                 if (i < 0) { i = (len - 1) - (step++) * 4; }
             }
-            var maxx = ((i % w4) / 4) + 1 | 0;
-
-
+            var maxx = ((i % line) / 4) + 1 | 0;
 
 
             // set font metrics
@@ -1065,7 +840,7 @@ var DynamicAtlas = function (padding) {
             data.canvas.width = data.rect.width;
             data.canvas.height = data.rect.height;
             var c = data.canvas.getContext("2d");
-            c.drawImage(_canvas, -paddingX - data.rect.x, -baseline - data.rect.y);
+            c.drawImage(metricsCanvas, -paddingX - data.rect.x, -baseline - data.rect.y);
 
             //reset rect position
             data.rect.x = data.rect.y = 0;
@@ -1076,6 +851,42 @@ var DynamicAtlas = function (padding) {
 }
 
 
+
+//helper function for float or default
+var float = function (val, def) {
+    if (isNaN(val)) return def;
+    return parseFloat(val);
+}
+
+//helper function for int or default
+var int = function (val, def) {
+    if (isNaN(val)) return def;
+    return parseInt(val);
+}
+
+//helper function for string or default
+var string = function (val, def) {
+    if (typeof val === 'string' && val.length) return val;
+    return def;
+}
+
+//helper function to convert string hex to int or default
+var hexToInt = function (str, def) {
+    if (typeof str === 'number')
+        return str;
+
+    var result = parseInt(str.replace('#', '0x'));
+
+    if (isNaN(result)) return def;
+    return result;
+}
+
+//helper function to convert hex to rgba
+function hexToRgba(hex, alpha) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    alpha = float(alpha, 1);
+    return result ? "rgba(" + parseInt(result[1], 16) + "," + parseInt(result[2], 16) + "," + parseInt(result[3], 16) + "," + alpha + ")" : false;
+}
 
 
 
