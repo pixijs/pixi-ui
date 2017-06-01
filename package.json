@@ -34,10 +34,10 @@
     "README.md"
   ],
   "dependencies": {
-    "glslify": "^5.0.2"
+    "glslify": "^5.0.2",
+    "browserify-versionify": "^1.0.6"
   },
   "devDependencies": {
-    "browserify-versionify": "^1.0.6",
     "del": "^2.2.0",
     "jaguarjs-jsdoc": "^1.0.1",
     "jsdoc": "^3.4.0",
