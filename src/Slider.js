@@ -163,6 +163,7 @@ Slider.prototype.initialize = function () {
     };
 
     var triggerValueChange = function () {
+        self.emit("change", self.value);
         if (self._lastChange != self.value) {
             self._lastChange = self.value;
             if (typeof self.onValueChange === "function")
@@ -171,6 +172,7 @@ Slider.prototype.initialize = function () {
     };
 
     var triggerValueChanging = function () {
+        self.emit("changeing", self.value);
         if (self._lastChanging != self.value) {
             self._lastChanging = self.value;
             if (typeof self._onValueChanging === "function")

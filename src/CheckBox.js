@@ -125,9 +125,10 @@ Object.defineProperties(CheckBox.prototype, {
                     InputController.updateCheckGroupSelected(this);
 
 
-                this.change(val);
+                
                 this.emit("change", val);
                 this._checked = val;
+                this.change(val);
 
             }
         }

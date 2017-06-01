@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 01 Jun 2017 03:59:20 UTC
+ * Compiled Thu, 01 Jun 2017 14:31:07 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -291,9 +291,10 @@ Object.defineProperties(CheckBox.prototype, {
                     InputController.updateCheckGroupSelected(this);
 
 
-                this.change(val);
+                
                 this.emit("change", val);
                 this._checked = val;
+                this.change(val);
 
             }
         }
@@ -2377,6 +2378,7 @@ ScrollingContainer.prototype.addChild = function (UIObject) {
     else {
         Container.prototype.addChild.call(this, UIObject);
         this.innerContainer.addChild(UIObject.container);
+        this.getInnerBounds(true); //make sure bounds is updated instantly when a child is added
     }
     return UIObject;
 };
@@ -2471,13 +2473,13 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
     
-    this.getInnerBounds = function () {
+    this.getInnerBounds = function (force) {
         //this is a temporary fix, because we cant rely on innercontainer height if the children is positioned > 0 y.
-        if (performance.now() - this.boundCached > 1000) {
-            this.innerContainer.getBounds(true, this.innerBounds);
-            this.innerContainer.getBounds(true, this.innerBounds);
-            this.innerBounds.height = this.innerBounds.y - this.innerContainer.y + this.innerContainer.height;
-            this.innerBounds.width = this.innerBounds.x - this.innerContainer.x + this.innerContainer.width;
+        if (force || performance.now() - this.boundCached > 1000) {
+            this.innerContainer.getLocalBounds(this.innerBounds);
+            this.innerContainer.getLocalBounds(this.innerBounds);
+            this.innerBounds.height = this.innerBounds.y + this.innerContainer.height;
+            this.innerBounds.width = this.innerBounds.x + this.innerContainer.width;
             this.boundCached = performance.now();
         }
 
@@ -2885,6 +2887,7 @@ Slider.prototype.initialize = function () {
     };
 
     var triggerValueChange = function () {
+        self.emit("change", self.value);
         if (self._lastChange != self.value) {
             self._lastChange = self.value;
             if (typeof self.onValueChange === "function")
@@ -2893,6 +2896,7 @@ Slider.prototype.initialize = function () {
     };
 
     var triggerValueChanging = function () {
+        self.emit("changeing", self.value);
         if (self._lastChanging != self.value) {
             self._lastChanging = self.value;
             if (typeof self._onValueChanging === "function")
