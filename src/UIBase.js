@@ -152,6 +152,15 @@ UIBase.prototype.baseupdate = function () {
         this.dirty = false;
 
 
+        var pivotXOffset = this.pivotX * this._width;
+        var pivotYOffset = this.pivotY * this._height;
+
+        if (this.pixelPerfect) {
+            pivotXOffset = Math.round(pivotXOffset);
+            pivotYOffset = Math.round(pivotYOffset);
+        }
+
+
         if (this.horizontalAlign === null) {
             //get anchors (use left right if conflict)
             if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null)
@@ -183,7 +192,7 @@ UIBase.prototype.baseupdate = function () {
                     this.container.position.x = this._anchorLeft;
                     this._width = parentWidth - this._anchorLeft - this._anchorRight;
                 }
-                this.container.position.x += this.pivotX * this._width;
+                this.container.position.x += pivotXOffset;
             }
             else {
                 this.container.position.x = 0;
@@ -217,7 +226,7 @@ UIBase.prototype.baseupdate = function () {
                     this.container.position.y = this._anchorTop;
                     this._height = parentHeight - this._anchorTop - this._anchorBottom;
                 }
-                this.container.position.y += this.pivotY * this._height;
+                this.container.position.y += pivotYOffset;
             }
             else {
                 this.container.position.y = 0;
@@ -240,7 +249,7 @@ UIBase.prototype.baseupdate = function () {
                 this.container.position.x = parentWidth - this._width;
             else
                 this.container.position.x = 0;
-            this.container.position.x += this._width * this.pivotX;
+            this.container.position.x += pivotXOffset;
         }
         if (this.verticalAlign !== null) {
             if (this.verticalAlign == "middle")
@@ -249,7 +258,7 @@ UIBase.prototype.baseupdate = function () {
                 this.container.position.y = parentHeight - this._height;
             else
                 this.container.position.y = 0;
-            this.container.position.y += this._height * this.pivotY;
+            this.container.position.y += pivotYOffset;
         }
 
 
@@ -265,8 +274,8 @@ UIBase.prototype.baseupdate = function () {
         if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
 
         //pivot
-        if (this.setting.pivotX !== null) this.container.pivot.x = this._width * this.setting.pivotX;
-        if (this.setting.pivotY !== null) this.container.pivot.y = this._height * this.setting.pivotY;
+        if (this.setting.pivotX !== null) this.container.pivot.x = pivotXOffset;
+        if (this.setting.pivotY !== null) this.container.pivot.y = pivotYOffset;
 
         if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
         if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;

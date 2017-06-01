@@ -41,7 +41,7 @@ function Button(options) {
         }
     };
 
-    var clickEvent = new ClickEvent(this.background);
+    var clickEvent = new ClickEvent(this);
     clickEvent.onHover = function (e) {
         self.emit("hover", true);
     };
@@ -81,6 +81,18 @@ function Button(options) {
             document.removeEventListener("keydown", keyDownEvent);
         }
     };
+
+    this.initialize = function () {
+        InputBase.prototype.initialize.call(this);
+        this.container.interactiveChildren = false;
+        
+        var self = this;
+        //lazy to make sure all children is initialized
+        setTimeout(function () {
+            self.container.hitArea = self.container.getLocalBounds();
+        }, 0);
+    };
+
 }
 
 Button.prototype = Object.create(InputBase.prototype);
@@ -103,7 +115,7 @@ Object.defineProperties(Button.prototype, {
     },
     text: {
         get: function () {
-            return this.value;
+            return this.uiText;
         },
         set: function (val) {
             this.value = val;

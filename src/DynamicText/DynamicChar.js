@@ -11,6 +11,8 @@
     //is this char newline?
     this.newline = false;
 
+    this.emoji = false;
+
     //charcode
     this.charcode = 0;
 
@@ -23,8 +25,6 @@
     //line index of char
     this.lineIndex = -1;
 
-    //cache for sprite
-    this.sprite = null;
 }
 
 DynamicChar.prototype.constructor = DynamicChar;

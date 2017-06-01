@@ -17,23 +17,26 @@ var UIBase = require('../UIBase'),
 * @param [allowTags=true] {boolean} Allow inline styling
 * @param [options=null] {DynamicTextStyle} Additional text settings
 */
-function DynamicText(text, width, height, allowTags, options) {
-    UIBase.call(this, int(width, 0), int(height, 0));
-    var autoWidth = width ? false : true;
-    var autoHeight = height ? false : true;
+function DynamicText(text, options) {
+    options = options || {};
+
+    UIBase.call(this, options.width || 0, options.height || 0);
 
     //create atlas
     if (atlas === null)
         atlas = new DynamicAtlas(1);
 
+    var autoWidth = !options.width;
+    var autoHeight = !options.height;
 
     //defaultstyle for this textobject
     var defaultStyle = this.defaultStyle = new DynamicTextStyle();
-    defaultStyle.merge(options);
+    defaultStyle.merge(options.style);
 
     //collection of all processed char
     var chars = this.chars = [];
     var renderChars = [];
+    var spriteCache = []; //(temp)
     var charContainer = new PIXI.Container();
     this.container.addChild(charContainer);
 
@@ -45,11 +48,13 @@ function DynamicText(text, width, height, allowTags, options) {
 
     //states
     var lastWidth = 0,
-        lastHeight = 0,
-        renderedMaxWidth = 0,
-        renderedMaxHeight = 0;
+        lastHeight = 0;
+
     this.dirtyText = true;
-    this.dirtyAlignment = true;
+    this.dirtyStyle = true;
+    this.dirtySize = true;
+    this.dirtyRender = true;
+
 
     //dictionary for line data
     var lineWidthData = [];
@@ -57,27 +62,28 @@ function DynamicText(text, width, height, allowTags, options) {
     var lineFontSizeData = [];
     var lineAlignmentData = [];
     var renderCount = 0;
+    var charCount = 0;
+
+    //ellipsis caches (not nessesary when no sprites)
+    var lineEllipsisData = [];
+    var lineHasEllipsis = [];
 
     //ROUGH TEMP RENDER (with sprites)
     this.render = function () {
-        renderedMaxWidth = 0;
-        renderedMaxHeight = 0;
-
         var yOffset = 0,
             xOffset = 0,
             currentLine = -1,
             i;
 
-        if (renderChars.length > renderCount) {
-            for (i = renderCount; i < renderChars.length; i++) {
-                var removeChar = renderChars[i];
-                if (removeChar.sprite && removeChar.sprite.parent)
-                    charContainer.removeChild(removeChar.sprite);
+        if (spriteCache.length > renderCount) {
+            for (i = renderCount; i < spriteCache.length; i++) {
+                var removeSprite = spriteCache[i];
+                if (removeSprite)
+                    removeSprite.visible = false;
             }
-            renderChars.splice(renderCount, renderChars.length - renderCount);
         }
 
-        var char, lineWidth = 0, lineHeight = 0;
+        var char, lineWidth = 0, lineHeight = 0, maxLineWidth = 0;
 
         for (i = 0; i < renderCount; i++) {
             char = renderChars[i];
@@ -96,31 +102,36 @@ function DynamicText(text, width, height, allowTags, options) {
                     case 'center': xOffset = (this._width - lineWidth) * 0.5; break;
                     default: xOffset = 0;
                 }
+
+
+                maxLineWidth = Math.max(lineWidth, maxLineWidth);
             }
 
             //no reason to render a blank space or 0x0 letters (no texture created)
             if (!char.data.texture || char.space || char.newline) {
-                if (char.sprite && char.sprite.parent)
-                    charContainer.removeChild(char.sprite);
+                if (spriteCache[i])
+                    spriteCache[i].visible = false;
                 continue;
             }
 
-            renderedMaxHeight = Math.max(renderedMaxHeight, yOffset);
-            renderedMaxWidth = Math.max(renderedMaxWidth, lineWidth);
 
             //add new sprite
-            var tex = char.data.texture, sprite = char.sprite;
+            var tex = char.data.texture, sprite = spriteCache[i];
 
 
-            if (sprite === null) {
-                char.sprite = sprite = new PIXI.Sprite(tex);
+
+            if (!sprite) {
+                sprite = spriteCache[i] = new PIXI.Sprite(tex);
                 sprite.anchor.set(0.5);
             }
             else
                 sprite.texture = tex;
 
+
+
+            sprite.visible = true;
             sprite.x = char.x + xOffset + tex.width * 0.5;
-            sprite.y = char.y + yOffset - tex.height * 0.5 - (lineHeight - lineFontSizeData[currentLine]) * 0.5;
+            sprite.y = char.y + yOffset - tex.height * 0.5 - (lineHeight - lineFontSizeData[currentLine]);
 
 
             sprite.tint = char.emoji ? 0xffffff : hexToInt(char.style.tint, 0xffffff);
@@ -130,6 +141,9 @@ function DynamicText(text, width, height, allowTags, options) {
             if (!sprite.parent)
                 charContainer.addChild(sprite);
         }
+
+        if (autoWidth) this.width = maxLineWidth;
+        if (autoHeight) this.height = yOffset;
     };
 
     //updates the renderChar array and position chars for render
@@ -142,86 +156,160 @@ function DynamicText(text, width, height, allowTags, options) {
             lineAlignment = defaultStyle.align,
             lastSpaceIndex = -1,
             lastSpaceLineWidth = 0,
-            forceNewline = false;
+            textHeight = 0,
+            forceNewline = false,
+            style,
+            renderIndex = 0,
+            ellipsis = false,
+            lineFull = false,
+            i;
 
-        //reset width
-        if (autoWidth) this._width = 0;
 
 
 
-        for (var i = 0; i < renderCount; i++) {
-            var char = chars[i];
+        for (i = 0; i < charCount; i++) {
+            var char = chars[i], lastChar = chars[i - 1];
+            style = char.style;
+
+
+            //lineheight
+            lineHeight = Math.max(lineHeight, defaultStyle.lineHeight || style.lineHeight || char.data.lineHeight);
+
+            if (style.overflowY !== 'visible' && lineHeight + textHeight > this._height) {
+                if (style.overflowY === 'hidden')
+                    break;
+
+            }
+
+            if (char.newline)
+                lineFull = false;
+
 
             //set word index
             if (char.space || char.newline) wordIndex++;
             else char.wordIndex = wordIndex;
 
-            //lineheight
-            lineHeight = Math.max(lineHeight, defaultStyle.lineHeight || char.style.lineHeight || char.data.lineHeight);
-
             //textheight
-            lineFontSize = Math.max(lineFontSize, char.style.fontSize);
+            lineFontSize = Math.max(lineFontSize, style.fontSize);
 
             //lineindex
             char.lineIndex = lineIndex;
 
             //lineAlignment
-            if (char.style.align !== defaultStyle.align) lineAlignment = char.style.align;
-
-            //position
-            char.x = pos.x + char.data.xOffset;
-            char.y = parseFloat(char.style.verticalAlign) + char.data.yOffset;
-
-            var addWidth = Math.round(char.data.width) + parseFloat(char.style.letterSpacing);
-            pos.x += addWidth;
+            if (style.align !== defaultStyle.align) lineAlignment = style.align;
 
 
             if (char.space) {
                 lastSpaceIndex = i;
-                lastSpaceLineWidth = pos.x - addWidth;
-            }
-
-            renderChars[i] = char;
-            if (!autoWidth && pos.x > this._width) {
-                if (lastSpaceIndex !== -1) {
-                    i = lastSpaceIndex;
-                    lastSpaceIndex = -1;
-                    pos.x = lastSpaceLineWidth;
-                }
-                else {
-                    i--;
-                    pos.x -= addWidth;
-                }
-                forceNewline = true;
+                lastSpaceLineWidth = pos.x;
             }
 
 
-            //textbox width
-            if (autoWidth) this._width = Math.max(pos.x, this._width);
+            var size = Math.round(char.data.width) + float(style.letterSpacing, 0);
+            if (!autoWidth && !forceNewline && !char.newline && pos.x + size > this._width) {
+                if (style.wrap) {
+                    if (char.space) {
+                        forceNewline = true;
+                    }
+                    else if (lastSpaceIndex !== -1) {
+                        renderIndex -= i - lastSpaceIndex;
+                        i = lastSpaceIndex - 1;
+                        lastSpaceIndex = -1;
+                        pos.x = lastSpaceLineWidth;
+                        forceNewline = true;
+                        continue;
+
+                    }
+                    else if (style.breakWords) {
+                        if (lastChar) {
+                            pos.x -= lastChar.style.letterSpacing;
+                            pos.x -= lastChar.data.width;
+                        }
+                        i -= 2;
+                        renderIndex--;
+                        forceNewline = true;
+                        continue;
+                    }
+
+
+                }
+
+
+                if (style.overflowX == 'hidden' && !forceNewline) {
+                    lineFull = true;
+                    if (style.ellipsis && !ellipsis) {
+                        ellipsis = true;
+                        var ellipsisData = lineEllipsisData[lineIndex];
+                        if (!ellipsisData) ellipsisData = lineEllipsisData[lineIndex] = [new DynamicChar(), new DynamicChar(), new DynamicChar()];
+                        for (var d = 0; d < 3; d++) {
+                            var dot = ellipsisData[d];
+                            dot.value = ".";
+                            dot.data = atlas.getCharObject(dot.value, style);
+                            dot.style = style;
+                            dot.x = pos.x + char.data.xOffset;
+                            dot.y = parseFloat(style.verticalAlign) + dot.data.yOffset;
+                            dot.lineIndex = lineIndex;
+                            pos.x += Math.round(dot.data.width) + float(style.letterSpacing, 0);
+                            renderChars[renderIndex] = dot;
+                            renderIndex++;
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+
+
+
+
+
+            //Update position and add to renderchars
+            if (!lineFull) {
+                //position
+                char.x = pos.x + char.data.xOffset;
+                char.y = parseFloat(style.verticalAlign) + char.data.yOffset;
+                pos.x += size;
+                renderChars[renderIndex] = char;
+                renderIndex++;
+            }
+
+
 
             //new line
-            if (forceNewline || char.newline || i === renderCount - 1) {
+            if (forceNewline || char.newline || i === charCount - 1) {
+                if (lastChar) {
+                    pos.x -= lastChar.style.letterSpacing;
+                    if (lastChar.space) pos.x -= lastChar.data.width;
+                }
 
+                if (char.space) {
+                    pos.x -= char.data.width;
+                    pos.x -= float(style.letterSpacing, 0);
+                }
+
+                textHeight += lineHeight;
+                lineHasEllipsis[lineIndex] = ellipsis;
                 lineWidthData[lineIndex] = pos.x;
-                lineHeightData[lineIndex] = Math.max(lineHeight, defaultStyle.lineHeight || char.style.lineHeight || char.data.lineHeight);
+                lineHeightData[lineIndex] = lineHeight;
                 lineFontSizeData[lineIndex] = lineFontSize;
                 lineAlignmentData[lineIndex] = lineAlignment;
 
-                var lastChar = chars[i - 1];
-                if (lastChar) {
-                    lineWidthData[lineIndex] -= lastChar.style.letterSpacing;
-                    if (lastChar.space)
-                        lineWidthData[lineIndex] -= lastChar.data.width;
-                }
 
-                wordIndex = lineHeight = pos.x = lastSpaceLineWidth = 0;
+                //reset line vaules
+                lineHeight = pos.x = lastSpaceLineWidth = lineFontSize = 0;
                 lineAlignment = defaultStyle.align;
                 lastSpaceIndex = -1;
                 lineIndex++;
-                forceNewline = false;
+                forceNewline = lineFull = ellipsis = false;
+
             }
+
         }
-        this.dirtyAlignment = false;
+
+        renderCount = renderIndex;
     };
 
     //phrases the input text and prepares the char array
@@ -230,10 +318,10 @@ function DynamicText(text, width, height, allowTags, options) {
         var styleTree = [defaultStyle],
             charIndex = 0,
             inputTextIndex = 0,
-            inputArray = Array.from(this._inputText),
-            style = defaultStyle;
+            inputArray = Array.from(this._inputText);
 
         for (var i = 0; i < inputArray.length; i++) {
+            style = styleTree[styleTree.length - 1];
             var c = inputArray[i],
                 charcode = c.charCodeAt(0),
                 newline = false,
@@ -246,7 +334,7 @@ function DynamicText(text, width, height, allowTags, options) {
                 newline = true;
             else if (/(\s)/.test(c))
                 space = true;
-            else if (allowTags && c === "<") {
+            else if (options.allowTags && c === "<") {
                 var tag = this._inputText.substring(inputTextIndex);
                 tag = tag.slice(0, tag.indexOf(">") + 1);
                 var FoundTag = true;
@@ -329,7 +417,7 @@ function DynamicText(text, width, height, allowTags, options) {
 
             if (emoji) {
                 char.style = char.style.clone();
-                char.style.fontFamily = DynamicText.defaultEmojiFont;
+                char.style.fontFamily = DynamicText.settings.defaultEmojiFont;
             }
 
             char.data = atlas.getCharObject(c, char.style);
@@ -341,27 +429,40 @@ function DynamicText(text, width, height, allowTags, options) {
             charIndex++;
             inputTextIndex += c.length;
         }
-        renderCount = charIndex;
-        this.dirtyText = false;
+        charCount = charIndex;
     };
 
     //PIXIUI update, called every time parent emits a change
     this.update = function () {
-        if (this.dirtyText || this.dirtyAlignment || this._width < lastWidth || this._height != lastHeight) {
+        this.dirtySize = !autoWidth && (this._width != lastWidth || this._height != lastHeight || this.dirtyText);
+
+        if (this.dirtyText || this.dirtyStyle) {
+            this.dirtyText = this.dirtyStyle = false;
+            this.dirtyRender = true; //force render after textchange
+            this.processInputText();
+        }
+
+        if (this.dirtySize || this.dirtyRender) {
+            this.dirtySize = this.dirtyRender = false;
             lastWidth = this._width;
             lastHeight = this.height;
-
-            if (this.dirtyText) this.processInputText();
             this.prepareForRender();
             this.render();
         }
+
+    
+        
     };
 }
 
+
 DynamicText.prototype = Object.create(UIBase.prototype);
 DynamicText.prototype.constructor = DynamicText;
-DynamicText.defaultEmojiFont = "Segoe UI Emoji"; //force one font family for emojis so we dont rerender them multiple times
 module.exports = DynamicText;
+DynamicText.settings = {
+    debugSpriteSheet: false,
+    defaultEmojiFont: "Segoe UI Emoji" //force one font family for emojis so we dont rerender them multiple times
+};
 
 Object.defineProperties(DynamicText.prototype, {
     value: {
@@ -384,17 +485,28 @@ Object.defineProperties(DynamicText.prototype, {
             this.value = val;
         }
     },
-    align: {
+    style: {
         get: function () {
-            return this.defaultStyle.align;
+            return this.defaultStyle;
         },
         set: function (val) {
-            this.defaultStyle.align = val;
+            //get a clean default style
+            var style = new DynamicTextStyle();
+            
+            //merge it with new style
+            style.merge(val);
+            
+            //merge it onto this default style
+            this.defaultStyle.merge(style);
 
-            for (var i = 0; i < this.chars.length; i++)
-                this.chars[i].style.align = val;
-
-            this.dirtyAlignment = true;
+            this.dirtyStyle = true;
+            this.update();
+        }
+    },
+    mergeStyle: {
+        set: function (val) {
+            this.defaultStyle.merge(val);
+            this.dirtyStyle = true;
             this.update();
         }
     }
@@ -423,7 +535,7 @@ var DynamicAtlas = function (padding) {
         rootNode,
         canvasList = [],
         atlasdim,
-        startdim = 1024,
+        startdim = 256,
         maxdim = 2048;
 
 
@@ -487,23 +599,13 @@ var DynamicAtlas = function (padding) {
         baseTexture.resolution = 1; //todo: support all resolutions
         baseTexture.update();
 
+        //Debug Spritesheet
+        if (DynamicText.settings.debugSpriteSheet) {
+            canvas.className = "DynamicText_SpriteSheet";
+            document.body.appendChild(canvas);
+        }
 
-
-        //temp (visual spritesheet)
-        setTimeout(function () {
-            var r = 10;
-            var s = 1;
-            for (var i = 0; i < canvasList.length; i++) {
-                c = canvasList[i];
-                document.body.appendChild(c);
-                c.className = "SpriteSheet";
-                //c.setAttribute("style", " position: absolute; left: calc(50% - 450px); top: 115px; border: 1px solid #d3d3d3; background-color: #808080;")
-                previewTimeout = undefined;
-                r += (c.width * ((1 / devicePixelRatio) * 0.5)) + 10;
-            }
-        }, 100);
     };
-    addCanvas();
 
     this.fontFamilyCache = {};
 
@@ -654,13 +756,14 @@ var DynamicAtlas = function (padding) {
     var generateCharData = function (char, style) {
 
         var fontSize = Math.max(1, int(style.fontSize, 26)),
-            lineHeight = fontSize * 1.3;
+            lineHeight = fontSize * 1.25;
 
 
         //Start our returnobject
         var data = {
             fontSize: fontSize,
-            lineHeight: lineHeight
+            lineHeight: lineHeight,
+            width: 0
         };
 
         //Return if newline
@@ -672,7 +775,7 @@ var DynamicAtlas = function (padding) {
         metricsContext.font = font;
 
         //Get char width
-        data.width = metricsContext.measureText(char).width;
+        data.width = Math.round(metricsContext.measureText(char).width);
 
         //Return if char = space
         if (/(\s)/.test(char)) return data;
@@ -730,7 +833,7 @@ var DynamicAtlas = function (padding) {
                 default:
                     //make gradient
                     try {
-                        var gradEnd = baseline + ((lineHeight - fontSize) * 0.5),
+                        var gradEnd = baseline + lineHeight - fontSize,
                             gradient = metricsContext.createLinearGradient(0, gradEnd - fontSize, 0, gradEnd);
 
                         for (i = 0; i < fills.length; i++)
@@ -828,9 +931,9 @@ var DynamicAtlas = function (padding) {
 
 
             // set font metrics
-            data.ascent = (baseline - ascent);
-            data.descent = (descent - baseline);
-            data.height = 1 + (descent - ascent);
+            data.ascent = Math.round(baseline - ascent);
+            data.descent = Math.round(descent - baseline);
+            data.height = 1 + Math.round(descent - ascent);
             data.bounds = {
                 minx: minx - paddingX,
                 maxx: maxx - paddingX,
@@ -855,9 +958,12 @@ var DynamicAtlas = function (padding) {
             //reset rect position
             data.rect.x = data.rect.y = 0;
 
+
         }
         return data;
     };
+
+    addCanvas();
 };
 
 
@@ -897,7 +1003,6 @@ function hexToRgba(hex, alpha) {
     alpha = float(alpha, 1);
     return result ? "rgba(" + parseInt(result[1], 16) + "," + parseInt(result[2], 16) + "," + parseInt(result[3], 16) + "," + alpha + ")" : false;
 }
-
 
 
 

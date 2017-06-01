@@ -53,12 +53,13 @@ function CheckBox(options) {
         }
     };
 
-    var clickEvent = new ClickEvent(this.background);
+    var clickEvent = new ClickEvent(this);
     clickEvent.onHover = function (e) {
         self.emit("hover", true);
     };
 
     clickEvent.onLeave = function (e) {
+
         self.emit("hover", false);
     };
 
@@ -89,6 +90,7 @@ function CheckBox(options) {
 
 
     this.focus = function () {
+
         if (!this._focused) {
             InputBase.prototype.focus.call(this);
             document.addEventListener("keydown", keyDownEvent, false);
@@ -97,6 +99,7 @@ function CheckBox(options) {
     };
 
     this.blur = function () {
+
         if (this._focused) {
             InputBase.prototype.blur.call(this);
             document.removeEventListener("keydown", keyDownEvent);

@@ -44,6 +44,8 @@ function ScrollingContainer(options) {
     this.animating = false;
     this.scrolling = false;
     this._scrollBars = [];
+
+    this.boundCached = performance.now() - 1000;
 }
 
 
@@ -69,10 +71,12 @@ ScrollingContainer.prototype.update = function () {
         if (this.radius === 0) {
 
             //this.mask.drawRect(0, 0, this._width, this._height);
-            this.mask.moveTo(-of, -of);
-            this.mask.lineTo(this._width + of, -of);
-            this.mask.lineTo(this._width + of, this._height + of);
-            this.mask.lineTo(-of, this._height + of);
+            //this.mask.drawRect(-of, -of, this._width + of, this.height + of);
+            //this.mask.moveTo(-of, -of);
+            //this.mask.lineTo(this._width + of, -of);
+            //this.mask.lineTo(this._width + of, this._height + of);
+            //this.mask.lineTo(-of, this._height + of);
+            this.mask.drawRect(-of, -of, this._width + of, this._height + of);
         }
         else {
             this.mask.drawRoundedRect(-of, -of, this._width + of, this.height + of, this.radius);
@@ -149,7 +153,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (this.scrollY) {
             var y = Math.max(0, (Math.min(bounds.height, pos.y)));
-            
+
             if (y + container.y > this._height) {
                 dif = y - this._height;
                 container.y = -dif;
@@ -191,12 +195,16 @@ ScrollingContainer.prototype.initScrolling = function () {
     };
 
 
+    
     this.getInnerBounds = function () {
-        this.innerContainer.getBounds(true, this.innerBounds);
-        this.innerContainer.getBounds(true, this.innerBounds);
-
-        this.innerBounds.height = this.innerBounds.y - this.innerContainer.y + this.innerContainer.height;
-        this.innerBounds.width = this.innerBounds.x - this.innerContainer.x + this.innerContainer.width;
+        //this is a temporary fix, because we cant rely on innercontainer height if the children is positioned > 0 y.
+        if (performance.now() - this.boundCached > 1000) {
+            this.innerContainer.getBounds(true, this.innerBounds);
+            this.innerContainer.getBounds(true, this.innerBounds);
+            this.innerBounds.height = this.innerBounds.y - this.innerContainer.y + this.innerContainer.height;
+            this.innerBounds.width = this.innerBounds.x - this.innerContainer.x + this.innerContainer.width;
+            this.boundCached = performance.now();
+        }
 
         return this.innerBounds;
     };
