@@ -12,10 +12,12 @@ var InputBase = require('./InputBase'),
  * @param [options.text=null] {PIXI.UI.Text} optional text
  * @param [options.tabIndex=0] {Number} input tab index
  * @param [options.tabGroup=0] {Number|String} input tab group
+ * @param [options.width=options.background.width] {Number|String} width
+ * @param [options.height=options.background.height] {Number|String} height
  */
 
 function Button(options) {
-    InputBase.call(this, options.background.width, options.background.height, options.tabIndex || 0, options.tabGroup || 0);
+    InputBase.call(this, options.width || options.background.width, options.height || options.background.height, options.tabIndex || 0, options.tabGroup || 0);
     this.background = options.background;
     this.background.width = "100%";
     this.background.height = "100%";
@@ -23,7 +25,7 @@ function Button(options) {
     this.background.verticalAlign = "middle";
     this.background.horizontalAlign = "center";
     this.addChild(this.background);
-
+    this.isHover = false;
 
     this.uiText = options.text;
     if (this.uiText) {
@@ -43,10 +45,12 @@ function Button(options) {
 
     var clickEvent = new ClickEvent(this);
     clickEvent.onHover = function (e) {
+        this.isHover = true;
         self.emit("hover", true);
     };
 
     clickEvent.onLeave = function (e) {
+        this.isHover = false;
         self.emit("hover", false);
     };
 

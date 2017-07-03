@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 01 Jun 2017 14:31:07 UTC
+ * Compiled Sat, 10 Jun 2017 18:28:57 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -28,10 +28,12 @@ var InputBase = require('./InputBase'),
  * @param [options.text=null] {PIXI.UI.Text} optional text
  * @param [options.tabIndex=0] {Number} input tab index
  * @param [options.tabGroup=0] {Number|String} input tab group
+ * @param [options.width=options.background.width] {Number|String} width
+ * @param [options.height=options.background.height] {Number|String} height
  */
 
 function Button(options) {
-    InputBase.call(this, options.background.width, options.background.height, options.tabIndex || 0, options.tabGroup || 0);
+    InputBase.call(this, options.width || options.background.width, options.height || options.background.height, options.tabIndex || 0, options.tabGroup || 0);
     this.background = options.background;
     this.background.width = "100%";
     this.background.height = "100%";
@@ -39,7 +41,7 @@ function Button(options) {
     this.background.verticalAlign = "middle";
     this.background.horizontalAlign = "center";
     this.addChild(this.background);
-
+    this.isHover = false;
 
     this.uiText = options.text;
     if (this.uiText) {
@@ -59,10 +61,12 @@ function Button(options) {
 
     var clickEvent = new ClickEvent(this);
     clickEvent.onHover = function (e) {
+        this.isHover = true;
         self.emit("hover", true);
     };
 
     clickEvent.onLeave = function (e) {
+        this.isHover = false;
         self.emit("hover", false);
     };
 
@@ -441,7 +445,7 @@ function DynamicText(text, options) {
     var autoHeight = !options.height;
 
     //defaultstyle for this textobject
-    var defaultStyle = this.defaultStyle = new DynamicTextStyle();
+    var defaultStyle = this._style = new DynamicTextStyle(this);
     defaultStyle.merge(options.style);
 
     //collection of all processed char
@@ -463,7 +467,6 @@ function DynamicText(text, options) {
 
     this.dirtyText = true;
     this.dirtyStyle = true;
-    this.dirtySize = true;
     this.dirtyRender = true;
 
 
@@ -843,26 +846,32 @@ function DynamicText(text, options) {
         charCount = charIndex;
     };
 
-    //PIXIUI update, called every time parent emits a change
+    //PIXIUI update, lazy update (bad solution needs rewrite when converted to pixi plugin)
+    this.lazyUpdate = null;
+    var self = this;
     this.update = function () {
-        this.dirtySize = !autoWidth && (this._width != lastWidth || this._height != lastHeight || this.dirtyText);
+        if (self.lazyUpdate !== null) return;
+        self.lazyUpdate = setTimeout(function () {
+            
+            console.log("UPDATING TEXT");
+            var dirtySize = !autoWidth && (self._width != lastWidth || self._height != lastHeight || self.dirtyText);
 
-        if (this.dirtyText || this.dirtyStyle) {
-            this.dirtyText = this.dirtyStyle = false;
-            this.dirtyRender = true; //force render after textchange
-            this.processInputText();
-        }
+            if (self.dirtyText || self.dirtyStyle) {
+                self.dirtyText = self.dirtyStyle = false;
+                self.dirtyRender = true; //force render after textchange
+                self.processInputText();
+            }
 
-        if (this.dirtySize || this.dirtyRender) {
-            this.dirtySize = this.dirtyRender = false;
-            lastWidth = this._width;
-            lastHeight = this.height;
-            this.prepareForRender();
-            this.render();
-        }
+            if (dirtySize || self.dirtyRender) {
+                self.dirtyRender = false;
+                lastWidth = self._width;
+                lastHeight = self.height;
+                self.prepareForRender();
+                self.render();
+            }
+            self.lazyUpdate = null;
+        }, 0);
 
-    
-        
     };
 }
 
@@ -885,6 +894,7 @@ Object.defineProperties(DynamicText.prototype, {
                 this._inputText = val;
                 this.dirtyText = true;
                 this.update();
+                console.log("Updating Text to: " + val);
             }
         }
     },
@@ -893,30 +903,24 @@ Object.defineProperties(DynamicText.prototype, {
             return this.value;
         },
         set: function (val) {
+            
             this.value = val;
         }
     },
     style: {
         get: function () {
-            return this.defaultStyle;
+            return this._style;
         },
         set: function (val) {
             //get a clean default style
-            var style = new DynamicTextStyle();
-            
+            var style = new DynamicTextStyle(this);
+
             //merge it with new style
             style.merge(val);
-            
-            //merge it onto this default style
-            this.defaultStyle.merge(style);
 
-            this.dirtyStyle = true;
-            this.update();
-        }
-    },
-    mergeStyle: {
-        set: function (val) {
-            this.defaultStyle.merge(val);
+            //merge it onto this default style
+            this._style.merge(style);
+
             this.dirtyStyle = true;
             this.update();
         }
@@ -1421,29 +1425,31 @@ function hexToRgba(hex, alpha) {
 
 
 },{"../UIBase":32,"./DynamicChar":5,"./DynamicTextStyle":7,"emoji-regex":1}],7:[function(require,module,exports){
-function DynamicTextStyle() {
-    this.scale = 1;
-    this.align = 'left';
-    this.fontFamily = 'Arial';
-    this.fontSize = 26;
-    this.fontWeight = 'normal';
-    this.fontStyle = 'normal';
-    this.letterSpacing = 0;
-    this.lineHeight = 0;
-    this.verticalAlign = 0;
-    this.rotation = 0;
-    this.skew = 0;
-    this.tint = "#FFFFFF";
-    this.fill = '#FFFFFF'; 
-    this.shadow = '';
-    this.stroke = 0;
-    this.strokeFill = '';
-    this.strokeShadow = '';
-    this.wrap = true;
-    this.breakWords = false;
-    this.overflowX = 'visible'; //visible|hidden
-    this.overflowY = 'visible'; //visible|hidden
-    this.ellipsis = false;
+function DynamicTextStyle(parent) {
+    this.respectDirty = true;
+    this._parent = parent || null;
+    this._scale = 1;
+    this._align = 'left';
+    this._fontFamily = 'Arial';
+    this._fontSize = 26;
+    this._fontWeight = 'normal';
+    this._fontStyle = 'normal';
+    this._letterSpacing = 0;
+    this._lineHeight = 0;
+    this._verticalAlign = 0;
+    this._rotation = 0;
+    this._skew = 0;
+    this._tint = "#FFFFFF";
+    this._fill = '#FFFFFF';
+    this._shadow = '';
+    this._stroke = 0;
+    this._strokeFill = '';
+    this._strokeShadow = '';
+    this._wrap = true;
+    this._breakWords = false;
+    this._overflowX = 'visible'; //visible|hidden
+    this._overflowY = 'visible'; //visible|hidden
+    this._ellipsis = false;
 
 
     var _cachedEllipsisSize = null;
@@ -1463,12 +1469,16 @@ DynamicTextStyle.prototype.clone = function () {
 };
 
 DynamicTextStyle.prototype.merge = function (style) {
+
     if (typeof style === 'object') {
+        this.respectDirty = false;
         for (var param in style) {
             var val = style[param];
-            if (typeof val !== 'function')
-                this[param] = val;
+            if (typeof val === 'function' || param === 'respectDirty' || param === '_parent') continue;
+            this[param] = style[param];
         }
+        this.respectDirty = true;
+        this._dirty = true;
     }
 };
 
@@ -1485,6 +1495,261 @@ DynamicTextStyle.prototype.ctxFont = function () {
 
 DynamicTextStyle.prototype.constructor = DynamicTextStyle;
 module.exports = DynamicTextStyle;
+
+Object.defineProperties(DynamicTextStyle.prototype, {
+    _dirty: {
+        set: function (val) {
+            if (this.respectDirty) {
+                if (this._parent !== null) {
+                    this._parent.dirtyStyle = val;
+                    this._parent.update();
+                }
+            }
+        }
+    },
+    scale: {
+        get: function () {
+            return this._scale;
+        },
+        set: function (val) {
+            if (val !== this._scale) {
+                this._scale = val;
+                this._dirty = true;
+            }
+        }
+    },
+    align: {
+        get: function () {
+            return this._align;
+        },
+        set: function (val) {
+            if (val !== this._align) {
+                this._align = val;
+                this._dirty = true;
+            }
+        }
+    },
+    fontFamily: {
+        get: function () {
+            return this._fontFamily;
+        },
+        set: function (val) {
+            if (val !== this._fontFamily) {
+                this._fontFamily = val;
+                this._dirty = true;
+            }
+        }
+    },
+    fontSize: {
+        get: function () {
+            return this._fontSize;
+        },
+        set: function (val) {
+            if (val !== this._fontSize) {
+                this._fontSize = val;
+                this._dirty = true;
+            }
+        }
+    },
+    fontWeight: {
+        get: function () {
+            return this._fontWeight;
+        },
+        set: function (val) {
+            if (val !== this._fontWeight) {
+                this._fontWeight = val;
+                this._dirty = true;
+            }
+        }
+    },
+    fontStyle: {
+        get: function () {
+            return this._fontStyle;
+        },
+        set: function (val) {
+            if (val !== this._fontStyle) {
+                this._fontStyle = val;
+                this._dirty = true;
+            }
+        }
+    },
+    letterSpacing: {
+        get: function () {
+            return this._letterSpacing;
+        },
+        set: function (val) {
+            if (val !== this._letterSpacing) {
+                this._letterSpacing = val;
+                this._dirty = true;
+            }
+        }
+    },
+    lineHeight: {
+        get: function () {
+            return this._lineHeight;
+        },
+        set: function (val) {
+            if (val !== this._lineHeight) {
+                this._lineHeight = val;
+                this._dirty = true;
+            }
+        }
+    },
+    verticalAlign: {
+        get: function () {
+            return this._verticalAlign;
+        },
+        set: function (val) {
+            if (val !== this._verticalAlign) {
+                this._verticalAlign = val;
+                this._dirty = true;
+            }
+        }
+    },
+    rotation: {
+        get: function () {
+            return this._rotation;
+        },
+        set: function (val) {
+            if (val !== this._rotation) {
+                this._rotation = val;
+                this._dirty = true;
+            }
+        }
+    },
+    skew: {
+        get: function () {
+            return this._skew;
+        },
+        set: function (val) {
+            if (val !== this._skew) {
+                this._skew = val;
+                this._dirty = true;
+            }
+        }
+    },
+    tint: {
+        get: function () {
+            return this._tint;
+        },
+        set: function (val) {
+            if (val !== this._tint) {
+                this._tint = val;
+                this._dirty = true;
+            }
+        }
+    },
+    fill: {
+        get: function () {
+            return this._fill;
+        },
+        set: function (val) {
+            if (val !== this._fill) {
+                this._fill = val;
+                this._dirty = true;
+            }
+        }
+    },
+    shadow: {
+        get: function () {
+            return this._shadow;
+        },
+        set: function (val) {
+            if (val !== this._shadow) {
+                this._shadow = val;
+                this._dirty = true;
+            }
+        }
+    },
+    stroke: {
+        get: function () {
+            return this._stroke;
+        },
+        set: function (val) {
+            if (val !== this._stroke) {
+                this._stroke = val;
+                this._dirty = true;
+            }
+        }
+    },
+    strokeFill: {
+        get: function () {
+            return this._strokeFill;
+        },
+        set: function (val) {
+            if (val !== this._strokeFill) {
+                this._strokeFill = val;
+                this._dirty = true;
+            }
+        }
+    },
+    strokeShadow: {
+        get: function () {
+            return this._strokeShadow;
+        },
+        set: function (val) {
+            if (val !== this._strokeShadow) {
+                this._strokeShadow = val;
+                this._dirty = true;
+            }
+        }
+    },
+    wrap: {
+        get: function () {
+            return this._wrap;
+        },
+        set: function (val) {
+            if (val !== this._wrap) {
+                this._wrap = val;
+                this._dirty = true;
+            }
+        }
+    },
+    breakWords: {
+        get: function () {
+            return this._breakWords;
+        },
+        set: function (val) {
+            if (val !== this._breakWords) {
+                this._breakWords = val;
+                this._dirty = true;
+            }
+        }
+    },
+    overflowX: {
+        get: function () {
+            return this._overflowX;
+        },
+        set: function (val) {
+            if (val !== this._overflowX) {
+                this._overflowX = val;
+                this._dirty = true;
+            }
+        }
+    },
+    overflowY: {
+        get: function () {
+            return this._overflowY;
+        },
+        set: function (val) {
+            if (val !== this._overflowY) {
+                this._overflowY = val;
+                this._dirty = true;
+            }
+        }
+    },
+    ellipsis: {
+        get: function () {
+            return this._ellipsis;
+        },
+        set: function (val) {
+            if (val !== this._ellipsis) {
+                this._ellipsis = val;
+                this._dirty = true;
+            }
+        }
+    }
+});
 },{}],8:[function(require,module,exports){
 var Ease = {},
     EaseBase = require('./EaseBase'),
@@ -2390,6 +2655,20 @@ ScrollingContainer.prototype.updateScrollBars = function () {
     }
 };
 
+
+ScrollingContainer.prototype.getInnerBounds = function (force) {
+    //this is a temporary fix, because we cant rely on innercontainer height if the children is positioned > 0 y.
+    if (force || performance.now() - this.boundCached > 1000) {
+        this.innerContainer.getLocalBounds(this.innerBounds);
+        this.innerContainer.getLocalBounds(this.innerBounds);
+        this.innerBounds.height = this.innerBounds.y + this.innerContainer.height;
+        this.innerBounds.width = this.innerBounds.x + this.innerContainer.width;
+        this.boundCached = performance.now();
+    }
+
+    return this.innerBounds;
+};
+
 ScrollingContainer.prototype.initScrolling = function () {
     var container = this.innerContainer,
         containerStart = new PIXI.Point(),
@@ -2472,19 +2751,6 @@ ScrollingContainer.prototype.initScrolling = function () {
     };
 
 
-    
-    this.getInnerBounds = function (force) {
-        //this is a temporary fix, because we cant rely on innercontainer height if the children is positioned > 0 y.
-        if (force || performance.now() - this.boundCached > 1000) {
-            this.innerContainer.getLocalBounds(this.innerBounds);
-            this.innerContainer.getLocalBounds(this.innerBounds);
-            this.innerBounds.height = this.innerBounds.y + this.innerContainer.height;
-            this.innerBounds.width = this.innerBounds.x + this.innerContainer.width;
-            this.boundCached = performance.now();
-        }
-
-        return this.innerBounds;
-    };
 
     this.updateDirection = function (direction, delta) {
         var bounds = this.getInnerBounds();
@@ -3382,7 +3648,7 @@ function TextInput(options) {
     }
 
 
-    InputBase.call(this, options.width || 150, options.height || 20, options.tabIndex || 0, options.tabGroup || 0);
+    InputBase.call(this, options.width || options.background ? options.background.width : 150, options.height || options.background ? options.background.height : 20, options.tabIndex || 0, options.tabGroup || 0);
     this._dirtyText = true;
     this.maxLength = options.maxLength || 0;
     this._value = this._lastValue = options.value || "";
@@ -4325,6 +4591,7 @@ Object.defineProperties(TilingSprite.prototype, {
 var MathHelper = require('./MathHelper');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
+var _callbackItemCache = [];
 var _tweenObjects = {};
 var _activeTweenObjects = {};
 var _currentId = 0;
@@ -4333,6 +4600,51 @@ var TweenObject = function (object) {
     this.object = object;
     this.tweens = {};
     this.active = false;
+};
+
+var CallbackItem = function () {
+    this._ready = false;
+    this.obj = null;
+    this.parent = null;
+    this.key = "";
+    this.time = 0;
+    this.callback = null;
+    this.currentTime = 0;
+};
+
+CallbackItem.prototype.set = function (obj, callback, time) {
+    
+
+    this.obj = obj.object;
+
+    if (!this.obj._currentCallbackID)
+        this.obj._currentCallbackID = 1;
+    else
+        this.obj._currentCallbackID++;
+
+    this.time = time;
+    this.parent = obj;
+    this.callback = callback;
+    this._ready = false;
+    this.key = "cb_" + this.obj._currentCallbackID;
+    this.currentTime = 0;
+    if (!this.parent.active) {
+        this.parent.active = true;
+        _activeTweenObjects[this.obj._tweenObjectId] = this.parent;
+    }
+};
+
+CallbackItem.prototype.update = function (delta) {
+    this.currentTime += delta;
+    if (this.currentTime >= this.time) {
+        this._ready = true;
+        delete this.parent.tweens[this.key];
+        if (!Object.keys(this.parent.tweens).length) {
+            this.parent.active = false;
+            delete _activeTweenObjects[this.obj._tweenObjectId];
+        }
+        this.callback();
+    }
 };
 
 var TweenItem = function () {
@@ -4347,6 +4659,47 @@ var TweenItem = function () {
     this.currentTime = 0;
     this.t = 0;
 };
+
+
+TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
+    this.parent = obj;
+    this.obj = obj.object;
+    this.key = key;
+    this.surfix = getSurfix(to);
+    this.to = getToValue(to);
+    this.from = getFromValue(from, to, this.obj, key);
+    this.time = time;
+    this.currentTime = 0;
+    this.ease = ease;
+    this._ready = false;
+
+    if (!this.parent.active) {
+        this.parent.active = true;
+        _activeTweenObjects[this.obj._tweenObjectId] = this.parent;
+    }
+        
+};
+
+TweenItem.prototype.update = function (delta) {
+    this.currentTime += delta;
+    this.t = Math.min(this.currentTime, this.time) / this.time;
+    if (this.ease)
+        this.t = this.ease.getPosition(this.t);
+
+    var val = MathHelper.Lerp(this.from, this.to, this.t);
+    this.obj[this.key] = this.surfix ? val + this.surfix : val;
+
+    if (this.currentTime >= this.time) {
+        this._ready = true;
+        delete this.parent.tweens[this.key];
+        if (!Object.keys(this.parent.tweens).length) {
+            this.parent.active = false;
+            delete _activeTweenObjects[this.obj._tweenObjectId];
+        }
+    }
+};
+
+
 
 var widthKeys = ["width", "minWidth", "maxWidth", "anchorLeft", "anchorRight", "left", "right", "x"];
 var heightKeys = ["height", "minHeight", "maxHeight", "anchorTop", "anchorBottom", "top", "bottom", "y"];
@@ -4395,41 +4748,6 @@ function getToValue(to) {
         return parseFloat(to.replace('%', ''));
 }
 
-TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
-    this.parent = obj;
-    this.obj = obj.object;
-    this.key = key;
-    this.surfix = getSurfix(to);
-    this.to = getToValue(to);
-    this.from = getFromValue(from, to, this.obj, key);
-    this.time = time;
-    this.currentTime = 0;
-    this.ease = ease;
-    this._ready = false;
-
-    if (!this.parent.active)
-        _activeTweenObjects[this.obj._tweenObjectId] = this.parent;
-};
-
-TweenItem.prototype.update = function (delta) {
-    this.currentTime += delta;
-    this.t = Math.min(this.currentTime, this.time) / this.time;
-    if (this.ease)
-        this.t = this.ease.getPosition(this.t);
-
-    var val = MathHelper.Lerp(this.from, this.to, this.t);
-    this.obj[this.key] = this.surfix ? val + this.surfix : val;
-
-    if (this.currentTime >= this.time) {
-        this._ready = true;
-        delete this.parent.tweens[this.key];
-        if (!Object.keys(this.parent.tweens).length) {
-            this.parent.active = false;
-            delete _activeTweenObjects[this.obj._tweenObjectId];
-        }
-    }
-};
-
 
 function getObject(obj) {
     if (!obj._tweenObjectId) {
@@ -4454,10 +4772,28 @@ function getTweenItem() {
     return tween;
 }
 
+function getCallbackItem() {
+    for (var i = 0; i < _callbackItemCache.length; i++) {
+        if (_callbackItemCache[i]._ready)
+            return _callbackItemCache[i];
+    }
+
+    var cb = new CallbackItem();
+    _callbackItemCache.push(cb);
+    return cb;
+}
+
 var Tween = {
     to: function (obj, time, params, ease) {
         var object = getObject(obj);
         for (var key in params) {
+            if (key === "onComplete") {
+                var cb = getCallbackItem();
+                cb.set(object, params[key], time);
+                object.tweens[cb.key] = cb;
+                continue;
+            }
+
             if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
             if (!object.tweens[key])
                 object.tweens[key] = getTweenItem();
@@ -4468,6 +4804,13 @@ var Tween = {
     from: function (obj, time, params, ease) {
         var object = getObject(obj);
         for (var key in params) {
+            if (key === "onComplete") {
+                var cb = getCallbackItem();
+                cb.set(object, params[key], time);
+                object.tweens[cb.key] = cb;
+                continue;
+            }
+
             if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
             if (!object.tweens[key])
                 object.tweens[key] = getTweenItem();
@@ -4477,6 +4820,13 @@ var Tween = {
     fromTo: function (obj, time, paramsFrom, paramsTo, ease) {
         var object = getObject(obj);
         for (var key in paramsFrom) {
+            if (key === "onComplete") {
+                var cb = getCallbackItem();
+                cb.set(object, params[key], time);
+                object.tweens[cb.key] = cb;
+                continue;
+            }
+
             if (paramsFrom[key] == paramsTo[key] || typeof obj[key] === "undefined" || typeof paramsTo[key] === "undefined") continue;
             if (!object.tweens[key]) {
                 object.tweens[key] = getTweenItem();
@@ -5621,6 +5971,22 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.container.click = val;
+        }
+    },
+    interactive: {
+        get: function () {
+            return this.container.interactive;
+        },
+        set: function (val) {
+            this.container.interactive = val;
+        }
+    },
+    interactiveChildren: {
+        get: function () {
+            return this.container.interactiveChildren;
+        },
+        set: function (val) {
+            this.container.interactiveChildren = val;
         }
     }
 });

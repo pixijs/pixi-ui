@@ -1089,5 +1089,21 @@ Object.defineProperties(UIBase.prototype, {
         set: function (val) {
             this.container.click = val;
         }
+    },
+    interactive: {
+        get: function () {
+            return this.container.interactive;
+        },
+        set: function (val) {
+            this.container.interactive = val;
+        }
+    },
+    interactiveChildren: {
+        get: function () {
+            return this.container.interactiveChildren;
+        },
+        set: function (val) {
+            this.container.interactiveChildren = val;
+        }
     }
 });

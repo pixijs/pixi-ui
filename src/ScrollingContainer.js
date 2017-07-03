@@ -114,6 +114,20 @@ ScrollingContainer.prototype.updateScrollBars = function () {
     }
 };
 
+
+ScrollingContainer.prototype.getInnerBounds = function (force) {
+    //this is a temporary fix, because we cant rely on innercontainer height if the children is positioned > 0 y.
+    if (force || performance.now() - this.boundCached > 1000) {
+        this.innerContainer.getLocalBounds(this.innerBounds);
+        this.innerContainer.getLocalBounds(this.innerBounds);
+        this.innerBounds.height = this.innerBounds.y + this.innerContainer.height;
+        this.innerBounds.width = this.innerBounds.x + this.innerContainer.width;
+        this.boundCached = performance.now();
+    }
+
+    return this.innerBounds;
+};
+
 ScrollingContainer.prototype.initScrolling = function () {
     var container = this.innerContainer,
         containerStart = new PIXI.Point(),
@@ -196,19 +210,6 @@ ScrollingContainer.prototype.initScrolling = function () {
     };
 
 
-    
-    this.getInnerBounds = function (force) {
-        //this is a temporary fix, because we cant rely on innercontainer height if the children is positioned > 0 y.
-        if (force || performance.now() - this.boundCached > 1000) {
-            this.innerContainer.getLocalBounds(this.innerBounds);
-            this.innerContainer.getLocalBounds(this.innerBounds);
-            this.innerBounds.height = this.innerBounds.y + this.innerContainer.height;
-            this.innerBounds.width = this.innerBounds.x + this.innerContainer.width;
-            this.boundCached = performance.now();
-        }
-
-        return this.innerBounds;
-    };
 
     this.updateDirection = function (direction, delta) {
         var bounds = this.getInnerBounds();

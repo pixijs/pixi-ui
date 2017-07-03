@@ -30,7 +30,7 @@ function DynamicText(text, options) {
     var autoHeight = !options.height;
 
     //defaultstyle for this textobject
-    var defaultStyle = this.defaultStyle = new DynamicTextStyle();
+    var defaultStyle = this._style = new DynamicTextStyle(this);
     defaultStyle.merge(options.style);
 
     //collection of all processed char
@@ -52,7 +52,6 @@ function DynamicText(text, options) {
 
     this.dirtyText = true;
     this.dirtyStyle = true;
-    this.dirtySize = true;
     this.dirtyRender = true;
 
 
@@ -432,26 +431,32 @@ function DynamicText(text, options) {
         charCount = charIndex;
     };
 
-    //PIXIUI update, called every time parent emits a change
+    //PIXIUI update, lazy update (bad solution needs rewrite when converted to pixi plugin)
+    this.lazyUpdate = null;
+    var self = this;
     this.update = function () {
-        this.dirtySize = !autoWidth && (this._width != lastWidth || this._height != lastHeight || this.dirtyText);
+        if (self.lazyUpdate !== null) return;
+        self.lazyUpdate = setTimeout(function () {
+            
+            console.log("UPDATING TEXT");
+            var dirtySize = !autoWidth && (self._width != lastWidth || self._height != lastHeight || self.dirtyText);
 
-        if (this.dirtyText || this.dirtyStyle) {
-            this.dirtyText = this.dirtyStyle = false;
-            this.dirtyRender = true; //force render after textchange
-            this.processInputText();
-        }
+            if (self.dirtyText || self.dirtyStyle) {
+                self.dirtyText = self.dirtyStyle = false;
+                self.dirtyRender = true; //force render after textchange
+                self.processInputText();
+            }
 
-        if (this.dirtySize || this.dirtyRender) {
-            this.dirtySize = this.dirtyRender = false;
-            lastWidth = this._width;
-            lastHeight = this.height;
-            this.prepareForRender();
-            this.render();
-        }
+            if (dirtySize || self.dirtyRender) {
+                self.dirtyRender = false;
+                lastWidth = self._width;
+                lastHeight = self.height;
+                self.prepareForRender();
+                self.render();
+            }
+            self.lazyUpdate = null;
+        }, 0);
 
-    
-        
     };
 }
 
@@ -474,6 +479,7 @@ Object.defineProperties(DynamicText.prototype, {
                 this._inputText = val;
                 this.dirtyText = true;
                 this.update();
+                console.log("Updating Text to: " + val);
             }
         }
     },
@@ -482,30 +488,24 @@ Object.defineProperties(DynamicText.prototype, {
             return this.value;
         },
         set: function (val) {
+            
             this.value = val;
         }
     },
     style: {
         get: function () {
-            return this.defaultStyle;
+            return this._style;
         },
         set: function (val) {
             //get a clean default style
-            var style = new DynamicTextStyle();
-            
+            var style = new DynamicTextStyle(this);
+
             //merge it with new style
             style.merge(val);
-            
-            //merge it onto this default style
-            this.defaultStyle.merge(style);
 
-            this.dirtyStyle = true;
-            this.update();
-        }
-    },
-    mergeStyle: {
-        set: function (val) {
-            this.defaultStyle.merge(val);
+            //merge it onto this default style
+            this._style.merge(style);
+
             this.dirtyStyle = true;
             this.update();
         }
