@@ -1,6 +1,7 @@
 ﻿var MathHelper = require('./MathHelper');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
+var _callbackItemCache = [];
 var _tweenObjects = {};
 var _activeTweenObjects = {};
 var _currentId = 0;
@@ -9,6 +10,51 @@ var TweenObject = function (object) {
     this.object = object;
     this.tweens = {};
     this.active = false;
+};
+
+var CallbackItem = function () {
+    this._ready = false;
+    this.obj = null;
+    this.parent = null;
+    this.key = "";
+    this.time = 0;
+    this.callback = null;
+    this.currentTime = 0;
+};
+
+CallbackItem.prototype.set = function (obj, callback, time) {
+    
+
+    this.obj = obj.object;
+
+    if (!this.obj._currentCallbackID)
+        this.obj._currentCallbackID = 1;
+    else
+        this.obj._currentCallbackID++;
+
+    this.time = time;
+    this.parent = obj;
+    this.callback = callback;
+    this._ready = false;
+    this.key = "cb_" + this.obj._currentCallbackID;
+    this.currentTime = 0;
+    if (!this.parent.active) {
+        this.parent.active = true;
+        _activeTweenObjects[this.obj._tweenObjectId] = this.parent;
+    }
+};
+
+CallbackItem.prototype.update = function (delta) {
+    this.currentTime += delta;
+    if (this.currentTime >= this.time) {
+        this._ready = true;
+        delete this.parent.tweens[this.key];
+        if (!Object.keys(this.parent.tweens).length) {
+            this.parent.active = false;
+            delete _activeTweenObjects[this.obj._tweenObjectId];
+        }
+        this.callback();
+    }
 };
 
 var TweenItem = function () {
@@ -23,6 +69,47 @@ var TweenItem = function () {
     this.currentTime = 0;
     this.t = 0;
 };
+
+
+TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
+    this.parent = obj;
+    this.obj = obj.object;
+    this.key = key;
+    this.surfix = getSurfix(to);
+    this.to = getToValue(to);
+    this.from = getFromValue(from, to, this.obj, key);
+    this.time = time;
+    this.currentTime = 0;
+    this.ease = ease;
+    this._ready = false;
+
+    if (!this.parent.active) {
+        this.parent.active = true;
+        _activeTweenObjects[this.obj._tweenObjectId] = this.parent;
+    }
+        
+};
+
+TweenItem.prototype.update = function (delta) {
+    this.currentTime += delta;
+    this.t = Math.min(this.currentTime, this.time) / this.time;
+    if (this.ease)
+        this.t = this.ease.getPosition(this.t);
+
+    var val = MathHelper.Lerp(this.from, this.to, this.t);
+    this.obj[this.key] = this.surfix ? val + this.surfix : val;
+
+    if (this.currentTime >= this.time) {
+        this._ready = true;
+        delete this.parent.tweens[this.key];
+        if (!Object.keys(this.parent.tweens).length) {
+            this.parent.active = false;
+            delete _activeTweenObjects[this.obj._tweenObjectId];
+        }
+    }
+};
+
+
 
 var widthKeys = ["width", "minWidth", "maxWidth", "anchorLeft", "anchorRight", "left", "right", "x"];
 var heightKeys = ["height", "minHeight", "maxHeight", "anchorTop", "anchorBottom", "top", "bottom", "y"];
@@ -71,41 +158,6 @@ function getToValue(to) {
         return parseFloat(to.replace('%', ''));
 }
 
-TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
-    this.parent = obj;
-    this.obj = obj.object;
-    this.key = key;
-    this.surfix = getSurfix(to);
-    this.to = getToValue(to);
-    this.from = getFromValue(from, to, this.obj, key);
-    this.time = time;
-    this.currentTime = 0;
-    this.ease = ease;
-    this._ready = false;
-
-    if (!this.parent.active)
-        _activeTweenObjects[this.obj._tweenObjectId] = this.parent;
-};
-
-TweenItem.prototype.update = function (delta) {
-    this.currentTime += delta;
-    this.t = Math.min(this.currentTime, this.time) / this.time;
-    if (this.ease)
-        this.t = this.ease.getPosition(this.t);
-
-    var val = MathHelper.Lerp(this.from, this.to, this.t);
-    this.obj[this.key] = this.surfix ? val + this.surfix : val;
-
-    if (this.currentTime >= this.time) {
-        this._ready = true;
-        delete this.parent.tweens[this.key];
-        if (!Object.keys(this.parent.tweens).length) {
-            this.parent.active = false;
-            delete _activeTweenObjects[this.obj._tweenObjectId];
-        }
-    }
-};
-
 
 function getObject(obj) {
     if (!obj._tweenObjectId) {
@@ -130,10 +182,28 @@ function getTweenItem() {
     return tween;
 }
 
+function getCallbackItem() {
+    for (var i = 0; i < _callbackItemCache.length; i++) {
+        if (_callbackItemCache[i]._ready)
+            return _callbackItemCache[i];
+    }
+
+    var cb = new CallbackItem();
+    _callbackItemCache.push(cb);
+    return cb;
+}
+
 var Tween = {
     to: function (obj, time, params, ease) {
         var object = getObject(obj);
         for (var key in params) {
+            if (key === "onComplete") {
+                var cb = getCallbackItem();
+                cb.set(object, params[key], time);
+                object.tweens[cb.key] = cb;
+                continue;
+            }
+
             if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
             if (!object.tweens[key])
                 object.tweens[key] = getTweenItem();
@@ -144,6 +214,13 @@ var Tween = {
     from: function (obj, time, params, ease) {
         var object = getObject(obj);
         for (var key in params) {
+            if (key === "onComplete") {
+                var cb = getCallbackItem();
+                cb.set(object, params[key], time);
+                object.tweens[cb.key] = cb;
+                continue;
+            }
+
             if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
             if (!object.tweens[key])
                 object.tweens[key] = getTweenItem();
@@ -153,6 +230,13 @@ var Tween = {
     fromTo: function (obj, time, paramsFrom, paramsTo, ease) {
         var object = getObject(obj);
         for (var key in paramsFrom) {
+            if (key === "onComplete") {
+                var cb = getCallbackItem();
+                cb.set(object, params[key], time);
+                object.tweens[cb.key] = cb;
+                continue;
+            }
+
             if (paramsFrom[key] == paramsTo[key] || typeof obj[key] === "undefined" || typeof paramsTo[key] === "undefined") continue;
             if (!object.tweens[key]) {
                 object.tweens[key] = getTweenItem();
