@@ -23,7 +23,7 @@ var CallbackItem = function () {
 };
 
 CallbackItem.prototype.set = function (obj, callback, time) {
-    
+
 
     this.obj = obj.object;
 
@@ -87,7 +87,7 @@ TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
         this.parent.active = true;
         _activeTweenObjects[this.obj._tweenObjectId] = this.parent;
     }
-        
+
 };
 
 TweenItem.prototype.update = function (delta) {
@@ -204,12 +204,14 @@ var Tween = {
                 continue;
             }
 
-            if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
-            if (!object.tweens[key])
-                object.tweens[key] = getTweenItem();
-            object.tweens[key].set(object, key, obj[key], params[key], time, ease);
-
+            if (time) {
+                if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
+                if (!object.tweens[key])
+                    object.tweens[key] = getTweenItem();
+                object.tweens[key].set(object, key, obj[key], params[key], time, ease);
+            }
         }
+        if (!time) this.set(obj, params);
     },
     from: function (obj, time, params, ease) {
         var object = getObject(obj);
@@ -221,28 +223,33 @@ var Tween = {
                 continue;
             }
 
-            if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
-            if (!object.tweens[key])
-                object.tweens[key] = getTweenItem();
-            object.tweens[key].set(object, key, params[key], obj[key], time, ease);
+            if (time) {
+                if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
+                if (!object.tweens[key])
+                    object.tweens[key] = getTweenItem();
+                object.tweens[key].set(object, key, params[key], obj[key], time, ease);
+            }
         }
+        if (!time) this.set(obj, params);
     },
     fromTo: function (obj, time, paramsFrom, paramsTo, ease) {
         var object = getObject(obj);
-        for (var key in paramsFrom) {
+        for (var key in paramsTo) {
             if (key === "onComplete") {
                 var cb = getCallbackItem();
-                cb.set(object, params[key], time);
+                cb.set(object, paramsTo[key], time);
                 object.tweens[cb.key] = cb;
                 continue;
             }
-
-            if (paramsFrom[key] == paramsTo[key] || typeof obj[key] === "undefined" || typeof paramsTo[key] === "undefined") continue;
-            if (!object.tweens[key]) {
-                object.tweens[key] = getTweenItem();
+            if (time) {
+                if (paramsFrom[key] == paramsTo[key] || typeof obj[key] === "undefined" || typeof paramsFrom[key] === "undefined") continue;
+                if (!object.tweens[key]) {
+                    object.tweens[key] = getTweenItem();
+                }
+                object.tweens[key].set(object, key, paramsFrom[key], paramsTo[key], time, ease);
             }
-            object.tweens[key].set(object, key, paramsFrom[key], paramsTo[key], time, ease);
         }
+        if (!time) this.set(obj, paramsTo);
     },
     set: function (obj, params) {
         var object = getObject(obj);

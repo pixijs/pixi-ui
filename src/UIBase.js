@@ -82,18 +82,10 @@ UIBase.prototype.updatesettings = function (updateChildren, updateParent) {
         }
     }
 
-    if (updateParent)
-        this.updateParent();
-
+    if (updateParent) this.updateParent();
     this.baseupdate();
     this.update();
-
-    if (updateChildren)
-        this.updateChildren();
-
-
-
-
+    if (updateChildren) this.updateChildren();
 };
 
 /**
