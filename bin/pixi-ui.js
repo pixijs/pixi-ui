@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Sat, 22 Jul 2017 09:46:15 UTC
+ * Compiled Tue, 08 Aug 2017 21:06:38 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -164,7 +164,6 @@ Object.defineProperties(Button.prototype, {
  * "blur"
  * "focus"
  * "focusChanged"   param: [bool]isFocussed
- * "change"         param: [bool]isChecked
  *  
  */
 },{"./InputBase":11,"./Interaction/ClickEvent.js":12,"./Interaction/InputController":15}],3:[function(require,module,exports){
@@ -2038,11 +2037,17 @@ var ClickEvent = function (obj) {
     var bound = false,
         self = this,
         id = 0,
-        ishover = false;
+        ishover = false,
+        mouse = new PIXI.Point(),
+        offset = new PIXI.Point(),
+        movementX = 0,
+        movementY = 0;
+    
 
     obj.container.interactive = true;
 
     var _onMouseDown = function (event) {
+        mouse.copy(event.data.global);
         id = event.data.identifier;
         self.onPress.call(obj, event, true);
         if (!bound) {
@@ -2056,6 +2061,7 @@ var ClickEvent = function (obj) {
 
     var _mouseUpAll = function (event) {
         if (event.data.identifier !== id) return;
+        offset.set(event.data.global.x - mouse.x, event.data.global.y - mouse.y);
         if (bound) {
             obj.container.removeListener('mouseup', _onMouseUp);
             obj.container.removeListener('mouseupoutside', _onMouseUpOutside);
@@ -2069,6 +2075,11 @@ var ClickEvent = function (obj) {
     var _onMouseUp = function (event) {
         if (event.data.identifier !== id) return;
         _mouseUpAll(event);
+
+        movementX = Math.abs(offset.x);
+        movementY = Math.abs(offset.y);
+        if (Math.max(movementX, movementY) > obj.dragThreshold) return; 
+
         self.onClick.call(obj, event);
     };
 
@@ -4972,18 +4983,10 @@ UIBase.prototype.updatesettings = function (updateChildren, updateParent) {
         }
     }
 
-    if (updateParent)
-        this.updateParent();
-
+    if (updateParent) this.updateParent();
     this.baseupdate();
     this.update();
-
-    if (updateChildren)
-        this.updateChildren();
-
-
-
-
+    if (updateChildren) this.updateChildren();
 };
 
 /**
