@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Tue, 08 Aug 2017 21:25:46 UTC
+ * Compiled Tue, 08 Aug 2017 21:49:35 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2831,6 +2831,7 @@ ScrollingContainer.prototype.initScrolling = function () {
                 Position.copy(container.position);
                 this.scrolling = true;
                 this.setScrollPosition();
+                self.emit("dragStart", e);
             }
         };
 
@@ -2842,7 +2843,10 @@ ScrollingContainer.prototype.initScrolling = function () {
         };
 
         drag.onDragEnd = function (e) {
-            this.scrolling = false;
+            if (this.scrolling) {
+                this.scrolling = false;
+                self.emit("dragEnd", e);
+            }
         };
     }
 
