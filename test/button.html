@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        canvas { width: 100% !important; height: 100% !important; position: fixed; }
+    </style>
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+
+</head>
+<body>
+    <script type="text/javascript">
+        PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.LINEAR;
+        PIXI.settings.RESOLUTION = devicePixelRatio || 1;
+        var renderer = new PIXI.WebGLRenderer(window.innerWidth, window.innerHeight, { resolution: devicePixelRatio || 1, transparent: true });
+        var stage = new PIXI.Container();
+        var uiStage = new PIXI.UI.Stage(window.innerWidth, window.innerHeight);
+        uiStage.minHeight = 315;
+        uiStage.minWidth = 500;
+
+        var dragContainer = new PIXI.UI.Container();
+        document.body.appendChild(renderer.view);
+        stage.addChild(uiStage);
+        var resizeFunction = function () {
+            renderer.resize(window.innerWidth, window.innerHeight);
+            uiStage.resize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener("resize", resizeFunction);
+        resizeFunction();
+        PIXI.loader.add('UISprites.json').load(function () {
+            init();
+        });
+
+
+        function init() {
+            var cb1_bg = PIXI.Texture.fromFrame("UI/cb-1-bg.png");
+            var cb1_mark = PIXI.Texture.fromFrame("UI/cb-1-mark.png");
+            var cb2_bg = PIXI.Texture.fromFrame("UI/cb-2-bg.png");
+            var cb2_mark = PIXI.Texture.fromFrame("UI/cb-2-mark.png");
+
+            var whiteBG = PIXI.Texture.fromFrame("UI/ui-box-1.png");
+            var innerBG = PIXI.Texture.fromFrame("UI/ui-box-2.png");
+            var solidBox = PIXI.Texture.fromFrame("UI/solid-box.png");
+            var lineSprite = PIXI.Texture.fromFrame("UI/ui-horizontal-line-border.png");
+            var textStyle = { fill: '#000000', fontSize: 18, fontFamily: 'Lucida Sans Typewriter' };
+
+
+            button = new PIXI.UI.Button({
+                background: new PIXI.UI.SliceSprite(PIXI.Texture.fromFrame("UI/cb-1-bg.png"), 10),
+            });
+
+            button.on("hover", function (isHover) {
+                console.log("hover", isHover);
+                PIXI.UI.Tween.to(button, 0.1, { width: isHover ? 100 : 50 });
+            });
+
+            uiStage.addChild(button);
+
+            Update();
+        }
+
+        function Update() {
+            renderer.render(stage);
+            requestAnimationFrame(Update);
+        }
+
+    </script>
+</body>
+</html>

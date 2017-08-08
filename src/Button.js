@@ -148,6 +148,5 @@ Object.defineProperties(Button.prototype, {
  * "blur"
  * "focus"
  * "focusChanged"   param: [bool]isFocussed
- * "change"         param: [bool]isChecked
  *  
  */
