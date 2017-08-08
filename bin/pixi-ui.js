@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Tue, 08 Aug 2017 21:06:38 UTC
+ * Compiled Tue, 08 Aug 2017 21:25:46 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2042,7 +2042,7 @@ var ClickEvent = function (obj) {
         offset = new PIXI.Point(),
         movementX = 0,
         movementY = 0;
-    
+
 
     obj.container.interactive = true;
 
@@ -2076,9 +2076,13 @@ var ClickEvent = function (obj) {
         if (event.data.identifier !== id) return;
         _mouseUpAll(event);
 
-        movementX = Math.abs(offset.x);
-        movementY = Math.abs(offset.y);
-        if (Math.max(movementX, movementY) > obj.dragThreshold) return; 
+        //prevent clicks with scrolling/dragging objects
+        if (obj.dragThreshold) {
+            movementX = Math.abs(offset.x);
+            movementY = Math.abs(offset.y);
+            if (Math.max(movementX, movementY) > obj.dragThreshold) return;
+        }
+
 
         self.onClick.call(obj, event);
     };
