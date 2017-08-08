@@ -7,7 +7,7 @@
         offset = new PIXI.Point(),
         movementX = 0,
         movementY = 0;
-    
+
 
     obj.container.interactive = true;
 
@@ -41,9 +41,13 @@
         if (event.data.identifier !== id) return;
         _mouseUpAll(event);
 
-        movementX = Math.abs(offset.x);
-        movementY = Math.abs(offset.y);
-        if (Math.max(movementX, movementY) > obj.dragThreshold) return; 
+        //prevent clicks with scrolling/dragging objects
+        if (obj.dragThreshold) {
+            movementX = Math.abs(offset.x);
+            movementY = Math.abs(offset.y);
+            if (Math.max(movementX, movementY) > obj.dragThreshold) return;
+        }
+
 
         self.onClick.call(obj, event);
     };
