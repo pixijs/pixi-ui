@@ -275,6 +275,7 @@ ScrollingContainer.prototype.initScrolling = function () {
                 Position.copy(container.position);
                 this.scrolling = true;
                 this.setScrollPosition();
+                self.emit("dragStart", e);
             }
         };
 
@@ -286,7 +287,10 @@ ScrollingContainer.prototype.initScrolling = function () {
         };
 
         drag.onDragEnd = function (e) {
-            this.scrolling = false;
+            if (this.scrolling) {
+                this.scrolling = false;
+                self.emit("dragEnd", e);
+            }
         };
     }
 

@@ -205,6 +205,13 @@
                 ScrollingContainer.dragThreshold = 5;
                 ScrollingContainer.dragRestrictAxis = "y";
                 ScrollingContainer.addChild(sortableList);
+                ScrollingContainer.on("dragStart", function () {
+                    console.log("start drag scroll");
+                });
+
+                ScrollingContainer.on("dragEnd", function () {
+                    console.log("end drag scroll");
+                });
 
                 ScrollBar = new PIXI.UI.ScrollBar({
                     track: new PIXI.UI.SliceSprite(innerBG, 4),
