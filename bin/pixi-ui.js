@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Tue, 08 Aug 2017 21:49:35 UTC
+ * Compiled Mon, 04 Sep 2017 17:17:17 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -4901,12 +4901,13 @@ var UI = {
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
     Interaction: require('./Interaction/Interaction'),
+    Base: require('./UIBase'),
     Ticker: require('./Ticker').shared,
 };
 
 
 module.exports = UI;
-},{"./Button":2,"./CheckBox":3,"./Container":4,"./DynamicText/DynamicText":6,"./DynamicText/DynamicTextStyle":7,"./Ease/Ease":8,"./Interaction/Interaction":16,"./MathHelper":18,"./ScrollBar":19,"./ScrollingContainer":20,"./SliceSprite":21,"./Slider":22,"./SortableList":23,"./Sprite":24,"./Stage":25,"./Text":26,"./TextInput":27,"./Ticker":28,"./TilingSprite":29,"./Tween":30}],32:[function(require,module,exports){
+},{"./Button":2,"./CheckBox":3,"./Container":4,"./DynamicText/DynamicText":6,"./DynamicText/DynamicTextStyle":7,"./Ease/Ease":8,"./Interaction/Interaction":16,"./MathHelper":18,"./ScrollBar":19,"./ScrollingContainer":20,"./SliceSprite":21,"./Slider":22,"./SortableList":23,"./Sprite":24,"./Stage":25,"./Text":26,"./TextInput":27,"./Ticker":28,"./TilingSprite":29,"./Tween":30,"./UIBase":32}],32:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI'),
     DragEvent = require('./Interaction/DragEvent'),
