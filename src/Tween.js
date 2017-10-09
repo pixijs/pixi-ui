@@ -22,6 +22,15 @@ var CallbackItem = function () {
     this.currentTime = 0;
 };
 
+CallbackItem.prototype.remove = function () {
+    this._ready = true;
+    delete this.parent.tweens[this.key];
+    if (!Object.keys(this.parent.tweens).length) {
+        this.parent.active = false;
+        delete _activeTweenObjects[this.obj._tweenObjectId];
+    }
+};
+
 CallbackItem.prototype.set = function (obj, callback, time) {
 
 
@@ -47,15 +56,12 @@ CallbackItem.prototype.set = function (obj, callback, time) {
 CallbackItem.prototype.update = function (delta) {
     this.currentTime += delta;
     if (this.currentTime >= this.time) {
-        this._ready = true;
-        delete this.parent.tweens[this.key];
-        if (!Object.keys(this.parent.tweens).length) {
-            this.parent.active = false;
-            delete _activeTweenObjects[this.obj._tweenObjectId];
-        }
+        this.remove();
         this.callback();
     }
 };
+
+
 
 var TweenItem = function () {
     this._ready = false;
@@ -70,6 +76,14 @@ var TweenItem = function () {
     this.t = 0;
 };
 
+TweenItem.prototype.remove = function () {
+    this._ready = true;
+    delete this.parent.tweens[this.key];
+    if (!Object.keys(this.parent.tweens).length) {
+        this.parent.active = false;
+        delete _activeTweenObjects[this.obj._tweenObjectId];
+    }
+};
 
 TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
     this.parent = obj;
@@ -100,15 +114,9 @@ TweenItem.prototype.update = function (delta) {
     this.obj[this.key] = this.surfix ? val + this.surfix : val;
 
     if (this.currentTime >= this.time) {
-        this._ready = true;
-        delete this.parent.tweens[this.key];
-        if (!Object.keys(this.parent.tweens).length) {
-            this.parent.active = false;
-            delete _activeTweenObjects[this.obj._tweenObjectId];
-        }
+        this.remove();
     }
 };
-
 
 
 var widthKeys = ["width", "minWidth", "maxWidth", "anchorLeft", "anchorRight", "left", "right", "x"];
@@ -205,10 +213,17 @@ var Tween = {
             }
 
             if (time) {
-                if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
+                var match = params[key] == obj[key];
+                if (typeof obj[key] === "undefined") continue;
+
+                if (match) {
+                    if (object.tweens[key]) object.tweens[key].remove();
+                }
+                else {
                 if (!object.tweens[key])
                     object.tweens[key] = getTweenItem();
                 object.tweens[key].set(object, key, obj[key], params[key], time, ease);
+                }
             }
         }
         if (!time) this.set(obj, params);
@@ -224,10 +239,17 @@ var Tween = {
             }
 
             if (time) {
-                if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
-                if (!object.tweens[key])
-                    object.tweens[key] = getTweenItem();
-                object.tweens[key].set(object, key, params[key], obj[key], time, ease);
+                var match = params[key] == obj[key];
+                if (typeof obj[key] === "undefined") continue;
+
+                if (match) {
+                    if (object.tweens[key]) object.tweens[key].remove();
+                }
+                else {
+                    if (!object.tweens[key])
+                        object.tweens[key] = getTweenItem();
+                    object.tweens[key].set(object, key, params[key], obj[key], time, ease);
+                }
             }
         }
         if (!time) this.set(obj, params);
@@ -242,11 +264,20 @@ var Tween = {
                 continue;
             }
             if (time) {
-                if (paramsFrom[key] == paramsTo[key] || typeof obj[key] === "undefined" || typeof paramsFrom[key] === "undefined") continue;
-                if (!object.tweens[key]) {
-                    object.tweens[key] = getTweenItem();
+                var match = paramsFrom[key] == paramsTo[key];
+                if (typeof obj[key] === "undefined" || typeof paramsFrom[key] === "undefined") continue;
+
+                if (match) {
+                    if (object.tweens[key]) object.tweens[key].remove();
+                    obj[key] = paramsTo[key];
                 }
-                object.tweens[key].set(object, key, paramsFrom[key], paramsTo[key], time, ease);
+                else {
+                    if (!object.tweens[key]) {
+                        object.tweens[key] = getTweenItem();
+                    }
+                    object.tweens[key].set(object, key, paramsFrom[key], paramsTo[key], time, ease);
+                }
+
             }
         }
         if (!time) this.set(obj, paramsTo);
@@ -254,8 +285,8 @@ var Tween = {
     set: function (obj, params) {
         var object = getObject(obj);
         for (var key in params) {
-            if (params[key] == obj[key] || typeof obj[key] === "undefined") continue;
-            if (object.tweens[key]) delete object.tweens[key];
+            if (typeof obj[key] === "undefined") continue;
+            if (object.tweens[key]) object.tweens[key].remove();
             obj[key] = params[key];
         }
     },
