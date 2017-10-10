@@ -438,7 +438,7 @@ function DynamicText(text, options) {
         if (self.lazyUpdate !== null) return;
         self.lazyUpdate = setTimeout(function () {
             
-            console.log("UPDATING TEXT");
+            //console.log("UPDATING TEXT");
             var dirtySize = !autoWidth && (self._width != lastWidth || self._height != lastHeight || self.dirtyText);
 
             if (self.dirtyText || self.dirtyStyle) {
@@ -479,7 +479,7 @@ Object.defineProperties(DynamicText.prototype, {
                 this._inputText = val;
                 this.dirtyText = true;
                 this.update();
-                console.log("Updating Text to: " + val);
+                //console.log("Updating Text to: " + val);
             }
         }
     },

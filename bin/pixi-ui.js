@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Mon, 09 Oct 2017 12:30:51 UTC
+ * Compiled Tue, 10 Oct 2017 09:48:27 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -852,7 +852,7 @@ function DynamicText(text, options) {
         if (self.lazyUpdate !== null) return;
         self.lazyUpdate = setTimeout(function () {
             
-            console.log("UPDATING TEXT");
+            //console.log("UPDATING TEXT");
             var dirtySize = !autoWidth && (self._width != lastWidth || self._height != lastHeight || self.dirtyText);
 
             if (self.dirtyText || self.dirtyStyle) {
@@ -893,7 +893,7 @@ Object.defineProperties(DynamicText.prototype, {
                 this._inputText = val;
                 this.dirtyText = true;
                 this.update();
-                console.log("Updating Text to: " + val);
+                //console.log("Updating Text to: " + val);
             }
         }
     },
@@ -2057,6 +2057,7 @@ var ClickEvent = function (obj) {
             obj.container.on('touchendoutside', _onMouseUpOutside);
             bound = true;
         }
+        event.data.originalEvent.preventDefault();
     };
 
     var _mouseUpAll = function (event) {
@@ -2219,6 +2220,8 @@ var DragEvent = function (obj) {
             obj.stage.on('touchcancel', _onDragEnd);
             bound = true;
         }
+
+        e.data.originalEvent.preventDefault();
     };
 
     var _onDragMove = function (event) {
@@ -5318,6 +5321,7 @@ UIBase.prototype.initDraggable = function () {
         this._dragPosition = new PIXI.Point();
         this.drag = new DragEvent(this);
         this.drag.onDragStart = function (e) {
+            
             var added = DragDropController.add(this, e);
             if (!this.dragging && added) {
                 this.dragging = true;
@@ -5333,8 +5337,10 @@ UIBase.prototype.initDraggable = function () {
                 } else {
                     stageOffset.set(0);
                 }
-
+                this.emit("draggablestart", e);
             }
+
+            
         };
 
 
@@ -5343,13 +5349,15 @@ UIBase.prototype.initDraggable = function () {
                 this._dragPosition.set(containerStart.x + offset.x - stageOffset.x, containerStart.y + offset.y - stageOffset.y);
                 this.x = this._dragPosition.x;
                 this.y = this._dragPosition.y;
+                this.emit("draggablemove", e);
             }
+            
         };
 
         this.drag.onDragEnd = function (e) {
             if (this.dragging) {
                 this.dragging = false;
-                //Return to container after 1ms if not picked up by a droppable
+                //Return to container after 0ms if not picked up by a droppable
                 setTimeout(function () {
                     self.container.interactive = true;
                     var item = DragDropController.getItem(self);
@@ -5360,9 +5368,10 @@ UIBase.prototype.initDraggable = function () {
                             self.parent.addChild(self);
                         }
                     }
-                }, 1);
+                    self.emit("draggableend", e);
+                }, 0);
             }
-
+            
         };
     }
 };

@@ -22,6 +22,7 @@
             obj.container.on('touchendoutside', _onMouseUpOutside);
             bound = true;
         }
+        event.data.originalEvent.preventDefault();
     };
 
     var _mouseUpAll = function (event) {

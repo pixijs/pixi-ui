@@ -26,6 +26,8 @@
             obj.stage.on('touchcancel', _onDragEnd);
             bound = true;
         }
+
+        e.data.originalEvent.preventDefault();
     };
 
     var _onDragMove = function (event) {

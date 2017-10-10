@@ -377,6 +377,7 @@ UIBase.prototype.initDraggable = function () {
         this._dragPosition = new PIXI.Point();
         this.drag = new DragEvent(this);
         this.drag.onDragStart = function (e) {
+            
             var added = DragDropController.add(this, e);
             if (!this.dragging && added) {
                 this.dragging = true;
@@ -392,8 +393,10 @@ UIBase.prototype.initDraggable = function () {
                 } else {
                     stageOffset.set(0);
                 }
-
+                this.emit("draggablestart", e);
             }
+
+            
         };
 
 
@@ -402,13 +405,15 @@ UIBase.prototype.initDraggable = function () {
                 this._dragPosition.set(containerStart.x + offset.x - stageOffset.x, containerStart.y + offset.y - stageOffset.y);
                 this.x = this._dragPosition.x;
                 this.y = this._dragPosition.y;
+                this.emit("draggablemove", e);
             }
+            
         };
 
         this.drag.onDragEnd = function (e) {
             if (this.dragging) {
                 this.dragging = false;
-                //Return to container after 1ms if not picked up by a droppable
+                //Return to container after 0ms if not picked up by a droppable
                 setTimeout(function () {
                     self.container.interactive = true;
                     var item = DragDropController.getItem(self);
@@ -419,9 +424,10 @@ UIBase.prototype.initDraggable = function () {
                             self.parent.addChild(self);
                         }
                     }
-                }, 1);
+                    self.emit("draggableend", e);
+                }, 0);
             }
-
+            
         };
     }
 };
