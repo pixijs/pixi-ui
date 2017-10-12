@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Tue, 10 Oct 2017 09:48:27 UTC
+ * Compiled Wed, 11 Oct 2017 23:12:16 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2033,7 +2033,10 @@ InputBase.prototype.blur = function () {
     }
 };
 },{"./Interaction/ClickEvent":12,"./Interaction/InputController":15,"./UIBase":32}],12:[function(require,module,exports){
-var ClickEvent = function (obj) {
+var ClickEvent = function (obj, includeHover, rightMouseButton) {
+
+
+
     var bound = false,
         self = this,
         id = 0,
@@ -2041,8 +2044,13 @@ var ClickEvent = function (obj) {
         mouse = new PIXI.Point(),
         offset = new PIXI.Point(),
         movementX = 0,
-        movementY = 0;
+        movementY = 0,
+        right = typeof rightMouseButton === 'undefined' ? false : rightMouseButton,
+        hover = typeof includeHover === 'undefined' ? true : includeHover;
 
+    var eventname_mousedown = right ? "rightdown" : "mousedown";
+    var eventname_mouseup = right ? "rightup" : "mouseup";
+    var eventname_mouseupoutside = right ? "rightupoutside" : "mouseupoutside";
 
     obj.container.interactive = true;
 
@@ -2051,10 +2059,12 @@ var ClickEvent = function (obj) {
         id = event.data.identifier;
         self.onPress.call(obj, event, true);
         if (!bound) {
-            obj.container.on('mouseup', _onMouseUp);
-            obj.container.on('mouseupoutside', _onMouseUpOutside);
-            obj.container.on('touchend', _onMouseUp);
-            obj.container.on('touchendoutside', _onMouseUpOutside);
+            obj.container.on(eventname_mouseup, _onMouseUp);
+            obj.container.on(eventname_mouseupoutside, _onMouseUpOutside);
+            if (!right) {
+                obj.container.on('touchend', _onMouseUp);
+                obj.container.on('touchendoutside', _onMouseUpOutside);
+            }
             bound = true;
         }
         event.data.originalEvent.preventDefault();
@@ -2064,10 +2074,12 @@ var ClickEvent = function (obj) {
         if (event.data.identifier !== id) return;
         offset.set(event.data.global.x - mouse.x, event.data.global.y - mouse.y);
         if (bound) {
-            obj.container.removeListener('mouseup', _onMouseUp);
-            obj.container.removeListener('mouseupoutside', _onMouseUpOutside);
-            obj.container.removeListener('touchend', _onMouseUp);
-            obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+            obj.container.removeListener(eventname_mouseup, _onMouseUp);
+            obj.container.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
+            if (!right) {
+                obj.container.removeListener('touchend', _onMouseUp);
+                obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+            }
             bound = false;
         }
         self.onPress.call(obj, event, false);
@@ -2109,23 +2121,32 @@ var ClickEvent = function (obj) {
 
     this.stopEvent = function () {
         if (bound) {
-            obj.container.removeListener('mouseup', _onMouseUp);
-            obj.container.removeListener('mouseupoutside', _onMouseUpOutside);
-            obj.container.removeListener('touchend', _onMouseUp);
-            obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+            obj.container.removeListener(eventname_mouseup, _onMouseUp);
+            obj.container.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
+
+            if (!right) {
+                obj.container.removeListener('touchend', _onMouseUp);
+                obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+            }
             bound = false;
         }
-        obj.container.removeListener('mousedown', _onMouseDown);
-        obj.container.removeListener('touchstart', _onMouseDown);
-        obj.container.removeListener('mouseover', _onMouseOver);
-        obj.container.removeListener('mouseout', _onMouseOut);
+        obj.container.removeListener(eventname_mousedown, _onMouseDown);
+        if (!right) obj.container.removeListener('touchstart', _onMouseDown);
+
+        if (hover) {
+            obj.container.removeListener('mouseover', _onMouseOver);
+            obj.container.removeListener('mouseout', _onMouseOut);
+        }
     };
 
     this.startEvent = function () {
-        obj.container.on('mousedown', _onMouseDown);
-        obj.container.on('touchstart', _onMouseDown);
-        obj.container.on('mouseover', _onMouseOver);
-        obj.container.on('mouseout', _onMouseOut);
+        obj.container.on(eventname_mousedown, _onMouseDown);
+        if (!right) obj.container.on('touchstart', _onMouseDown);
+
+        if (hover) {
+            obj.container.on('mouseover', _onMouseOver);
+            obj.container.on('mouseout', _onMouseOut);
+        }
     };
 
     this.startEvent();
