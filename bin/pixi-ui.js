@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Wed, 11 Oct 2017 23:12:16 UTC
+ * Compiled Tue, 06 Feb 2018 13:32:00 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -6067,6 +6067,14 @@ Object.defineProperties(UIBase.prototype, {
         },
         set: function (val) {
             this.container.interactiveChildren = val;
+        }
+    },
+    parentLayer: {
+        get: function () {
+            return this.container.parentLayer;
+        },
+        set: function (val) {
+            this.container.parentLayer = val;
         }
     }
 });

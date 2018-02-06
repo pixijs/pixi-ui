@@ -1103,5 +1103,13 @@ Object.defineProperties(UIBase.prototype, {
         set: function (val) {
             this.container.interactiveChildren = val;
         }
+    },
+    parentLayer: {
+        get: function () {
+            return this.container.parentLayer;
+        },
+        set: function (val) {
+            this.container.parentLayer = val;
+        }
     }
 });
