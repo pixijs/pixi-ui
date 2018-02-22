@@ -16,7 +16,7 @@
         return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
     },
     rgbToNumber: function (r, g, b) {
-        return b * 65536 + g * 256 + r;
+        return r * 65536 + g * 256 + b;
     },
     numberToRgb: function (c) {
         return {

@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 22 Feb 2018 12:52:27 UTC
+ * Compiled Thu, 22 Feb 2018 13:10:54 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -1947,7 +1947,7 @@ var Helpers = {
         return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
     },
     rgbToNumber: function (r, g, b) {
-        return b * 65536 + g * 256 + r;
+        return r * 65536 + g * 256 + b;
     },
     numberToRgb: function (c) {
         return {
