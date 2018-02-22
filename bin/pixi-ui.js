@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Tue, 06 Feb 2018 13:32:00 UTC
+ * Compiled Thu, 22 Feb 2018 12:52:27 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -166,7 +166,7 @@ Object.defineProperties(Button.prototype, {
  * "focusChanged"   param: [bool]isFocussed
  *  
  */
-},{"./InputBase":11,"./Interaction/ClickEvent.js":12,"./Interaction/InputController":15}],3:[function(require,module,exports){
+},{"./InputBase":12,"./Interaction/ClickEvent.js":13,"./Interaction/InputController":16}],3:[function(require,module,exports){
 var InputBase = require('./InputBase'),
     ClickEvent = require('./Interaction/ClickEvent.js'),
     InputController = require('./Interaction/InputController');
@@ -348,7 +348,7 @@ Object.defineProperties(CheckBox.prototype, {
  * "change"         param: [bool]isChecked
  *  
  */
-},{"./InputBase":11,"./Interaction/ClickEvent.js":12,"./Interaction/InputController":15}],4:[function(require,module,exports){
+},{"./InputBase":12,"./Interaction/ClickEvent.js":13,"./Interaction/InputController":16}],4:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -1929,6 +1929,53 @@ module.exports = ExponentialEase;
 
 
 },{"./EaseBase":9}],11:[function(require,module,exports){
+var Helpers = {
+    Lerp: function (start, stop, amt) {
+        if (amt > 1) amt = 1;
+        else if (amt < 0) amt = 0;
+        return start + (stop - start) * amt;
+    },
+    Round: function(number, decimals) {
+        var pow = Math.pow(10, decimals);
+        return Math.round(number * pow) / pow;
+    },
+    componentToHex: function(c) {
+       var hex = c.toString(16);
+       return hex.length == 1 ? "0" + hex : hex;
+    },
+    rgbToHex: function(r, g, b) {
+        return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    },
+    rgbToNumber: function (r, g, b) {
+        return b * 65536 + g * 256 + r;
+    },
+    numberToRgb: function (c) {
+        return {
+            r: Math.floor(c / (256 * 256)),
+            g: Math.floor(c / 256) % 256,
+            b: c % 256,
+        };
+    },
+    hexToRgb: function (hex) {
+        if (!isNaN(hex)) return this.numberToRgb(hex);
+
+        // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+        var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+            return r + r + g + g + b + b;
+        });
+
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+};
+
+module.exports = Helpers;
+},{}],12:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     InputController = require('./Interaction/InputController'),
     ClickEvent = require('./Interaction/ClickEvent');
@@ -2032,7 +2079,7 @@ InputBase.prototype.blur = function () {
 
     }
 };
-},{"./Interaction/ClickEvent":12,"./Interaction/InputController":15,"./UIBase":32}],12:[function(require,module,exports){
+},{"./Interaction/ClickEvent":13,"./Interaction/InputController":16,"./UIBase":32}],13:[function(require,module,exports){
 var ClickEvent = function (obj, includeHover, rightMouseButton) {
 
 
@@ -2159,7 +2206,7 @@ ClickEvent.prototype.onHover = function (event) { };
 ClickEvent.prototype.onLeave = function (event) { };
 ClickEvent.prototype.onPress = function (event, isPressed) { };
 ClickEvent.prototype.onClick = function (event) { };
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var _items = [];
 var DragDropController = {
     add: function (item, event) {
@@ -2212,7 +2259,7 @@ var DragDropController = {
 };
 
 module.exports = DragDropController;
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var DragEvent = function (obj) {
     var bound = false,
         start = new PIXI.Point(),
@@ -2315,7 +2362,7 @@ DragEvent.prototype.onPress = function (event, isPressed) { };
 DragEvent.prototype.onDragEnd = function (event) { };
 DragEvent.prototype.onDragMove = function (event, offset) { };
 DragEvent.prototype.onDragStart = function (event) { };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var _currentItem;
 var tabGroups = {};
 var checkGroups = {};
@@ -2407,7 +2454,7 @@ var InputController = {
 };
 
 module.exports = InputController;
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var Interaction = {
     ClickEvent: require('./ClickEvent'),
     DragEvent: require('./DragEvent'),
@@ -2416,7 +2463,7 @@ var Interaction = {
 
 
 module.exports = Interaction;
-},{"./ClickEvent":12,"./DragEvent":14,"./MouseScrollEvent":17}],17:[function(require,module,exports){
+},{"./ClickEvent":13,"./DragEvent":15,"./MouseScrollEvent":18}],18:[function(require,module,exports){
 var MouseScrollEvent = function (obj, preventDefault) {
     var bound = false, delta = new PIXI.Point(), self = this;
     obj.container.interactive = true;
@@ -2469,20 +2516,6 @@ MouseScrollEvent.prototype.constructor = MouseScrollEvent;
 module.exports = MouseScrollEvent;
 
 MouseScrollEvent.prototype.onMouseScroll = function (event, delta) { };
-},{}],18:[function(require,module,exports){
-var MathHelper = {
-    Lerp: function (start, stop, amt) {
-        if (amt > 1) amt = 1;
-        else if (amt < 0) amt = 0;
-        return start + (stop - start) * amt;
-    },
-    Round: function(number, decimals) {
-        var pow = Math.pow(10, decimals);
-        return Math.round(number * pow) / pow;
-    }
-};
-
-module.exports = MathHelper;
 },{}],19:[function(require,module,exports){
 var Slider = require('./Slider'),
     Tween = require('./Tween'),
@@ -2580,7 +2613,7 @@ ScrollBar.prototype.toggleHidden = function (hidden) {
 },{"./Ease/Ease":8,"./Slider":22,"./Tween":30}],20:[function(require,module,exports){
 var UIBase = require('./UIBase'),
     Container = require('./Container'),
-    MathHelper = require('./MathHelper'),
+    Helpers = require('./Helpers'),
     Ticker = require('./Ticker'),
     DragEvent = require('./Interaction/DragEvent'),
     MouseScrollEvent = require('./Interaction/MouseScrollEvent');
@@ -2802,7 +2835,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) !== 0) {
             targetPosition[direction] += Speed[direction];
-            Speed[direction] = MathHelper.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.softness, 0.01)) * delta);
+            Speed[direction] = Helpers.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.softness, 0.01)) * delta);
 
             if (targetPosition[direction] > 0) {
                 targetPosition[direction] = 0;
@@ -2816,7 +2849,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) === 0 && (container[direction] > 0 || container[direction] < min)) {
             var target = Position[direction] > 0 ? 0 : min;
-            Position[direction] = MathHelper.Lerp(Position[direction], target, (40 - (30 * this.softness)) * delta);
+            Position[direction] = Helpers.Lerp(Position[direction], target, (40 - (30 * this.softness)) * delta);
             stop = false;
         }
         else if (this.scrolling || Math.round(Speed[direction]) !== 0) {
@@ -2892,7 +2925,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
 
 
-},{"./Container":4,"./Interaction/DragEvent":14,"./Interaction/MouseScrollEvent":17,"./MathHelper":18,"./Ticker":28,"./UIBase":32}],21:[function(require,module,exports){
+},{"./Container":4,"./Helpers":11,"./Interaction/DragEvent":15,"./Interaction/MouseScrollEvent":18,"./Ticker":28,"./UIBase":32}],21:[function(require,module,exports){
 var UIBase = require('./UIBase');
 
 /**
@@ -3036,7 +3069,7 @@ var UIBase = require('./UIBase'),
     ClickEvent = require('./Interaction/ClickEvent'),
     Tween = require('./Tween'),
     Ease = require('./Ease/Ease'),
-    MathHelper = require('./MathHelper');
+    Helpers = require('./Helpers');
 
 /**
 * An UI Slider, the default width/height is 90%
@@ -3218,7 +3251,7 @@ Slider.prototype.initialize = function () {
 Object.defineProperties(Slider.prototype, {
     value: {
         get: function () {
-            return MathHelper.Round(MathHelper.Lerp(this._minValue, this._maxValue, this._amt), this.decimals);
+            return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this._amt), this.decimals);
         },
         set: function (val) {
             this._amt = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
@@ -3278,7 +3311,7 @@ Object.defineProperties(Slider.prototype, {
         }
     }
 });
-},{"./Ease/Ease":8,"./Interaction/ClickEvent":12,"./Interaction/DragEvent":14,"./MathHelper":18,"./Tween":30,"./UIBase":32}],23:[function(require,module,exports){
+},{"./Ease/Ease":8,"./Helpers":11,"./Interaction/ClickEvent":13,"./Interaction/DragEvent":15,"./Tween":30,"./UIBase":32}],23:[function(require,module,exports){
 var Container = require('./Container');
 var Tween = require('./Tween');
 /**
@@ -4496,7 +4529,7 @@ Object.defineProperties(TextInput.prototype, {
  *  
  * 
  */
-},{"./Container":4,"./InputBase":11,"./Interaction/DragEvent":14}],28:[function(require,module,exports){
+},{"./Container":4,"./InputBase":12,"./Interaction/DragEvent":15}],28:[function(require,module,exports){
 var Tween = require('./Tween');
 
 function Ticker(autoStart) {
@@ -4631,7 +4664,7 @@ Object.defineProperties(TilingSprite.prototype, {
     }
 });
 },{"./UIBase":32}],30:[function(require,module,exports){
-var MathHelper = require('./MathHelper');
+var Helpers = require('./Helpers');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
 var _callbackItemCache = [];
@@ -4665,8 +4698,6 @@ CallbackItem.prototype.remove = function () {
 };
 
 CallbackItem.prototype.set = function (obj, callback, time) {
-
-
     this.obj = obj.object;
 
     if (!this.obj._currentCallbackID)
@@ -4707,6 +4738,7 @@ var TweenItem = function () {
     this.ease = 0;
     this.currentTime = 0;
     this.t = 0;
+    this.isColor = false;
 };
 
 TweenItem.prototype.remove = function () {
@@ -4719,12 +4751,22 @@ TweenItem.prototype.remove = function () {
 };
 
 TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
+    this.isColor = isNaN(from) && from[0] == "#" || isNaN(to) && to[0] == "#";
     this.parent = obj;
     this.obj = obj.object;
     this.key = key;
     this.surfix = getSurfix(to);
-    this.to = getToValue(to);
-    this.from = getFromValue(from, to, this.obj, key);
+
+    if (this.isColor) {
+        this.to = Helpers.hexToRgb(to);
+        this.from = Helpers.hexToRgb(from);
+        this.currentColor = { r: this.from.r, g: this.from.g, b: this.from.b };
+    }
+    else {
+        this.to = getToValue(to);
+        this.from = getFromValue(from, to, this.obj, key);
+    }
+
     this.time = time;
     this.currentTime = 0;
     this.ease = ease;
@@ -4743,8 +4785,18 @@ TweenItem.prototype.update = function (delta) {
     if (this.ease)
         this.t = this.ease.getPosition(this.t);
 
-    var val = MathHelper.Lerp(this.from, this.to, this.t);
-    this.obj[this.key] = this.surfix ? val + this.surfix : val;
+    if (this.isColor) {
+        this.currentColor.r = Math.round(Helpers.Lerp(this.from.r, this.to.r, this.t));
+        this.currentColor.g = Math.round(Helpers.Lerp(this.from.g, this.to.g, this.t));
+        this.currentColor.b = Math.round(Helpers.Lerp(this.from.b, this.to.b, this.t));
+        this.obj[this.key] = Helpers.rgbToNumber(this.currentColor.r, this.currentColor.g, this.currentColor.b);
+    }
+    else {
+        var val = Helpers.Lerp(this.from, this.to, this.t);
+        this.obj[this.key] = this.surfix ? val + this.surfix : val;
+    }
+
+    
 
     if (this.currentTime >= this.time) {
         this.remove();
@@ -4853,9 +4905,9 @@ var Tween = {
                     if (object.tweens[key]) object.tweens[key].remove();
                 }
                 else {
-                if (!object.tweens[key])
-                    object.tweens[key] = getTweenItem();
-                object.tweens[key].set(object, key, obj[key], params[key], time, ease);
+                    if (!object.tweens[key])
+                        object.tweens[key] = getTweenItem();
+                    object.tweens[key].set(object, key, obj[key], params[key], time, ease);
                 }
             }
         }
@@ -4935,7 +4987,7 @@ var Tween = {
 
 
 module.exports = Tween;
-},{"./Ease/Ease":8,"./MathHelper":18}],31:[function(require,module,exports){
+},{"./Ease/Ease":8,"./Helpers":11}],31:[function(require,module,exports){
 var UI = {
     Stage: require('./Stage'),
     Container: require('./Container'),
@@ -4952,7 +5004,7 @@ var UI = {
     TextInput: require('./TextInput'),
     Button: require('./Button'),
     CheckBox: require('./CheckBox'),
-    MathHelper: require('./MathHelper'),
+    Helpers: require('./Helpers'),
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
     Interaction: require('./Interaction/Interaction'),
@@ -4962,7 +5014,7 @@ var UI = {
 
 
 module.exports = UI;
-},{"./Button":2,"./CheckBox":3,"./Container":4,"./DynamicText/DynamicText":6,"./DynamicText/DynamicTextStyle":7,"./Ease/Ease":8,"./Interaction/Interaction":16,"./MathHelper":18,"./ScrollBar":19,"./ScrollingContainer":20,"./SliceSprite":21,"./Slider":22,"./SortableList":23,"./Sprite":24,"./Stage":25,"./Text":26,"./TextInput":27,"./Ticker":28,"./TilingSprite":29,"./Tween":30,"./UIBase":32}],32:[function(require,module,exports){
+},{"./Button":2,"./CheckBox":3,"./Container":4,"./DynamicText/DynamicText":6,"./DynamicText/DynamicTextStyle":7,"./Ease/Ease":8,"./Helpers":11,"./Interaction/Interaction":17,"./ScrollBar":19,"./ScrollingContainer":20,"./SliceSprite":21,"./Slider":22,"./SortableList":23,"./Sprite":24,"./Stage":25,"./Text":26,"./TextInput":27,"./Ticker":28,"./TilingSprite":29,"./Tween":30,"./UIBase":32}],32:[function(require,module,exports){
 var UISettings = require('./UISettings'),
     UI = require('./UI'),
     DragEvent = require('./Interaction/DragEvent'),
@@ -6078,7 +6130,7 @@ Object.defineProperties(UIBase.prototype, {
         }
     }
 });
-},{"./Interaction/DragDropController":13,"./Interaction/DragEvent":14,"./UI":31,"./UISettings":33}],33:[function(require,module,exports){
+},{"./Interaction/DragDropController":14,"./Interaction/DragEvent":15,"./UI":31,"./UISettings":33}],33:[function(require,module,exports){
 /**
  * Settings object for all UIObjects
  *

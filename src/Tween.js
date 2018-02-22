@@ -1,4 +1,4 @@
-﻿var MathHelper = require('./MathHelper');
+﻿var Helpers = require('./Helpers');
 var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
 var _callbackItemCache = [];
@@ -32,8 +32,6 @@ CallbackItem.prototype.remove = function () {
 };
 
 CallbackItem.prototype.set = function (obj, callback, time) {
-
-
     this.obj = obj.object;
 
     if (!this.obj._currentCallbackID)
@@ -74,6 +72,7 @@ var TweenItem = function () {
     this.ease = 0;
     this.currentTime = 0;
     this.t = 0;
+    this.isColor = false;
 };
 
 TweenItem.prototype.remove = function () {
@@ -86,12 +85,22 @@ TweenItem.prototype.remove = function () {
 };
 
 TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
+    this.isColor = isNaN(from) && from[0] == "#" || isNaN(to) && to[0] == "#";
     this.parent = obj;
     this.obj = obj.object;
     this.key = key;
     this.surfix = getSurfix(to);
-    this.to = getToValue(to);
-    this.from = getFromValue(from, to, this.obj, key);
+
+    if (this.isColor) {
+        this.to = Helpers.hexToRgb(to);
+        this.from = Helpers.hexToRgb(from);
+        this.currentColor = { r: this.from.r, g: this.from.g, b: this.from.b };
+    }
+    else {
+        this.to = getToValue(to);
+        this.from = getFromValue(from, to, this.obj, key);
+    }
+
     this.time = time;
     this.currentTime = 0;
     this.ease = ease;
@@ -110,8 +119,18 @@ TweenItem.prototype.update = function (delta) {
     if (this.ease)
         this.t = this.ease.getPosition(this.t);
 
-    var val = MathHelper.Lerp(this.from, this.to, this.t);
-    this.obj[this.key] = this.surfix ? val + this.surfix : val;
+    if (this.isColor) {
+        this.currentColor.r = Math.round(Helpers.Lerp(this.from.r, this.to.r, this.t));
+        this.currentColor.g = Math.round(Helpers.Lerp(this.from.g, this.to.g, this.t));
+        this.currentColor.b = Math.round(Helpers.Lerp(this.from.b, this.to.b, this.t));
+        this.obj[this.key] = Helpers.rgbToNumber(this.currentColor.r, this.currentColor.g, this.currentColor.b);
+    }
+    else {
+        var val = Helpers.Lerp(this.from, this.to, this.t);
+        this.obj[this.key] = this.surfix ? val + this.surfix : val;
+    }
+
+    
 
     if (this.currentTime >= this.time) {
         this.remove();
@@ -220,9 +239,9 @@ var Tween = {
                     if (object.tweens[key]) object.tweens[key].remove();
                 }
                 else {
-                if (!object.tweens[key])
-                    object.tweens[key] = getTweenItem();
-                object.tweens[key].set(object, key, obj[key], params[key], time, ease);
+                    if (!object.tweens[key])
+                        object.tweens[key] = getTweenItem();
+                    object.tweens[key].set(object, key, obj[key], params[key], time, ease);
                 }
             }
         }

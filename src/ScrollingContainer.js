@@ -1,6 +1,6 @@
 var UIBase = require('./UIBase'),
     Container = require('./Container'),
-    MathHelper = require('./MathHelper'),
+    Helpers = require('./Helpers'),
     Ticker = require('./Ticker'),
     DragEvent = require('./Interaction/DragEvent'),
     MouseScrollEvent = require('./Interaction/MouseScrollEvent');
@@ -222,7 +222,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) !== 0) {
             targetPosition[direction] += Speed[direction];
-            Speed[direction] = MathHelper.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.softness, 0.01)) * delta);
+            Speed[direction] = Helpers.Lerp(Speed[direction], 0, (5 + 2.5 / Math.max(this.softness, 0.01)) * delta);
 
             if (targetPosition[direction] > 0) {
                 targetPosition[direction] = 0;
@@ -236,7 +236,7 @@ ScrollingContainer.prototype.initScrolling = function () {
 
         if (!this.scrolling && Math.round(Speed[direction]) === 0 && (container[direction] > 0 || container[direction] < min)) {
             var target = Position[direction] > 0 ? 0 : min;
-            Position[direction] = MathHelper.Lerp(Position[direction], target, (40 - (30 * this.softness)) * delta);
+            Position[direction] = Helpers.Lerp(Position[direction], target, (40 - (30 * this.softness)) * delta);
             stop = false;
         }
         else if (this.scrolling || Math.round(Speed[direction]) !== 0) {

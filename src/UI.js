@@ -14,7 +14,7 @@
     TextInput: require('./TextInput'),
     Button: require('./Button'),
     CheckBox: require('./CheckBox'),
-    MathHelper: require('./MathHelper'),
+    Helpers: require('./Helpers'),
     Tween: require('./Tween'),
     Ease: require('./Ease/Ease'),
     Interaction: require('./Interaction/Interaction'),

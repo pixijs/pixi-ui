@@ -3,7 +3,7 @@ var UIBase = require('./UIBase'),
     ClickEvent = require('./Interaction/ClickEvent'),
     Tween = require('./Tween'),
     Ease = require('./Ease/Ease'),
-    MathHelper = require('./MathHelper');
+    Helpers = require('./Helpers');
 
 /**
 * An UI Slider, the default width/height is 90%
@@ -185,7 +185,7 @@ Slider.prototype.initialize = function () {
 Object.defineProperties(Slider.prototype, {
     value: {
         get: function () {
-            return MathHelper.Round(MathHelper.Lerp(this._minValue, this._maxValue, this._amt), this.decimals);
+            return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this._amt), this.decimals);
         },
         set: function (val) {
             this._amt = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
