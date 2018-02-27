@@ -94,7 +94,7 @@ function Button(options) {
         //lazy to make sure all children is initialized
         setTimeout(function () {
             self.container.hitArea = self.container.getLocalBounds();
-        }, 0);
+        }, 20);
     };
 
 }
