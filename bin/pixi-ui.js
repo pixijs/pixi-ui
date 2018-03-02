@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 02 Mar 2018 11:27:07 UTC
+ * Compiled Fri, 02 Mar 2018 12:17:13 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -1957,6 +1957,9 @@ var Helpers = {
         };
     },
     hexToRgb: function (hex) {
+        if (hex === null)
+            hex = 0xffffff;
+
         if (!isNaN(hex)) return this.numberToRgb(hex);
 
         // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
