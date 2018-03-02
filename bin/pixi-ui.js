@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 22 Feb 2018 13:10:54 UTC
+ * Compiled Fri, 02 Mar 2018 09:59:33 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -110,7 +110,7 @@ function Button(options) {
         //lazy to make sure all children is initialized
         setTimeout(function () {
             self.container.hitArea = self.container.getLocalBounds();
-        }, 0);
+        }, 20);
     };
 
 }
@@ -3504,6 +3504,7 @@ function Stage(width, height) {
     this.interactive = true;
     this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.initialized = true;
+    this.resize(width, height);
 }
 
 Stage.prototype = Object.create(PIXI.Container.prototype);
