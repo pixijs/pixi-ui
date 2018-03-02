@@ -26,6 +26,9 @@
         };
     },
     hexToRgb: function (hex) {
+        if (hex === null)
+            hex = 0xffffff;
+
         if (!isNaN(hex)) return this.numberToRgb(hex);
 
         // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
