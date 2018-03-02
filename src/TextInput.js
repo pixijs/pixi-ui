@@ -36,9 +36,10 @@ function TextInput(options) {
         _pui_tempInput.setAttribute("style", "position:fixed; left:-10px; top:-10px; width:0px; height: 0px;");
         document.body.appendChild(_pui_tempInput);
     }
+    var width = typeof options.width !== 'undefined' ? options.width : options.background ? options.background.width : 150;
+    var height = typeof options.height !== 'undefined' ? options.height : options.background ? options.background.height : 150;
+    InputBase.call(this, width, height, options.tabIndex || 0, options.tabGroup || 0);
 
-
-    InputBase.call(this, options.width || options.background ? options.background.width : 150, options.height || options.background ? options.background.height : 20, options.tabIndex || 0, options.tabGroup || 0);
     this._dirtyText = true;
     this.maxLength = options.maxLength || 0;
     this._value = this._lastValue = options.value || "";
