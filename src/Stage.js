@@ -21,6 +21,7 @@ function Stage(width, height) {
     this.interactive = true;
     this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.initialized = true;
+    this.resize(width, height);
 }
 
 Stage.prototype = Object.create(PIXI.Container.prototype);
