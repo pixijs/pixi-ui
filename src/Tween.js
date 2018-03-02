@@ -4,7 +4,7 @@ var _tweenItemCache = [];
 var _callbackItemCache = [];
 var _tweenObjects = {};
 var _activeTweenObjects = {};
-var _currentId = 0;
+var _currentId = 1;
 
 var TweenObject = function (object) {
     this.object = object;

@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+
+    <script src="pixi.js"></script>
+    <script src="../bin/pixi-ui.js"></script>
+    <title></title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+
+</head>
+<body>
+    <style>
+        body { margin: 0; padding: 0; background-color: #000000; }
+        .rendererView { position: absolute; display: block; width: 100%; }
+    </style>
+    <script type="text/javascript">
+        var app = new PIXI.Application(800, 600, { backgroundColor: 0x020222, autoStart: true });
+        document.body.appendChild(app.view);
+
+        var uistage = new PIXI.UI.Stage(800, 600);
+
+        //input
+        var input = new PIXI.UI.TextInput({
+            background: new PIXI.UI.Sprite(PIXI.Texture.WHITE),
+            value: "ZZZZZZZZZZ",
+            style: { fontSize: 15, fill: "#ffffff" },
+            lineHeight: 23,
+            paddingLeft: 10,
+            width: 200,
+            height: 30
+        });
+        input.background.alpha = 0.2;
+        input.x = 100;
+        input.y = 100;//
+
+        //button
+        var button = new PIXI.UI.Button({
+            background: new PIXI.UI.Sprite(PIXI.Texture.WHITE),
+            text: new PIXI.UI.DynamicText("hello"),
+            width: 200,
+            height: 50
+        });
+
+        button.background.alpha = 0.5;
+        button.x = 100;
+        button.y = 140;
+
+
+        button.on("hover", function (over) {
+            this.text.value = over ? "World!" : "Hello";
+
+            var ease = over ? PIXI.UI.Ease.Bounce.BounceOut : PIXI.UI.Ease.Circ.CircOut;
+            PIXI.UI.Tween.to(button.background, 0.5, { scale: over ? 1.15 : 1, tint: over ? "#d8ff6e" : "#ffffff" }, ease);
+            console.log(over);
+        });
+
+
+
+        app.stage.interactive = true;
+        app.stage.addChild(uistage);
+        uistage.addChild(input, button);
+    </script>
+</body>
+</html>

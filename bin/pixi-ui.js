@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 02 Mar 2018 12:17:13 UTC
+ * Compiled Fri, 02 Mar 2018 12:34:53 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -4675,7 +4675,7 @@ var _tweenItemCache = [];
 var _callbackItemCache = [];
 var _tweenObjects = {};
 var _activeTweenObjects = {};
-var _currentId = 0;
+var _currentId = 1;
 
 var TweenObject = function (object) {
     this.object = object;
@@ -4789,6 +4789,9 @@ TweenItem.prototype.update = function (delta) {
     this.t = Math.min(this.currentTime, this.time) / this.time;
     if (this.ease)
         this.t = this.ease.getPosition(this.t);
+
+
+
 
     if (this.isColor) {
         this.currentColor.r = Math.round(Helpers.Lerp(this.from.r, this.to.r, this.t));
