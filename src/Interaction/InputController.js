@@ -26,12 +26,15 @@ var InputController = {
         }
     },
     set: function (item) {
-        if (_currentItem && typeof _currentItem.blur === "function")
-            _currentItem.blur();
+        this.blur();
         _currentItem = item;
     },
     clear: function () {
         _currentItem = undefined;
+    },
+    blur: function () {
+        if (_currentItem && typeof _currentItem.blur === "function")
+            _currentItem.blur();
     },
     fireTab: function () {
         if (_currentItem) {

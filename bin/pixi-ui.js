@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 02 Mar 2018 12:34:53 UTC
+ * Compiled Mon, 19 Mar 2018 10:26:34 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2394,12 +2394,15 @@ var InputController = {
         }
     },
     set: function (item) {
-        if (_currentItem && typeof _currentItem.blur === "function")
-            _currentItem.blur();
+        this.blur();
         _currentItem = item;
     },
     clear: function () {
         _currentItem = undefined;
+    },
+    blur: function () {
+        if (_currentItem && typeof _currentItem.blur === "function")
+            _currentItem.blur();
     },
     fireTab: function () {
         if (_currentItem) {
@@ -2461,12 +2464,13 @@ module.exports = InputController;
 var Interaction = {
     ClickEvent: require('./ClickEvent'),
     DragEvent: require('./DragEvent'),
-    MouseScrollEvent: require('./MouseScrollEvent')
+    MouseScrollEvent: require('./MouseScrollEvent'),
+    InputController: require('./InputController')
 };
 
 
 module.exports = Interaction;
-},{"./ClickEvent":13,"./DragEvent":15,"./MouseScrollEvent":18}],18:[function(require,module,exports){
+},{"./ClickEvent":13,"./DragEvent":15,"./InputController":16,"./MouseScrollEvent":18}],18:[function(require,module,exports){
 var MouseScrollEvent = function (obj, preventDefault) {
     var bound = false, delta = new PIXI.Point(), self = this;
     obj.container.interactive = true;
@@ -4789,9 +4793,6 @@ TweenItem.prototype.update = function (delta) {
     this.t = Math.min(this.currentTime, this.time) / this.time;
     if (this.ease)
         this.t = this.ease.getPosition(this.t);
-
-
-
 
     if (this.isColor) {
         this.currentColor.r = Math.round(Helpers.Lerp(this.from.r, this.to.r, this.t));
