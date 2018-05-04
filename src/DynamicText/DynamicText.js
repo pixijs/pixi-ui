@@ -281,7 +281,6 @@ function DynamicText(text, options) {
             if (forceNewline || char.newline || i === charCount - 1) {
                 if (lastChar) {
                     pos.x -= lastChar.style.letterSpacing;
-                    if (lastChar.space) pos.x -= lastChar.data.width;
                 }
 
                 if (char.space) {

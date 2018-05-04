@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Mon, 19 Mar 2018 10:26:34 UTC
+ * Compiled Fri, 04 May 2018 13:23:04 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -695,7 +695,6 @@ function DynamicText(text, options) {
             if (forceNewline || char.newline || i === charCount - 1) {
                 if (lastChar) {
                     pos.x -= lastChar.style.letterSpacing;
-                    if (lastChar.space) pos.x -= lastChar.data.width;
                 }
 
                 if (char.space) {
