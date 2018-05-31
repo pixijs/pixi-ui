@@ -5,8 +5,11 @@
     var _onMouseScroll = function (event) {
         if (preventDefault)
             event.preventDefault();
+       
 
-        delta.set(event.deltaX, event.deltaY);
+        var mWheeldelta = event.wheelDelta ? event.wheelDelta : event.detail * (120);
+
+        delta.set(mWheeldelta, mWheeldelta);
         self.onMouseScroll.call(obj, event, delta);
     };
 
