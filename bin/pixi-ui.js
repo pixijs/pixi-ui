@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 31 May 2018 10:42:24 UTC
+ * Compiled Thu, 31 May 2018 10:51:10 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2478,9 +2478,11 @@ var MouseScrollEvent = function (obj, preventDefault) {
         if (preventDefault)
             event.preventDefault();
 
-        var mWheeldelta = event.wheelDelta ? event.wheelDelta : event.detail * (120);
+        if (typeof event.deltaX !== "undefined")
+            delta.set(event.deltaX, event.deltaY);
+        else //Firefox
+            delta.set(event.axis == 1 ? event.detail * 60 : 0, event.axis == 2 ? event.detail * 60 : 0);
 
-        delta.set(mWheeldelta, mWheeldelta);
         self.onMouseScroll.call(obj, event, delta);
     };
 

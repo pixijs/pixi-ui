@@ -7,9 +7,9 @@
             event.preventDefault();
 
         if (typeof event.deltaX !== "undefined")
-            delta.set(event.deltaX, event.deltaY)
+            delta.set(event.deltaX, event.deltaY);
         else //Firefox
-            delta.set(event.axis == 1 ? event.detail * 60 : 0, event.axis == 2 ? event.detail * 60 : 0)
+            delta.set(event.axis == 1 ? event.detail * 60 : 0, event.axis == 2 ? event.detail * 60 : 0);
 
         self.onMouseScroll.call(obj, event, delta);
     };
