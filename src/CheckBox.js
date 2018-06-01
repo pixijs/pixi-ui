@@ -86,6 +86,7 @@ function CheckBox(options) {
             return;
 
         self.checked = !self.checked;
+        this.emit("change", self.checked);
     };
 
 
@@ -126,7 +127,7 @@ Object.defineProperties(CheckBox.prototype, {
 
 
                 
-                this.emit("change", val);
+                
                 this._checked = val;
                 this.change(val);
 
