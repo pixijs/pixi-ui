@@ -358,12 +358,12 @@ function TextInput(options) {
         if (!self.maxLength || chars.length < self.maxLength) {
 
             if (caret._atEnd) {
-                self.value += c;
+                self.valueEvent += c;
                 self.setCaretIndex(chars.length);
             }
             else {
                 var index = Math.min(chars.length - 1, caret._index);
-                self.value = self.value.slice(0, index) + c + self.value.slice(index);
+                self.valueEvent = self.value.slice(0, index) + c + self.value.slice(index);
                 self.setCaretIndex(index + c.length);
             }
         }
@@ -371,8 +371,16 @@ function TextInput(options) {
 
     //events
     var keyDownEvent = function (e) {
+
+
+
         if (e.which === ctrlKey || e.which === cmdKey) ctrlDown = true;
         if (e.which === shiftKey) shiftDown = true;
+
+        self.emit("keydown", e);
+
+        if (e.defaultPrevented)
+            return;
 
         if (e.which === 13) { //enter
             insertTextAtCaret('\n');
@@ -390,7 +398,7 @@ function TextInput(options) {
             }
             else if (e.which === 90) { //ctrl + z (undo)
                 if (self.value != self._lastValue)
-                    self.value = self._lastValue;
+                    self.valueEvent = self._lastValue;
                 self.setCaretIndex(self._lastValue.length + 1);
                 e.preventDefault();
                 return;
@@ -402,11 +410,11 @@ function TextInput(options) {
             if (!deleteSelection()) {
                 if (caret._index > 0 || (chars.length === 1 && caret._atEnd)) {
                     if (caret._atEnd) {
-                        self.value = self.value.slice(0, chars.length - 1);
+                        self.valueEvent = self.value.slice(0, chars.length - 1);
                         self.setCaretIndex(caret._index);
                     }
                     else {
-                        self.value = self.value.slice(0, caret._index - 1) + self.value.slice(caret._index);
+                        self.valueEvent = self.value.slice(0, caret._index - 1) + self.value.slice(caret._index);
                         self.setCaretIndex(caret._index - 1);
                     }
                 }
@@ -419,7 +427,7 @@ function TextInput(options) {
             //delete
             if (!deleteSelection()) {
                 if (!caret._atEnd) {
-                    self.value = self.value.slice(0, caret._index) + self.value.slice(caret._index + 1);
+                    self.valueEvent = self.value.slice(0, caret._index) + self.value.slice(caret._index + 1);
                     self.setCaretIndex(caret._index);
                 }
             }
@@ -472,9 +480,9 @@ function TextInput(options) {
                 if (hasSelection) {
                     de.y = Math.max(0, Math.min(textHeightPX, de.y + (vrdd ? -lineHeight : lineHeight)));
                     updateClosestIndex(de, false);
-                    console.log(si, ei);
+                    //console.log(si, ei);
                     if (Math.abs(si - ei) <= 1) {
-                        console.log(si, ei);
+                        //console.log(si, ei);
                         self.setCaretIndex(sie ? si + 1 : si);
                     } else {
                         caret._index = (eie ? ei + 1 : ei) + (caret._down ? -1 : 0);
@@ -513,9 +521,19 @@ function TextInput(options) {
     var keyUpEvent = function (e) {
         if (e.which == ctrlKey || e.which == cmdKey) ctrlDown = false;
         if (e.which === shiftKey) shiftDown = false;
+
+        self.emit("keyup", e);
+
+        if (e.defaultPrevented)
+            return;
     };
 
     var copyEvent = function (e) {
+        self.emit("copy", e);
+
+        if (e.defaultPrevented)
+            return;
+
         if (hasSelection) {
             var clipboardData = e.clipboardData || window.clipboardData;
             clipboardData.setData('Text', self.value.slice(selectionStart, selectionEnd + 1));
@@ -524,6 +542,11 @@ function TextInput(options) {
     };
 
     var cutEvent = function (e) {
+        self.emit("cut", e);
+
+        if (e.defaultPrevented)
+            return;
+
         if (hasSelection) {
             copyEvent(e);
             deleteSelection();
@@ -532,6 +555,11 @@ function TextInput(options) {
     };
 
     var pasteEvent = function (e) {
+        self.emit("paste", e);
+
+        if (e.defaultPrevented)
+            return;
+
         var clipboardData = e.clipboardData || window.clipboardData;
         insertTextAtCaret(clipboardData.getData('Text'));
         e.preventDefault();
@@ -793,6 +821,20 @@ TextInput.prototype.constructor = TextInput;
 module.exports = TextInput;
 
 Object.defineProperties(TextInput.prototype, {
+    valueEvent: {
+        get: function () {
+            return this._value;
+        },
+        set: function (val) {
+            if (this.maxLength)
+                val = val.slice(0, this.maxLength);
+
+            if (this._value != val) {
+                this.value = val;
+                this.emit("change");
+            }
+        }
+    },
     value: {
         get: function () {
             return this._value;
@@ -806,7 +848,6 @@ Object.defineProperties(TextInput.prototype, {
                 this._value = val;
                 this._dirtyText = true;
                 this.update();
-                this.emit("change");
 
             }
         }
@@ -841,6 +882,10 @@ Object.defineProperties(TextInput.prototype, {
  * "blur"
  * "focus"
  * "focusChanged" param: [bool]focus
- *  
- * 
+ * "keyup" param: Event
+ * "keydown" param: Event
+ * "copy" param: Event
+ * "paste" param: Event
+ * "cut" param: Event
+ * "keyup" param: Event
  */
