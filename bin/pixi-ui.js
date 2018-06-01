@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 01 Jun 2018 08:54:20 UTC
+ * Compiled Fri, 01 Jun 2018 11:06:53 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -255,6 +255,7 @@ function CheckBox(options) {
             return;
 
         self.checked = !self.checked;
+        this.emit("change", self.checked);
     };
 
 
@@ -295,7 +296,7 @@ Object.defineProperties(CheckBox.prototype, {
 
 
                 
-                this.emit("change", val);
+                
                 this._checked = val;
                 this.change(val);
 
