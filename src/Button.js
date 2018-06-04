@@ -8,7 +8,7 @@ var InputBase = require('./InputBase'),
  * @class
  * @extends PIXI.UI.InputBase
  * @memberof PIXI.UI
- * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
+ * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
  * @param [options.text=null] {PIXI.UI.Text} optional text
  * @param [options.tabIndex=0] {Number} input tab index
  * @param [options.tabGroup=0] {Number|String} input tab group
@@ -17,14 +17,18 @@ var InputBase = require('./InputBase'),
  */
 
 function Button(options) {
-    InputBase.call(this, options.width || options.background.width, options.height || options.background.height, options.tabIndex || 0, options.tabGroup || 0);
+    InputBase.call(this, options.width || (options.background ? options.background.width : 100), options.height || (options.background ? options.background.height : 20), options.tabIndex || 0, options.tabGroup || 0);
     this.background = options.background;
-    this.background.width = "100%";
-    this.background.height = "100%";
-    this.background.pivot = 0.5;
-    this.background.verticalAlign = "middle";
-    this.background.horizontalAlign = "center";
-    this.addChild(this.background);
+
+    if (this.background) {
+        this.background.width = "100%";
+        this.background.height = "100%";
+        this.background.pivot = 0.5;
+        this.background.verticalAlign = "middle";
+        this.background.horizontalAlign = "center";
+        this.addChild(this.background);
+
+    }
     this.isHover = false;
 
     this.uiText = options.text;
@@ -35,6 +39,7 @@ function Button(options) {
     }
 
     this.container.buttonMode = true;
+   
 
     var self = this;
     var keyDownEvent = function (e) {
@@ -89,11 +94,12 @@ function Button(options) {
     this.initialize = function () {
         InputBase.prototype.initialize.call(this);
         this.container.interactiveChildren = false;
-        
+
         var self = this;
-        //lazy to make sure all children is initialized
+        //lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
         setTimeout(function () {
-            self.container.hitArea = self.container.getLocalBounds();
+            var bounds = self.container.getLocalBounds();
+            self.container.hitArea = new PIXI.Rectangle(bounds.x < 0 ? bounds.x : 0, bounds.y < 0 ? bounds.y : 0, Math.max(bounds.x + bounds.width + (bounds.x < 0 ? -bounds.x : 0), self._width), Math.max(bounds.y + bounds.height + (bounds.y < 0 ? -bounds.y : 0), self._height));
         }, 20);
     };
 
