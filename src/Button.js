@@ -49,15 +49,11 @@ function Button(options) {
     };
 
     var clickEvent = new ClickEvent(this);
-    clickEvent.onHover = function (e) {
-        this.isHover = true;
-        self.emit("hover", true);
+    clickEvent.onHover = function (e, over) {
+        this.isHover = over;
+        self.emit("hover", over);
     };
 
-    clickEvent.onLeave = function (e) {
-        this.isHover = false;
-        self.emit("hover", false);
-    };
 
     clickEvent.onPress = function (e, isPressed) {
         if (isPressed) {

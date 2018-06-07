@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Mon, 04 Jun 2018 13:41:49 UTC
+ * Compiled Thu, 07 Jun 2018 10:42:01 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -65,15 +65,11 @@ function Button(options) {
     };
 
     var clickEvent = new ClickEvent(this);
-    clickEvent.onHover = function (e) {
-        this.isHover = true;
-        self.emit("hover", true);
+    clickEvent.onHover = function (e, over) {
+        this.isHover = over;
+        self.emit("hover", over);
     };
 
-    clickEvent.onLeave = function (e) {
-        this.isHover = false;
-        self.emit("hover", false);
-    };
 
     clickEvent.onPress = function (e, isPressed) {
         if (isPressed) {
@@ -229,14 +225,10 @@ function CheckBox(options) {
     };
 
     var clickEvent = new ClickEvent(this);
-    clickEvent.onHover = function (e) {
-        self.emit("hover", true);
+    clickEvent.onHover = function (e, over) {
+        self.emit("hover", over);
     };
 
-    clickEvent.onLeave = function (e) {
-
-        self.emit("hover", false);
-    };
 
     clickEvent.onPress = function (e, isPressed) {
         if (isPressed) {
@@ -2164,15 +2156,23 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
     var _onMouseOver = function (event) {
         if (!ishover) {
             ishover = true;
-            self.onHover.call(obj, event);
+            obj.container.on('mousemove', _onMouseMove);
+            obj.container.on('touchmove', _onMouseMove);
+            self.onHover.call(obj, event, true);
         }
     };
 
     var _onMouseOut = function (event) {
         if (ishover) {
             ishover = false;
-            self.onLeave.call(obj, event);
+            obj.container.removeListener('mousemove', _onMouseMove);
+            obj.container.removeListener('touchmove', _onMouseMove);
+            self.onHover.call(obj, event, false);
         }
+    };
+
+    var _onMouseMove = function (event) {
+        self.onMove.call(obj, event);
     };
 
     this.stopEvent = function () {
@@ -2192,6 +2192,8 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
         if (hover) {
             obj.container.removeListener('mouseover', _onMouseOver);
             obj.container.removeListener('mouseout', _onMouseOut);
+            obj.container.removeListener('mousemove', _onMouseMove);
+            obj.container.removeListener('touchmove', _onMouseMove);
         }
     };
 
@@ -2202,6 +2204,7 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
         if (hover) {
             obj.container.on('mouseover', _onMouseOver);
             obj.container.on('mouseout', _onMouseOut);
+            
         }
     };
 
@@ -2211,10 +2214,10 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
 ClickEvent.prototype.constructor = ClickEvent;
 module.exports = ClickEvent;
 
-ClickEvent.prototype.onHover = function (event) { };
-ClickEvent.prototype.onLeave = function (event) { };
+ClickEvent.prototype.onHover = function (event, over) { };
 ClickEvent.prototype.onPress = function (event, isPressed) { };
 ClickEvent.prototype.onClick = function (event) { };
+ClickEvent.prototype.onMove = function (event) { };
 },{}],14:[function(require,module,exports){
 var _items = [];
 var DragDropController = {

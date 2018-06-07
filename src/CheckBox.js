@@ -54,14 +54,10 @@ function CheckBox(options) {
     };
 
     var clickEvent = new ClickEvent(this);
-    clickEvent.onHover = function (e) {
-        self.emit("hover", true);
+    clickEvent.onHover = function (e, over) {
+        self.emit("hover", over);
     };
 
-    clickEvent.onLeave = function (e) {
-
-        self.emit("hover", false);
-    };
 
     clickEvent.onPress = function (e, isPressed) {
         if (isPressed) {

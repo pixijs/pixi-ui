@@ -73,15 +73,23 @@
     var _onMouseOver = function (event) {
         if (!ishover) {
             ishover = true;
-            self.onHover.call(obj, event);
+            obj.container.on('mousemove', _onMouseMove);
+            obj.container.on('touchmove', _onMouseMove);
+            self.onHover.call(obj, event, true);
         }
     };
 
     var _onMouseOut = function (event) {
         if (ishover) {
             ishover = false;
-            self.onLeave.call(obj, event);
+            obj.container.removeListener('mousemove', _onMouseMove);
+            obj.container.removeListener('touchmove', _onMouseMove);
+            self.onHover.call(obj, event, false);
         }
+    };
+
+    var _onMouseMove = function (event) {
+        self.onMove.call(obj, event);
     };
 
     this.stopEvent = function () {
@@ -101,6 +109,8 @@
         if (hover) {
             obj.container.removeListener('mouseover', _onMouseOver);
             obj.container.removeListener('mouseout', _onMouseOut);
+            obj.container.removeListener('mousemove', _onMouseMove);
+            obj.container.removeListener('touchmove', _onMouseMove);
         }
     };
 
@@ -111,6 +121,7 @@
         if (hover) {
             obj.container.on('mouseover', _onMouseOver);
             obj.container.on('mouseout', _onMouseOut);
+            
         }
     };
 
@@ -120,7 +131,7 @@
 ClickEvent.prototype.constructor = ClickEvent;
 module.exports = ClickEvent;
 
-ClickEvent.prototype.onHover = function (event) { };
-ClickEvent.prototype.onLeave = function (event) { };
+ClickEvent.prototype.onHover = function (event, over) { };
 ClickEvent.prototype.onPress = function (event, isPressed) { };
 ClickEvent.prototype.onClick = function (event) { };
+ClickEvent.prototype.onMove = function (event) { };
