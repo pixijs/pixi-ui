@@ -53,7 +53,8 @@ ScrollBar.prototype.alignToContainer = function () {
         sizeAmt = !this.scrollingContainer.innerContainer[width_height] ? 1 : this.scrollingContainer["_" + width_height] / this.scrollingContainer.innerContainer[width_height];
 
     //update amt
-    this._amt = !this.scrollingContainer["_" + width_height] ? 0 : -(this.scrollingContainer.innerContainer[x_y] / (this.scrollingContainer.innerContainer[width_height] - this.scrollingContainer["_" + width_height]));
+    var diff = this.scrollingContainer.innerContainer[width_height] - this.scrollingContainer["_" + width_height];
+    this._amt = !this.scrollingContainer["_" + width_height] || !diff ? 0 : -(this.scrollingContainer.innerContainer[x_y] / diff);
 
     if (sizeAmt >= 1) {
         size = this["_" + width_height];

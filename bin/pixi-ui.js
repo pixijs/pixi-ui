@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 08 Jun 2018 10:06:14 UTC
+ * Compiled Fri, 08 Jun 2018 12:35:42 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2592,7 +2592,8 @@ ScrollBar.prototype.alignToContainer = function () {
         sizeAmt = !this.scrollingContainer.innerContainer[width_height] ? 1 : this.scrollingContainer["_" + width_height] / this.scrollingContainer.innerContainer[width_height];
 
     //update amt
-    this._amt = !this.scrollingContainer["_" + width_height] ? 0 : -(this.scrollingContainer.innerContainer[x_y] / (this.scrollingContainer.innerContainer[width_height] - this.scrollingContainer["_" + width_height]));
+    var diff = this.scrollingContainer.innerContainer[width_height] - this.scrollingContainer["_" + width_height];
+    this._amt = !this.scrollingContainer["_" + width_height] || !diff ? 0 : -(this.scrollingContainer.innerContainer[x_y] / diff);
 
     if (sizeAmt >= 1) {
         size = this["_" + width_height];
