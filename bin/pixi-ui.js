@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Thu, 07 Jun 2018 10:42:01 UTC
+ * Compiled Fri, 08 Jun 2018 10:06:14 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -4060,6 +4060,10 @@ function TextInput(options) {
     };
 
     var insertTextAtCaret = function (c) {
+        if (!multiLine && c.indexOf("\n") != -1) {
+            c = c.replace(/\n/g, '');
+        }
+
         if (hasSelection)
             deleteSelection();
         if (!self.maxLength || chars.length < self.maxLength) {

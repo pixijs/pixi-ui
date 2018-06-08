@@ -353,6 +353,10 @@ function TextInput(options) {
     };
 
     var insertTextAtCaret = function (c) {
+        if (!multiLine && c.indexOf("\n") != -1) {
+            c = c.replace(/\n/g, '');
+        }
+
         if (hasSelection)
             deleteSelection();
         if (!self.maxLength || chars.length < self.maxLength) {
