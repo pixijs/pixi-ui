@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 08 Jun 2018 12:35:42 UTC
+ * Compiled Fri, 14 Sep 2018 08:10:59 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5958,7 +5958,25 @@ Object.defineProperties(UIBase.prototype, {
             this.baseupdate();
         }
     },
+    valign: {
+        get: function () {
+            return this.setting.verticalAlign;
+        },
+        set: function (val) {
+            this.setting.verticalAlign = val;
+            this.baseupdate();
+        }
+    },
     horizontalAlign: {
+        get: function () {
+            return this.setting.horizontalAlign;
+        },
+        set: function (val) {
+            this.setting.horizontalAlign = val;
+            this.baseupdate();
+        }
+    },
+    align: {
         get: function () {
             return this.setting.horizontalAlign;
         },

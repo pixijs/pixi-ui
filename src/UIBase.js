@@ -869,7 +869,25 @@ Object.defineProperties(UIBase.prototype, {
             this.baseupdate();
         }
     },
+    valign: {
+        get: function () {
+            return this.setting.verticalAlign;
+        },
+        set: function (val) {
+            this.setting.verticalAlign = val;
+            this.baseupdate();
+        }
+    },
     horizontalAlign: {
+        get: function () {
+            return this.setting.horizontalAlign;
+        },
+        set: function (val) {
+            this.setting.horizontalAlign = val;
+            this.baseupdate();
+        }
+    },
+    align: {
         get: function () {
             return this.setting.horizontalAlign;
         },
