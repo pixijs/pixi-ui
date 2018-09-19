@@ -1,4 +1,4 @@
-﻿var ClickEvent = function (obj, includeHover, rightMouseButton) {
+﻿var ClickEvent = function (obj, includeHover, rightMouseButton, doubleClick) {
 
 
 
@@ -11,13 +11,17 @@
         movementX = 0,
         movementY = 0,
         right = typeof rightMouseButton === 'undefined' ? false : rightMouseButton,
-        hover = typeof includeHover === 'undefined' ? true : includeHover;
+        hover = typeof includeHover === 'undefined' ? true : includeHover,
+        double = typeof doubleClick === 'undefined' ? false : doubleClick;
+
 
     var eventname_mousedown = right ? "rightdown" : "mousedown";
     var eventname_mouseup = right ? "rightup" : "mouseup";
     var eventname_mouseupoutside = right ? "rightupoutside" : "mouseupoutside";
 
     obj.container.interactive = true;
+
+    var time = 0;
 
     var _onMouseDown = function (event) {
         mouse.copy(event.data.global);
@@ -32,6 +36,18 @@
             }
             bound = true;
         }
+
+        if (double) {
+            var now = performance.now();
+            if (now - time < 210) {
+                self.onClick.call(obj, event);
+            }
+            else {
+                time = now;
+            }
+        }
+
+
         event.data.originalEvent.preventDefault();
     };
 
@@ -61,8 +77,8 @@
             if (Math.max(movementX, movementY) > obj.dragThreshold) return;
         }
 
-
-        self.onClick.call(obj, event);
+        if (!double)
+            self.onClick.call(obj, event);
     };
 
     var _onMouseUpOutside = function (event) {
@@ -121,7 +137,7 @@
         if (hover) {
             obj.container.on('mouseover', _onMouseOver);
             obj.container.on('mouseout', _onMouseOut);
-            
+
         }
     };
 

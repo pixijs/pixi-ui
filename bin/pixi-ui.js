@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Fri, 14 Sep 2018 08:10:59 UTC
+ * Compiled Wed, 19 Sep 2018 08:03:16 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2081,7 +2081,7 @@ InputBase.prototype.blur = function () {
     }
 };
 },{"./Interaction/ClickEvent":13,"./Interaction/InputController":16,"./UIBase":32}],13:[function(require,module,exports){
-var ClickEvent = function (obj, includeHover, rightMouseButton) {
+var ClickEvent = function (obj, includeHover, rightMouseButton, doubleClick) {
 
 
 
@@ -2094,13 +2094,17 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
         movementX = 0,
         movementY = 0,
         right = typeof rightMouseButton === 'undefined' ? false : rightMouseButton,
-        hover = typeof includeHover === 'undefined' ? true : includeHover;
+        hover = typeof includeHover === 'undefined' ? true : includeHover,
+        double = typeof doubleClick === 'undefined' ? false : doubleClick;
+
 
     var eventname_mousedown = right ? "rightdown" : "mousedown";
     var eventname_mouseup = right ? "rightup" : "mouseup";
     var eventname_mouseupoutside = right ? "rightupoutside" : "mouseupoutside";
 
     obj.container.interactive = true;
+
+    var time = 0;
 
     var _onMouseDown = function (event) {
         mouse.copy(event.data.global);
@@ -2115,6 +2119,18 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
             }
             bound = true;
         }
+
+        if (double) {
+            var now = performance.now();
+            if (now - time < 210) {
+                self.onClick.call(obj, event);
+            }
+            else {
+                time = now;
+            }
+        }
+
+
         event.data.originalEvent.preventDefault();
     };
 
@@ -2144,8 +2160,8 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
             if (Math.max(movementX, movementY) > obj.dragThreshold) return;
         }
 
-
-        self.onClick.call(obj, event);
+        if (!double)
+            self.onClick.call(obj, event);
     };
 
     var _onMouseUpOutside = function (event) {
@@ -2204,7 +2220,7 @@ var ClickEvent = function (obj, includeHover, rightMouseButton) {
         if (hover) {
             obj.container.on('mouseover', _onMouseOver);
             obj.container.on('mouseout', _onMouseOut);
-            
+
         }
     };
 
