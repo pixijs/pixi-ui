@@ -172,7 +172,7 @@ Slider.prototype.initialize = function () {
     };
 
     var triggerValueChanging = function () {
-        self.emit("changeing", self.value);
+        self.emit("changing", self.value);
         if (self._lastChanging != self.value) {
             self._lastChanging = self.value;
             if (typeof self._onValueChanging === "function")
