@@ -117,8 +117,6 @@ function TextInput(options) {
 
 
     var innerContainer = textContainer.innerContainer;
-    innerContainer.cacheAsBitmap = true;
-    //textContainer.container.addChild(innerContainer);
 
 
     this.update = function () {
@@ -570,7 +568,11 @@ function TextInput(options) {
     };
 
     var inputEvent = function (e) {
-        insertTextAtCaret(e.data);
+        var c = _pui_tempInput.value;
+        if (c.length) {
+            insertTextAtCaret(c);
+            _pui_tempInput.value = "";
+        }
         e.preventDefault();
     };
 
@@ -671,7 +673,7 @@ function TextInput(options) {
             document.addEventListener('paste', pasteEvent, false);
             document.addEventListener('copy', copyEvent, false);
             document.addEventListener('cut', cutEvent, false);
-            _pui_tempInput.addEventListener('textInput', inputEvent, false);
+            _pui_tempInput.addEventListener('input', inputEvent, false);
 
             setTimeout(function () {
                 if (!caret.visible && !self.selection.visible && !multiLine)
@@ -696,7 +698,7 @@ function TextInput(options) {
             document.removeEventListener('paste', pasteEvent);
             document.removeEventListener('copy', copyEvent);
             document.removeEventListener('cut', cutEvent);
-            _pui_tempInput.removeEventListener('textInput', inputEvent);
+            _pui_tempInput.removeEventListener('input', inputEvent);
             _pui_tempInput.blur();
 
         }
