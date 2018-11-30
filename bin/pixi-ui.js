@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Wed, 19 Sep 2018 08:03:16 UTC
+ * Compiled Fri, 30 Nov 2018 00:10:55 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -3275,7 +3275,7 @@ Slider.prototype.initialize = function () {
     };
 
     var triggerValueChanging = function () {
-        self.emit("changeing", self.value);
+        self.emit("changing", self.value);
         if (self._lastChanging != self.value) {
             self._lastChanging = self.value;
             if (typeof self._onValueChanging === "function")
@@ -3841,8 +3841,6 @@ function TextInput(options) {
 
 
     var innerContainer = textContainer.innerContainer;
-    innerContainer.cacheAsBitmap = true;
-    //textContainer.container.addChild(innerContainer);
 
 
     this.update = function () {
@@ -4294,7 +4292,11 @@ function TextInput(options) {
     };
 
     var inputEvent = function (e) {
-        insertTextAtCaret(e.data);
+        var c = _pui_tempInput.value;
+        if (c.length) {
+            insertTextAtCaret(c);
+            _pui_tempInput.value = "";
+        }
         e.preventDefault();
     };
 
@@ -4395,7 +4397,7 @@ function TextInput(options) {
             document.addEventListener('paste', pasteEvent, false);
             document.addEventListener('copy', copyEvent, false);
             document.addEventListener('cut', cutEvent, false);
-            _pui_tempInput.addEventListener('textInput', inputEvent, false);
+            _pui_tempInput.addEventListener('input', inputEvent, false);
 
             setTimeout(function () {
                 if (!caret.visible && !self.selection.visible && !multiLine)
@@ -4420,7 +4422,7 @@ function TextInput(options) {
             document.removeEventListener('paste', pasteEvent);
             document.removeEventListener('copy', copyEvent);
             document.removeEventListener('cut', cutEvent);
-            _pui_tempInput.removeEventListener('textInput', inputEvent);
+            _pui_tempInput.removeEventListener('input', inputEvent);
             _pui_tempInput.blur();
 
         }
