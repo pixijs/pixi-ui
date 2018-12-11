@@ -1,5 +1,4 @@
 ﻿var Helpers = require('./Helpers');
-var Ease = require('./Ease/Ease');
 var _tweenItemCache = [];
 var _callbackItemCache = [];
 var _tweenObjects = {};
@@ -10,6 +9,7 @@ var TweenObject = function (object) {
     this.object = object;
     this.tweens = {};
     this.active = false;
+    this.onUpdate = null;
 };
 
 var CallbackItem = function () {
@@ -27,6 +27,7 @@ CallbackItem.prototype.remove = function () {
     delete this.parent.tweens[this.key];
     if (!Object.keys(this.parent.tweens).length) {
         this.parent.active = false;
+        this.parent.onUpdate = null;
         delete _activeTweenObjects[this.obj._tweenObjectId];
     }
 };
@@ -55,7 +56,7 @@ CallbackItem.prototype.update = function (delta) {
     this.currentTime += delta;
     if (this.currentTime >= this.time) {
         this.remove();
-        this.callback();
+        this.callback.call(this.parent);
     }
 };
 
@@ -85,7 +86,7 @@ TweenItem.prototype.remove = function () {
 };
 
 TweenItem.prototype.set = function (obj, key, from, to, time, ease) {
-    this.isColor = isNaN(from) && from[0] == "#" || isNaN(to) && to[0] == "#";
+    this.isColor = isNaN(from) && from[0] === "#" || isNaN(to) && to[0] === "#";
     this.parent = obj;
     this.obj = obj.object;
     this.key = key;
@@ -223,6 +224,7 @@ function getCallbackItem() {
 var Tween = {
     to: function (obj, time, params, ease) {
         var object = getObject(obj);
+        var onUpdate = null;
         for (var key in params) {
             if (key === "onComplete") {
                 var cb = getCallbackItem();
@@ -231,8 +233,13 @@ var Tween = {
                 continue;
             }
 
+            if (key === "onUpdate") {
+                onUpdate = params[key];
+                continue;
+            }
+
             if (time) {
-                var match = params[key] == obj[key];
+                var match = params[key] === obj[key];
                 if (typeof obj[key] === "undefined") continue;
 
                 if (match) {
@@ -245,15 +252,24 @@ var Tween = {
                 }
             }
         }
-        if (!time) this.set(obj, params);
+
+        if (time)
+            object.onUpdate = onUpdate;
+        else this.set(obj, params);
     },
     from: function (obj, time, params, ease) {
         var object = getObject(obj);
+        var onUpdate = null;
         for (var key in params) {
             if (key === "onComplete") {
                 var cb = getCallbackItem();
                 cb.set(object, params[key], time);
                 object.tweens[cb.key] = cb;
+                continue;
+            }
+
+            if (key === "onUpdate") {
+                onUpdate = params[key];
                 continue;
             }
 
@@ -271,10 +287,14 @@ var Tween = {
                 }
             }
         }
-        if (!time) this.set(obj, params);
+
+        if (time)
+            object.onUpdate = onUpdate;
+        else this.set(obj, params);
     },
     fromTo: function (obj, time, paramsFrom, paramsTo, ease) {
         var object = getObject(obj);
+        var onUpdate = null;
         for (var key in paramsTo) {
             if (key === "onComplete") {
                 var cb = getCallbackItem();
@@ -282,6 +302,12 @@ var Tween = {
                 object.tweens[cb.key] = cb;
                 continue;
             }
+
+            if (key === "onUpdate") {
+                onUpdate = paramsTo[key];
+                continue;
+            }
+
             if (time) {
                 var match = paramsFrom[key] == paramsTo[key];
                 if (typeof obj[key] === "undefined" || typeof paramsFrom[key] === "undefined") continue;
@@ -299,7 +325,10 @@ var Tween = {
 
             }
         }
-        if (!time) this.set(obj, paramsTo);
+
+        if (time)
+            object.onUpdate = onUpdate;
+        else this.set(obj, params);
     },
     set: function (obj, params) {
         var object = getObject(obj);
@@ -314,6 +343,9 @@ var Tween = {
             var object = _activeTweenObjects[id];
             for (var key in object.tweens) {
                 object.tweens[key].update(delta);
+            }
+            if (object.onUpdate) {
+                object.onUpdate.call(object.object, delta);
             }
         }
     }
