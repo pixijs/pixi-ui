@@ -42,11 +42,11 @@ function Button(options) {
    
 
     var self = this;
-    var keyDownEvent = function (e) {
-        if (e.which === 32) { //space
-            self.click();
-        }
-    };
+    //var keyDownEvent = function (e) {
+    //    if (e.which === 32) { //space
+    //        self.click();
+    //    }
+    //};
 
     var clickEvent = new ClickEvent(this);
     clickEvent.onHover = function (e, over) {
@@ -75,7 +75,7 @@ function Button(options) {
     this.focus = function () {
         if (!this._focused) {
             InputBase.prototype.focus.call(this);
-            document.addEventListener("keydown", keyDownEvent, false);
+            //document.addEventListener("keydown", keyDownEvent, false);
         }
 
     };
@@ -83,7 +83,7 @@ function Button(options) {
     this.blur = function () {
         if (this._focused) {
             InputBase.prototype.blur.call(this);
-            document.removeEventListener("keydown", keyDownEvent);
+            //document.removeEventListener("keydown", keyDownEvent);
         }
     };
 
