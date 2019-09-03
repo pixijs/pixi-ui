@@ -328,7 +328,7 @@ var Tween = {
 
         if (time)
             object.onUpdate = onUpdate;
-        else this.set(obj, params);
+        else this.set(obj, paramsTo);
     },
     set: function (obj, params) {
         var object = getObject(obj);

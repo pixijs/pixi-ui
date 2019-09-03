@@ -1,6 +1,6 @@
 /*!
  * pixi-ui - v1.0.0
- * Compiled Sat, 29 Dec 2018 10:39:06 UTC
+ * Compiled Tue, 03 Sep 2019 20:17:43 UTC
  *
  * pixi-ui is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5084,7 +5084,7 @@ var Tween = {
 
         if (time)
             object.onUpdate = onUpdate;
-        else this.set(obj, params);
+        else this.set(obj, paramsTo);
     },
     set: function (obj, params) {
         var object = getObject(obj);
