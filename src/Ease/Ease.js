@@ -10,7 +10,7 @@ function create(fn) {
 }
 
 
-//Liear
+//Linear
 Ease.Linear = new EaseBase();
 
 //Exponential Eases

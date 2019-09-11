@@ -7,7 +7,7 @@ var UIBase = require('./UIBase');
  * @memberof PIXI.UI
  * @param Texture {PIXI.Texture} the texture for this SliceSprite
  * @param BorderWidth {Number} Width of the sprite borders
- * @param horizontalSlice {Boolean} Slice the sprite horizontically
+ * @param horizontalSlice {Boolean} Slice the sprite horizontally
  * @param verticalSlice {Boolean} Slice the sprite vertically
  * @param [tile=false] {Boolean} tile or stretch
  */

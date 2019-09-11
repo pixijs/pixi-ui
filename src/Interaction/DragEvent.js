@@ -1,4 +1,4 @@
-﻿var DragEvent = function (obj) {
+var DragEvent = function (obj) {
     var bound = false,
         start = new PIXI.Point(),
         offset = new PIXI.Point(),
@@ -37,7 +37,7 @@
         if (!dragging) {
             movementX = Math.abs(offset.x);
             movementY = Math.abs(offset.y);
-            if (movementX === 0 && movementY === 0 || Math.max(movementX, movementY) < obj.dragThreshold) return; //thresshold
+            if (movementX === 0 && movementY === 0 || Math.max(movementX, movementY) < obj.dragThreshold) return; //threshold
             if (obj.dragRestrictAxis !== null) {
                 cancel = false;
                 if (obj.dragRestrictAxis == "x" && movementY > movementX) cancel = true;

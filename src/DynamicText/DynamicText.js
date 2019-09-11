@@ -63,7 +63,7 @@ function DynamicText(text, options) {
     var renderCount = 0;
     var charCount = 0;
 
-    //ellipsis caches (not nessesary when no sprites)
+    //ellipsis caches (not necessary when no sprites)
     var lineEllipsisData = [];
     var lineHasEllipsis = [];
 
