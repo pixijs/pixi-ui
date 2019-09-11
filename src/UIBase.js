@@ -123,7 +123,7 @@ UIBase.prototype.baseupdate = function () {
 
 
 
-        //transform convertion (% etc)
+        //transform conversion (% etc)
         this.dirty = true; 
         this._width = this.actual_width;
         this._height = this.actual_height;
@@ -335,7 +335,7 @@ UIBase.prototype.removeChild = function (UIObject) {
             UIObject.parent = null;
 
             //oldParent._recursivePostUpdateTransform();
-            setTimeout(function () { //hack but cant get the transforms to update propertly otherwice?
+            setTimeout(function () { //hack but cant get the transforms to update properly otherwise?
                 if (oldUIParent.updatesettings)
                     oldUIParent.updatesettings(true, true);
             }, 0);

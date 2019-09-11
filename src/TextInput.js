@@ -311,7 +311,7 @@ function TextInput(options) {
     };
 
     var updateSelectionColors = function () {
-        //Color charecters
+        //Color characters
         for (var i = 0; i < chars.length; i++) {
             if (i >= selectionStart && i <= selectionEnd)
                 chars[i].style.fill = selectedColor;

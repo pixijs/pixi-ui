@@ -1,4 +1,4 @@
-﻿var Ease = {},
+var Ease = {},
     EaseBase = require('./EaseBase'),
     ExponentialEase = require('./ExponentialEase'),
     HALF_PI = Math.PI * 0.5;
@@ -13,7 +13,7 @@ function create(fn) {
 //Liear
 Ease.Linear = new EaseBase();
 
-//Exponetial Eases
+//Exponential Eases
 function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction) {
     return {
         easeIn: easeInFunction,

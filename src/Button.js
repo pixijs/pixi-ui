@@ -92,7 +92,7 @@ function Button(options) {
         this.container.interactiveChildren = false;
 
         var self = this;
-        //lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
+        //lazy to make sure all children is initialized (trying to get the best hitArea possible)
         setTimeout(function () {
             var bounds = self.container.getLocalBounds();
             self.container.hitArea = new PIXI.Rectangle(bounds.x < 0 ? bounds.x : 0, bounds.y < 0 ? bounds.y : 0, Math.max(bounds.x + bounds.width + (bounds.x < 0 ? -bounds.x : 0), self._width), Math.max(bounds.y + bounds.height + (bounds.y < 0 ? -bounds.y : 0), self._height));

@@ -296,7 +296,7 @@ function DynamicText(text, options) {
                 lineAlignmentData[lineIndex] = lineAlignment;
 
 
-                //reset line vaules
+                //reset line values
                 lineHeight = pos.x = lastSpaceLineWidth = lineFontSize = 0;
                 lineAlignment = defaultStyle.align;
                 lastSpaceIndex = -1;
@@ -584,7 +584,7 @@ var DynamicAtlas = function (padding) {
         context = canvas.getContext("2d");
         canvasList.push(canvas);
 
-        //reset dimentions
+        //reset dimensions
         atlasdim = startdim;
         canvas.width = canvas.height = atlasdim;
         rootNode = new AtlasNode(atlasdim, atlasdim);
@@ -641,7 +641,7 @@ var DynamicAtlas = function (padding) {
 
 
 
-            //temp resize if doesnt fit (not nesseary when we dont need to generate textures)
+            //temp resize if doesnt fit (not necessary when we dont need to generate textures)
             if (metrics.rect) {
                 if (canvas.width < metrics.rect.width || canvas.height < metrics.rect.height) {
                     canvas.width = canvas.height = Math.max(metrics.rect.width, metrics.rect.height);
@@ -779,7 +779,7 @@ var DynamicAtlas = function (padding) {
         //Return if char = space
         if (/(\s)/.test(char)) return data;
 
-        //set canvas size (with padding so we can messure)
+        //set canvas size (with padding so we can measure)
         var paddingY = Math.round(fontSize * 0.7), paddingX = Math.max(5, Math.round(fontSize * 0.7));
         metricsCanvas.width = Math.ceil(data.width) + paddingX * 2;
         metricsCanvas.height = 1.5 * fontSize;
@@ -892,7 +892,7 @@ var DynamicAtlas = function (padding) {
         }
 
 
-        //begin messuring
+        //begin measuring
         var pixelData = metricsContext.getImageData(0, 0, w, h).data;
 
         var i = 3,

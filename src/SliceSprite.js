@@ -9,7 +9,7 @@ var UIBase = require('./UIBase');
  * @param BorderWidth {Number} Width of the sprite borders
  * @param horizontalSlice {Boolean} Slice the sprite horizontically
  * @param verticalSlice {Boolean} Slice the sprite vertically
- * @param [tile=false] {Boolean} tile or streach
+ * @param [tile=false] {Boolean} tile or stretch
  */
 function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile) {
     UIBase.call(this, texture.width, texture.height);
