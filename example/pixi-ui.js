@@ -1625,6 +1625,7 @@
                     obj.container.on('mouseout', _onMouseOut);
                 }
             };
+            this.obj = obj;
             this.bound = false;
             this.id = 0;
             this.ishover = false;

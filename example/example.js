@@ -1,3 +1,23 @@
+function generateBackgroundGraphics(width = 300, height = 50, color = 0xffff)
+{
+    const mockBg = new PIXI.Graphics();
+
+    mockBg.beginFill(color);
+    mockBg.drawRect(0, 0, width, height);
+    mockBg.endFill();
+
+    return mockBg;
+}
+
+function generateBackgroundUI(width = 300, height = 50, color)
+{
+    const mockContainer = new PUXI.UI.Container(width, height);
+
+    mockContainer.container.addChild(generateBackgroundGraphics(width, height, color));
+
+    return mockContainer;
+}
+
 window.onload = function ()
 {
     const app = new PIXI.Application({
@@ -15,16 +35,7 @@ window.onload = function ()
     mockButton.verticalAlign = 'middle';
     mockButton.horizontalAlign = 'center';
 
-    const mockBg = new PIXI.Graphics();
-
-    mockBg.beginFill(0xffff);
-    mockBg.drawRect(0, 0, 300, 50);
-    mockBg.endFill();
-
-    const mockBgWrapper = new PUXI.UI.Container(300, 50);
-
-    mockBgWrapper.container.addChild(mockBg);
-
+    const mockBgWrapper = this.generateBackgroundUI();
     const mockInput = new PUXI.UI.TextInput({
         multiLine: false,
         background: mockBgWrapper,
@@ -39,21 +50,8 @@ window.onload = function ()
         scrollY: true,
     });
 
-    const mockBg2 = new PIXI.Graphics();
-
-    mockBg2.beginFill(0xffff);
-    mockBg2.drawRect(0, 0, 300, 50);
-    mockBg2.endFill();
-    // mockBg2.filters = [new PIXI.filters.NoiseFilter()];
-
-    const mockBg3 = new PIXI.Graphics();
-
-    mockBg3.beginFill(0xadfdad);
-    mockBg3.drawRect(0, 0, 300, 50);
-    mockBg3.endFill();
-    mockBg3.y = 50;
-    // mockBg3.filters = [new PIXI.filters.NoiseFilter()];
-
+    const mockBg2 = generateBackgroundGraphics();
+    const mockBg3 = generateBackgroundGraphics();
     const scrollCont = new PUXI.UI.Container(300, 100);
 
     scrollCont.container.addChild(mockBg2);
@@ -61,9 +59,16 @@ window.onload = function ()
     mockScroll.addChild(scrollCont);
     mockScroll.horizontalAlign = 'center';
 
+    const mockCheckbox = new PUXI.UI.CheckBox({
+        checked: true,
+        background: this.generateBackgroundUI(30, 30),
+        checkmark: this.generateBackgroundUI(10, 10, 0xff),
+    });
+
     uxStage.addChild(mockButton);
     uxStage.addChild(mockInput);
     uxStage.addChild(mockScroll);
+    uxStage.addChild(mockCheckbox);
     app.stage.addChild(uxStage);
 
     window.app = app;
