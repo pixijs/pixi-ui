@@ -19,7 +19,7 @@ export class MouseScrollEvent
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private onMouseScrollImpl(e): void
+    private onMouseScrollImpl = (e): void =>
     {
         const { obj, preventDefault, delta } = this;
 
@@ -39,7 +39,7 @@ export class MouseScrollEvent
         }
 
         this.onMouseScroll.call(obj, event, delta);
-    }
+    };
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private onHoverImpl = (e): void =>

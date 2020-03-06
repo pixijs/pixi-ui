@@ -3873,6 +3873,21 @@
         function MouseScrollEvent(obj, preventDefault) {
             var _this = this;
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            this.onMouseScrollImpl = function (e) {
+                var _a = _this, obj = _a.obj, preventDefault = _a.preventDefault, delta = _a.delta;
+                if (preventDefault) {
+                    event.preventDefault();
+                }
+                if (typeof e.deltaX !== 'undefined') {
+                    delta.set(e.deltaX, e.deltaY);
+                }
+                else // Firefox
+                 {
+                    delta.set(e.axis === 1 ? e.detail * 60 : 0, e.axis === 2 ? e.detail * 60 : 0);
+                }
+                _this.onMouseScroll.call(obj, event, delta);
+            };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.onHoverImpl = function (e) {
                 var onMouseScrollImpl = _this.onMouseScrollImpl;
                 if (!_this.bound) {
@@ -3900,21 +3915,6 @@
             this.preventDefault = preventDefault;
             this.startEvent();
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        MouseScrollEvent.prototype.onMouseScrollImpl = function (e) {
-            var _a = this, obj = _a.obj, preventDefault = _a.preventDefault, delta = _a.delta;
-            if (preventDefault) {
-                event.preventDefault();
-            }
-            if (typeof e.deltaX !== 'undefined') {
-                delta.set(e.deltaX, e.deltaY);
-            }
-            else // Firefox
-             {
-                delta.set(e.axis === 1 ? e.detail * 60 : 0, e.axis === 2 ? e.detail * 60 : 0);
-            }
-            this.onMouseScroll.call(obj, event, delta);
-        };
         MouseScrollEvent.prototype.stopEvent = function () {
             var _a = this, obj = _a.obj, onMouseScrollImpl = _a.onMouseScrollImpl, onHoverImpl = _a.onHoverImpl, onMouseOutImpl = _a.onMouseOutImpl;
             if (this.bound) {
@@ -4788,7 +4788,7 @@
             }
             var argumentsLength = newChildren.length;
             if (argumentsLength > 1) {
-                for (var i = 0; i < argumentsLength; i++) {
+                for (var i = 0; i < newChildren.length; i++) {
                     this.addChild(newChildren[i]);
                 }
             }

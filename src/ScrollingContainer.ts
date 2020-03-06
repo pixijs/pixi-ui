@@ -147,7 +147,7 @@ export class ScrollingContainer extends Container
 
         if (argumentsLength > 1)
         {
-            for (let i = 0; i < argumentsLength; i++)
+            for (let i = 0; i < newChildren.length; i++)
             {
                 this.addChild(newChildren[i]);
             }
