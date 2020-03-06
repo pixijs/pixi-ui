@@ -9,13 +9,20 @@ import { UIBase } from './UIBase';
  * @param Text {String} Text content
  * @param TextStyle {PIXI.TextStyle} Style used for the Text
  */
-function Text(text, PIXITextStyle)
+export class Text extends UIBase
 {
-    this._text = new PIXI.Text(text, PIXITextStyle);
-    UIBase.call(this, this._text.width, this._text.height);
-    this.container.addChild(this._text);
+    private _text: PIXI.Text;
 
-    this.baseupdate = function ()
+    constructor(text: string, textStyle: PIXI.TextStyle)
+    {
+        const textDisplay = new PIXI.Text(text, textStyle);
+
+        super(textDisplay.width, textDisplay.height);
+        this._text = textDisplay;
+        this.container.addChild(this._text);
+    }
+
+    baseupdate(): void
     {
         // force original text width unless using anchors
         if (this._anchorLeft === null || this._anchorRight === null)
@@ -39,45 +46,40 @@ function Text(text, PIXITextStyle)
             this._text.width = this._width;
         }
 
-        UIBase.prototype.baseupdate.call(this);
-    };
+        super.baseupdate();
+    }
 
-    this.update = function ()
+    update()
     {
         // set tint
         if (this.tint !== null)
-        { this._text.tint = this.tint; }
+        {
+            this._text.tint = this.tint;
+        }
 
         // set blendmode
         if (this.blendMode !== null)
-        { this._text.blendMode = this.blendMode; }
-    };
+        {
+            this._text.blendMode = this.blendMode;
+        }
+    }
+
+    get value(): string
+    {
+        return this._text.text;
+    }
+    set value(val: string)
+    {
+        this._text.text = val;
+        this.updatesettings(true);
+    }
+
+    get text(): string
+    {
+        return this.value;
+    }
+    set text(val: string)
+    {
+        this.value = val;
+    }
 }
-
-Text.prototype = Object.create(UIBase.prototype);
-Text.prototype.constructor = Text;
-export { Text };
-
-Object.defineProperties(Text.prototype, {
-    value: {
-        get()
-        {
-            return this._text.text;
-        },
-        set(val)
-        {
-            this._text.text = val;
-            this.updatesettings(true);
-        },
-    },
-    text: {
-        get()
-        {
-            return this.value;
-        },
-        set(val)
-        {
-            this.value = val;
-        },
-    },
-});

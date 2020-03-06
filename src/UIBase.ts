@@ -108,7 +108,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
      *
      * @private
      */
-    private updatesettings(updateChildren: boolean, updateParent?: boolean): void
+    protected updatesettings(updateChildren: boolean, updateParent?: boolean): void
     {
         if (!this.initialized)
         {
@@ -164,7 +164,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
      *
      * @private
      */
-    baseupdate(): void
+    protected baseupdate(): void
     {
     // return if parent size didnt change
         if (this.parent)

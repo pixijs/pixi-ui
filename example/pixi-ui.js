@@ -4984,132 +4984,99 @@
      * @param tweenTime {Number} if above 0 the sort will be animated
      * @param tweenEase {PIXI.UI.Ease} ease method used for animation
      */
-
-    function SortableList(desc, tweenTime, tweenEase)
-    {
-        Container.call(this);
-        this.desc = typeof desc !== 'undefined' ? desc : false;
-        this.tweenTime = tweenTime || 0;
-        this.tweenEase = tweenEase;
-        this.items = [];
-    }
-
-    SortableList.prototype = Object.create(Container.prototype);
-    SortableList.prototype.constructor = SortableList;
-
-    SortableList.prototype.addChild = function (UIObject, fnValue, fnThenBy)
-    {
-        Container.prototype.addChild.call(this, UIObject);
-        if (this.items.indexOf(UIObject) == -1)
-        {
-            this.items.push(UIObject);
+    var SortableList = /** @class */ (function (_super) {
+        __extends(SortableList, _super);
+        function SortableList(desc, tweenTime, tweenEase) {
+            var _this = _super.call(this, 0, 0) || this;
+            _this.desc = typeof desc !== 'undefined' ? desc : false;
+            _this.tweenTime = tweenTime || 0;
+            _this.tweenEase = tweenEase;
+            _this.items = [];
+            return _this;
         }
-
-        if (typeof fnValue === 'function')
-        { UIObject._sortListValue = fnValue; }
-
-        if (typeof fnThenBy === 'function')
-        { UIObject._sortListThenByValue = fnThenBy; }
-
-        if (!UIObject._sortListRnd)
-        { UIObject._sortListRnd = Math.random(); }
-
-        this.sort();
-    };
-
-    SortableList.prototype.removeChild = function (UIObject)
-    {
-        if (arguments.length > 1)
-        {
-            for (let i = 0; i < arguments.length; i++)
-            {
-                this.removeChild(arguments[i]);
+        SortableList.prototype.addChild = function (UIObject, fnValue, fnThenBy) {
+            _super.prototype.addChild.call(this, UIObject);
+            if (this.items.indexOf(UIObject) === -1) {
+                this.items.push(UIObject);
             }
-        }
-        else
-        {
-            Container.prototype.removeChild.call(this, UIObject);
-            const index = this.items.indexOf(UIObject);
-
-            if (index != -1)
-            {
-                this.items.splice(index, 1);
+            if (typeof fnValue === 'function') {
+                UIObject._sortListValue = fnValue;
+            }
+            if (typeof fnThenBy === 'function') {
+                UIObject._sortListThenByValue = fnThenBy;
+            }
+            if (!UIObject._sortListRnd) {
+                UIObject._sortListRnd = Math.random();
             }
             this.sort();
-        }
-    };
-
-    SortableList.prototype.sort = function (instant)
-    {
-        clearTimeout(this._sortTimeout);
-
-        if (instant)
-        {
-            this._sort();
-
-            return;
-        }
-
-        const _this = this;
-
-        this._sortTimeout = setTimeout(function () { _this._sort(); }, 0);
-    };
-
-    SortableList.prototype._sort = function ()
-    {
-        const self = this;
-        const desc = this.desc;
-        let y = 0;
-        let alt = true;
-
-        this.items.sort(function (a, b)
-        {
-            let res = a._sortListValue() < b._sortListValue() ? desc ? 1 : -1
-                : a._sortListValue() > b._sortListValue() ? desc ? -1 : 1 : 0;
-
-            if (res === 0 && a._sortListThenByValue && b._sortListThenByValue)
-            {
-                res = a._sortListThenByValue() < b._sortListThenByValue() ? desc ? 1 : -1
-                    : a._sortListThenByValue() > b._sortListThenByValue() ? desc ? -1 : 1 : 0;
+        };
+        SortableList.prototype.removeChild = function (UIObject) {
+            if (arguments.length > 1) {
+                for (var i = 0; i < arguments.length; i++) {
+                    this.removeChild(arguments[i]);
+                }
             }
-            if (res === 0)
-            {
-                res = a._sortListRnd > b._sortListRnd ? 1
-                    : a._sortListRnd < b._sortListRnd ? -1 : 0;
+            else {
+                _super.prototype.removeChild.call(this, UIObject);
+                var index = this.items.indexOf(UIObject);
+                if (index !== -1) {
+                    this.items.splice(index, 1);
+                }
+                this.sort();
             }
-
-            return res;
-        });
-
-        for (let i = 0; i < this.items.length; i++)
-        {
-            const item = this.items[i];
-
-            alt = !alt;
-
-            if (this.tweenTime > 0)
-            {
-                Tween.fromTo(item, this.tweenTime, { x: item.x, y: item.y }, { x: 0, y }, this.tweenEase);
+        };
+        SortableList.prototype.sort = function (instant) {
+            var _this = this;
+            if (instant === void 0) { instant = false; }
+            clearTimeout(this._sortTimeout);
+            if (instant) {
+                this._sort();
+                return;
             }
-            else
-            {
-                item.x = 0;
-                item.y = y;
+            this._sortTimeout = setTimeout(function () { _this._sort(); }, 0);
+        };
+        SortableList.prototype._sort = function () {
+            var _this = this;
+            var desc = this.desc;
+            var y = 0;
+            var alt = true;
+            this.items.sort(function (a, b) {
+                var res = a._sortListValue() < b._sortListValue() ? desc ? 1 : -1
+                    : a._sortListValue() > b._sortListValue() ? desc ? -1 : 1 : 0;
+                if (res === 0 && a._sortListThenByValue && b._sortListThenByValue) {
+                    res = a._sortListThenByValue() < b._sortListThenByValue() ? desc ? 1 : -1
+                        : a._sortListThenByValue() > b._sortListThenByValue() ? desc ? -1 : 1 : 0;
+                }
+                if (res === 0) {
+                    res = a._sortListRnd > b._sortListRnd ? 1
+                        : a._sortListRnd < b._sortListRnd ? -1 : 0;
+                }
+                return res;
+            });
+            for (var i = 0; i < this.items.length; i++) {
+                var item = this.items[i];
+                alt = !alt;
+                if (this.tweenTime > 0) {
+                    Tween.fromTo(item, this.tweenTime, { x: item.x, y: item.y }, { x: 0, y: y }, this.tweenEase);
+                }
+                else {
+                    item.x = 0;
+                    item.y = y;
+                }
+                y += item.height;
+                if (typeof item.altering === 'function') {
+                    item.altering(alt);
+                }
             }
-            y += item.height;
-            if (typeof item.altering === 'function')
-            { item.altering(alt); }
-        }
-
-        // force it to update parents when sort animation is done (prevent scrolling container bug)
-        if (this.tweenTime > 0)
-        {
-            setTimeout(function ()
-            {
-                self.updatesettings(false, true);
-            }, this.tweenTime * 1000);
-        }
-    };
+            // force it to update parents when sort animation is done (prevent scrolling container bug)
+            if (this.tweenTime > 0) {
+                setTimeout(function () {
+                    _this.updatesettings(false, true);
+                }, this.tweenTime * 1000);
+            }
+        };
+        return SortableList;
+    }(Container));
 
     /**
      * A sliced sprite with dynamic width and height.
@@ -5122,135 +5089,156 @@
      * @param verticalSlice {Boolean} Slice the sprite vertically
      * @param [tile=false] {Boolean} tile or streach
      */
-    function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile)
-    {
-        UIBase.call(this, texture.width, texture.height);
-
-        let ftl; let ftr; let fbl; let fbr; let ft; let fb; let fl; let fr; let ff; let stl; let str; let sbl; let sbr; let st; let sb; let sl; let sr; let sf;
-        const bw = borderWidth || 5;
-        const vs = typeof verticalSlice !== 'undefined' ? verticalSlice : true;
-        const hs = typeof horizontalSlice !== 'undefined' ? horizontalSlice : true;
-        const t = texture.baseTexture;
-        const f = texture.frame;
-
-        if (hs) this.setting.minWidth = borderWidth * 2;
-        if (vs) this.setting.minHeight = borderWidth * 2;
-
-        this.initialize = function ()
-        {
-            UIBase.prototype.initialize.apply(this);
-
-            // get frames
-            if (vs && hs)
-            {
-                ftl = new PIXI.Rectangle(f.x, f.y, bw, bw);
-                ftr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, bw);
-                fbl = new PIXI.Rectangle(f.x, f.y + f.height - bw, bw, bw);
-                fbr = new PIXI.Rectangle(f.x + f.width - bw, f.y + f.height - bw, bw, bw);
-                ft = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, bw);
-                fb = new PIXI.Rectangle(f.x + bw, f.y + f.height - bw, f.width - bw * 2, bw);
-                fl = new PIXI.Rectangle(f.x, f.y + bw, bw, f.height - bw * 2);
-                fr = new PIXI.Rectangle(f.x + f.width - bw, f.y + bw, bw, f.height - bw * 2);
-                ff = new PIXI.Rectangle(f.x + bw, f.y + bw, f.width - bw * 2, f.height - bw * 2);
+    var SliceSprite = /** @class */ (function (_super) {
+        __extends(SliceSprite, _super);
+        function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile) {
+            var _this = _super.call(this, texture.width, texture.height) || this;
+            _this.bw = borderWidth || 5;
+            _this.vs = typeof verticalSlice !== 'undefined' ? verticalSlice : true;
+            _this.hs = typeof horizontalSlice !== 'undefined' ? horizontalSlice : true;
+            _this.t = texture.baseTexture;
+            _this.f = texture.frame;
+            _this.tile = tile;
+            if (_this.hs) {
+                _this.setting.minWidth = borderWidth * 2;
             }
-            else if (hs)
-            {
-                fl = new PIXI.Rectangle(f.x, f.y, bw, f.height);
-                fr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, f.height);
-                ff = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, f.height);
+            if (_this.vs) {
+                _this.setting.minHeight = borderWidth * 2;
             }
-            else
-            { // vs
-                ft = new PIXI.Rectangle(f.x, f.y, f.width, bw);
-                fb = new PIXI.Rectangle(f.x, f.y + f.height - bw, f.width, bw);
-                ff = new PIXI.Rectangle(f.x, f.y + bw, f.width, f.height - bw * 2);
-            }
-
-            // TODO: swap frames if rotation
-
-            // make sprites
-            sf = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ff)) : new PIXI.Sprite(new PIXI.Texture(t, ff));
-            this.container.addChildAt(sf, 0);
-            if (vs && hs)
-            {
-                stl = new PIXI.Sprite(new PIXI.Texture(t, ftl));
-                str = new PIXI.Sprite(new PIXI.Texture(t, ftr));
-                sbl = new PIXI.Sprite(new PIXI.Texture(t, fbl));
-                sbr = new PIXI.Sprite(new PIXI.Texture(t, fbr));
-                this.container.addChildAt(stl, 0);
-                this.container.addChildAt(str, 0);
-                this.container.addChildAt(sbl, 0);
-                this.container.addChildAt(sbr, 0);
-            }
-            if (hs)
-            {
-                sl = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fl)) : new PIXI.Sprite(new PIXI.Texture(t, fl));
-                sr = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fr)) : new PIXI.Sprite(new PIXI.Texture(t, fr));
-                this.container.addChildAt(sl, 0);
-                this.container.addChildAt(sr, 0);
-            }
-            if (vs)
-            {
-                st = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ft)) : new PIXI.Sprite(new PIXI.Texture(t, ft));
-                sb = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fb)) : new PIXI.Sprite(new PIXI.Texture(t, fb));
-                this.container.addChildAt(st, 0);
-                this.container.addChildAt(sb, 0);
-            }
-
-            // set constant position and sizes
-            if (vs && hs) st.x = sb.x = sl.y = sr.y = stl.width = str.width = sbl.width = sbr.width = stl.height = str.height = sbl.height = sbr.height = bw;
-            if (hs) sf.x = sl.width = sr.width = bw;
-            if (vs) sf.y = st.height = sb.height = bw;
-        };
-
-        /**
+            /**
          * Updates the sliced sprites position and size
          *
          * @private
          */
-        this.update = function ()
-        {
-            if (!this.initialized) return;
-            if (vs && hs)
-            {
-                str.x = sbr.x = sr.x = this._width - bw;
-                sbl.y = sbr.y = sb.y = this._height - bw;
-                sf.width = st.width = sb.width = this._width - bw * 2;
-                sf.height = sl.height = sr.height = this._height - bw * 2;
+            _this.update = function () {
+                if (!this.initialized)
+                    return;
+                if (vs && hs) {
+                    str.x = sbr.x = sr.x = this._width - bw;
+                    sbl.y = sbr.y = sb.y = this._height - bw;
+                    sf.width = st.width = sb.width = this._width - bw * 2;
+                    sf.height = sl.height = sr.height = this._height - bw * 2;
+                }
+                else if (hs) {
+                    sr.x = this._width - bw;
+                    sl.height = sr.height = sf.height = this._height;
+                    sf.width = this._width - bw * 2;
+                }
+                else { // vs
+                    sb.y = this._height - bw;
+                    st.width = sb.width = sf.width = this._width;
+                    sf.height = this._height - bw * 2;
+                }
+                if (this.tint !== null) {
+                    sf.tint = this.tint;
+                    if (vs && hs)
+                        stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
+                    if (hs)
+                        sl.tint = sr.tint = this.tint;
+                    if (vs)
+                        st.tint = sb.tint = this.tint;
+                }
+                if (this.blendMode !== null) {
+                    sf.blendMode = this.blendMode;
+                    if (vs && hs)
+                        stl.blendMode = str.blendMode = sbl.blendMode = sbr.blendMode = this.blendMode;
+                    if (hs)
+                        sl.blendMode = sr.blendMode = this.blendMode;
+                    if (vs)
+                        st.blendMode = sb.blendMode = this.blendMode;
+                }
+            };
+            return _this;
+        }
+        SliceSprite.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            var _a = this, f = _a.f, bw = _a.bw;
+            // get frames
+            if (this.vs && this.hs) {
+                this.ftl = new PIXI$1.Rectangle(f.x, f.y, bw, bw);
+                this.ftr = new PIXI$1.Rectangle(f.x + f.width - bw, f.y, bw, bw);
+                this.fbl = new PIXI$1.Rectangle(f.x, f.y + f.height - bw, bw, bw);
+                this.fbr = new PIXI$1.Rectangle(f.x + f.width - bw, f.y + f.height - bw, bw, bw);
+                this.ft = new PIXI$1.Rectangle(f.x + bw, f.y, f.width - bw * 2, bw);
+                this.fb = new PIXI$1.Rectangle(f.x + bw, f.y + f.height - bw, f.width - bw * 2, bw);
+                this.fl = new PIXI$1.Rectangle(f.x, f.y + bw, bw, f.height - bw * 2);
+                this.fr = new PIXI$1.Rectangle(f.x + f.width - bw, f.y + bw, bw, f.height - bw * 2);
+                this.ff = new PIXI$1.Rectangle(f.x + bw, f.y + bw, f.width - bw * 2, f.height - bw * 2);
             }
-            else if (hs)
-            {
-                sr.x = this._width - bw;
-                sl.height = sr.height = sf.height = this._height;
-                sf.width = this._width - bw * 2;
+            else if (this.hs) {
+                this.fl = new PIXI$1.Rectangle(this.f.x, f.y, bw, f.height);
+                this.fr = new PIXI$1.Rectangle(f.x + f.width - bw, f.y, bw, f.height);
+                this.ff = new PIXI$1.Rectangle(f.x + bw, f.y, f.width - bw * 2, f.height);
             }
-            else
-            { // vs
-                sb.y = this._height - bw;
-                st.width = sb.width = sf.width = this._width;
-                sf.height = this._height - bw * 2;
+            else { // vs
+                this.ft = new PIXI$1.Rectangle(f.x, f.y, f.width, bw);
+                this.fb = new PIXI$1.Rectangle(f.x, f.y + f.height - bw, f.width, bw);
+                this.ff = new PIXI$1.Rectangle(f.x, f.y + bw, f.width, f.height - bw * 2);
             }
-
-            if (this.tint !== null)
-            {
-                sf.tint = this.tint;
-                if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
-                if (hs) sl.tint = sr.tint = this.tint;
-                if (vs) st.tint = sb.tint = this.tint;
+            // TODO: swap frames if rotation
+            var _b = this, t = _b.t, ff = _b.ff, fl = _b.fl, fr = _b.fr, ft = _b.ft, fb = _b.fb;
+            // make sprites
+            this.sf = this.tile
+                ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, ff))
+                : new PIXI$1.Sprite(new PIXI$1.Texture(t, ff));
+            this.container.addChildAt(this.sf, 0);
+            if (this.vs && this.hs) {
+                this.stl = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.ftl));
+                this.str = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.ftr));
+                this.sbl = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.fbl));
+                this.sbr = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.fbr));
+                this.container.addChildAt(this.stl, 0);
+                this.container.addChildAt(this.str, 0);
+                this.container.addChildAt(this.sbl, 0);
+                this.container.addChildAt(this.sbr, 0);
             }
-
-            if (this.blendMode !== null)
-            {
-                sf.blendMode = this.blendMode;
-                if (vs && hs) stl.blendMode = str.blendMode = sbl.blendMode = sbr.blendMode = this.blendMode;
-                if (hs) sl.blendMode = sr.blendMode = this.blendMode;
-                if (vs) st.blendMode = sb.blendMode = this.blendMode;
+            if (hs) {
+                this.sl = this.tile
+                    ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, fl))
+                    : new PIXI$1.Sprite(new PIXI$1.Texture(t, fl));
+                this.sr = this.tile
+                    ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, fr))
+                    : new PIXI$1.Sprite(new PIXI$1.Texture(t, fr));
+                this.container.addChildAt(this.sl, 0);
+                this.container.addChildAt(this.sr, 0);
+            }
+            if (this.vs) {
+                this.st = this.tile
+                    ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, ft))
+                    : new PIXI$1.Sprite(new PIXI$1.Texture(t, ft));
+                this.sb = this.tile
+                    ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, fb))
+                    : new PIXI$1.Sprite(new PIXI$1.Texture(t, fb));
+                this.container.addChildAt(this.st, 0);
+                this.container.addChildAt(this.sb, 0);
+            }
+            // set constant position and sizes
+            if (this.vs && this.hs) {
+                this.st.x = bw;
+                this.sb.x = bw;
+                this.sl.y = bw;
+                this.sr.y = bw;
+                this.stl.width = bw;
+                this.str.width = bw;
+                this.sbl.width = bw;
+                this.sbr.width = bw;
+                this.stl.height = bw;
+                this.str.height = bw;
+                this.sbl.height = bw;
+                this.sbr.height = bw;
+            }
+            if (this.hs) {
+                this.sf.x = this.sl.width = this.sr.width = bw;
+            }
+            if (this.vs) {
+                this.sf.y = this.st.height = this.sb.height = bw;
             }
         };
-    }
-
-    SliceSprite.prototype = Object.create(UIBase.prototype);
-    SliceSprite.prototype.constructor = SliceSprite;
+        SliceSprite.prototype.update = function () {
+            // NO updates
+        };
+        return SliceSprite;
+    }(UIBase));
 
     /**
      * An UI sprite object
@@ -5295,149 +5283,119 @@
      * @param width {Number} Width of the Stage
      * @param height {Number} Height of the Stage
      */
-    function Stage(width, height)
-    {
-        PIXI.Container.call(this);
-        this.__width = width;
-        this.__height = height;
-        this.minWidth = 0;
-        this.minHeight = 0;
-
-        this.UIChildren = [];
-        this.stage = this;
-        this.interactive = true;
-        this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
-        this.initialized = true;
-        this.resize(width, height);
-    }
-
-    Stage.prototype = Object.create(PIXI.Container.prototype);
-    Stage.prototype.constructor = Stage;
-
-    Stage.prototype.addChild = function (UIObject)
-    {
-        const argumentLenght = arguments.length;
-
-        if (argumentLenght > 1)
-        {
-            for (let i = 0; i < argumentLenght; i++)
-            {
-                this.addChild(arguments[i]);
-            }
+    var Stage = /** @class */ (function (_super) {
+        __extends(Stage, _super);
+        function Stage(width, height) {
+            var _this = _super.call(this) || this;
+            _this.__width = width;
+            _this.__height = height;
+            _this.minWidth = 0;
+            _this.minHeight = 0;
+            _this.UIChildren = [];
+            _this.interactive = true;
+            _this.stage = _this;
+            _this.hitArea = new PIXI$1.Rectangle(0, 0, 0, 0);
+            _this.initialized = true;
+            _this.resize(width, height);
+            return _this;
         }
-        else
-        {
-            if (UIObject.parent)
-            {
-                UIObject.parent.removeChild(UIObject);
+        Stage.prototype.addChild = function (UIObject) {
+            var argumentLenght = arguments.length;
+            if (argumentLenght > 1) {
+                for (var i = 0; i < argumentLenght; i++) {
+                    this.addChild(arguments[i]);
+                }
             }
-
-            UIObject.parent = this;
-            this.UIChildren.push(UIObject);
-            PIXI.Container.prototype.addChild.call(this, UIObject.container);
-            UIObject.updatesettings(true);
-        }
-    };
-
-    Stage.prototype.removeChild = function (UIObject)
-    {
-        const argumentLenght = arguments.length;
-
-        if (argumentLenght > 1)
-        {
-            for (let i = 0; i < argumentLenght; i++)
-            {
-                this.removeChild(arguments[i]);
+            else {
+                if (UIObject.parent) {
+                    UIObject.parent.removeChild(UIObject);
+                }
+                UIObject.parent = this;
+                this.UIChildren.push(UIObject);
+                _super.prototype.addChild.call(this, UIObject.container);
+                UIObject.updatesettings(true);
             }
-        }
-        else
-        {
-            PIXI.Container.prototype.removeChild.call(this, UIObject.container);
-            const index = this.UIChildren.indexOf(UIObject);
-
-            if (index != -1)
-            {
-                this.UIChildren.splice(index, 1);
-                UIObject.parent = null;
+        };
+        Stage.prototype.removeChild = function (UIObject) {
+            var argumentLenght = arguments.length;
+            if (argumentLenght > 1) {
+                for (var i = 0; i < argumentLenght; i++) {
+                    this.removeChild(arguments[i]);
+                }
             }
-        }
-    };
-
-    Stage.prototype.resize = function (width, height)
-    {
-        if (!isNaN(height)) this.__height = height;
-        if (!isNaN(width)) this.__width = width;
-
-        if (this.minWidth || this.minHeight)
-        {
-            let rx = 1;
-            let ry = 1;
-
-            if (width && width < this.minWidth)
-            {
-                rx = this.minWidth / width;
+            else {
+                _super.prototype.removeChild.call(this, UIObject.container);
+                var index = this.UIChildren.indexOf(UIObject);
+                if (index !== -1) {
+                    this.children.splice(index, 1);
+                    UIObject.parent = null;
+                }
             }
-
-            if (height && height < this.minHeight)
-            {
-                ry = this.minHeight / height;
+        };
+        Stage.prototype.resize = function (width, height) {
+            if (!isNaN(height))
+                this.__height = height;
+            if (!isNaN(width))
+                this.__width = width;
+            if (this.minWidth || this.minHeight) {
+                var rx = 1;
+                var ry = 1;
+                if (width && width < this.minWidth) {
+                    rx = this.minWidth / width;
+                }
+                if (height && height < this.minHeight) {
+                    ry = this.minHeight / height;
+                }
+                if (rx > ry && rx > 1) {
+                    this.scale.set(1 / rx);
+                    this.__height *= rx;
+                    this.__width *= rx;
+                }
+                else if (ry > 1) {
+                    this.scale.set(1 / ry);
+                    this.__width *= ry;
+                    this.__height *= ry;
+                }
+                else if (this.scale.x !== 1) {
+                    this.scale.set(1);
+                }
             }
-
-            if (rx > ry && rx > 1)
-            {
-                this.scale.set(1 / rx);
-                this.__height *= rx;
-                this.__width *= rx;
+            if (this.hitArea) {
+                this.hitArea.width = this.__width;
+                this.hitArea.height = this.__height;
             }
-            else if (ry > 1)
-            {
-                this.scale.set(1 / ry);
-                this.__width *= ry;
-                this.__height *= ry;
+            for (var i = 0; i < this.UIChildren.length; i++) {
+                this.UIChildren[i].updatesettings(true, false);
             }
-            else if (this.scale.x !== 1)
-            {
-                this.scale.set(1);
-            }
-        }
-
-        this.hitArea.width = this.__width;
-        this.hitArea.height = this.__height;
-
-        for (let i = 0; i < this.UIChildren.length; i++)
-        { this.UIChildren[i].updatesettings(true, false); }
-    };
-
-    Object.defineProperties(Stage.prototype, {
-        _width: {
-            get()
-            {
+        };
+        Object.defineProperty(Stage.prototype, "_width", {
+            get: function () {
                 return this.__width;
             },
-            set(val)
-            {
-                if (!isNaN(val))
-                {
+            set: function (val) {
+                if (!isNaN(val)) {
                     this.__width = val;
                     this.resize();
                 }
             },
-        },
-        _height: {
-            get()
-            {
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "_height", {
+            get: function () {
                 return this.__height;
             },
-            set(val)
-            {
-                if (!isNaN(val))
-                {
+            set: function (val) {
+                if (!isNaN(val)) {
                     this.__height = val;
                     this.resize();
                 }
             },
-        },
-    });
+            enumerable: true,
+            configurable: true
+        });
+        return Stage;
+    }(PIXI$1.Container));
 
     /**
      * An UI text object
@@ -5448,77 +5406,68 @@
      * @param Text {String} Text content
      * @param TextStyle {PIXI.TextStyle} Style used for the Text
      */
-    function Text(text, PIXITextStyle)
-    {
-        this._text = new PIXI.Text(text, PIXITextStyle);
-        UIBase.call(this, this._text.width, this._text.height);
-        this.container.addChild(this._text);
-
-        this.baseupdate = function ()
-        {
+    var Text = /** @class */ (function (_super) {
+        __extends(Text, _super);
+        function Text(text, textStyle) {
+            var _this = this;
+            var textDisplay = new PIXI.Text(text, textStyle);
+            _this = _super.call(this, textDisplay.width, textDisplay.height) || this;
+            _this._text = textDisplay;
+            _this.container.addChild(_this._text);
+            return _this;
+        }
+        Text.prototype.baseupdate = function () {
             // force original text width unless using anchors
-            if (this._anchorLeft === null || this._anchorRight === null)
-            {
+            if (this._anchorLeft === null || this._anchorRight === null) {
                 this.setting.width = this._text.width;
                 this.setting.widthPct = null;
             }
-            else
-            {
+            else {
                 this._text.width = this._width;
             }
-
             // force original text height unless using anchors
-            if (this._anchorTop === null || this._anchorBottom === null)
-            {
+            if (this._anchorTop === null || this._anchorBottom === null) {
                 this.setting.height = this._text.height;
                 this.setting.heightPct = null;
             }
-            else
-            {
+            else {
                 this._text.width = this._width;
             }
-
-            UIBase.prototype.baseupdate.call(this);
+            _super.prototype.baseupdate.call(this);
         };
-
-        this.update = function ()
-        {
+        Text.prototype.update = function () {
             // set tint
-            if (this.tint !== null)
-            { this._text.tint = this.tint; }
-
+            if (this.tint !== null) {
+                this._text.tint = this.tint;
+            }
             // set blendmode
-            if (this.blendMode !== null)
-            { this._text.blendMode = this.blendMode; }
+            if (this.blendMode !== null) {
+                this._text.blendMode = this.blendMode;
+            }
         };
-    }
-
-    Text.prototype = Object.create(UIBase.prototype);
-    Text.prototype.constructor = Text;
-
-    Object.defineProperties(Text.prototype, {
-        value: {
-            get()
-            {
+        Object.defineProperty(Text.prototype, "value", {
+            get: function () {
                 return this._text.text;
             },
-            set(val)
-            {
+            set: function (val) {
                 this._text.text = val;
                 this.updatesettings(true);
             },
-        },
-        text: {
-            get()
-            {
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Text.prototype, "text", {
+            get: function () {
                 return this.value;
             },
-            set(val)
-            {
+            set: function (val) {
                 this.value = val;
             },
-        },
-    });
+            enumerable: true,
+            configurable: true
+        });
+        return Text;
+    }(UIBase));
 
     // Dummy <input> element created for mobile keyboards
     var mockDOMInput;
