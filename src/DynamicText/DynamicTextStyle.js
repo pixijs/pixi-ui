@@ -1,4 +1,5 @@
-﻿function DynamicTextStyle(parent) {
+function DynamicTextStyle(parent)
+{
     this.respectDirty = true;
     this._parent = parent || null;
     this._scale = 1;
@@ -12,7 +13,7 @@
     this._verticalAlign = 0;
     this._rotation = 0;
     this._skew = 0;
-    this._tint = "#FFFFFF";
+    this._tint = '#FFFFFF';
     this._fill = '#FFFFFF';
     this._shadow = '';
     this._stroke = 0;
@@ -20,33 +21,40 @@
     this._strokeShadow = '';
     this._wrap = true;
     this._breakWords = false;
-    this._overflowX = 'visible'; //visible|hidden
-    this._overflowY = 'visible'; //visible|hidden
+    this._overflowX = 'visible'; // visible|hidden
+    this._overflowY = 'visible'; // visible|hidden
     this._ellipsis = false;
 
+    let _cachedEllipsisSize = null;
 
-    var _cachedEllipsisSize = null;
-    this.ellipsisSize = function (atlas) {
+    this.ellipsisSize = function (atlas)
+    {
         if (!this.ellipsis) return 0;
         if (_cachedEllipsisSize === null)
-            _cachedEllipsisSize = (atlas.getCharObject(".", this).width + this.letterSpacing) * 3;
+        { _cachedEllipsisSize = (atlas.getCharObject('.', this).width + this.letterSpacing) * 3; }
+
         return _cachedEllipsisSize;
     };
 }
 
+DynamicTextStyle.prototype.clone = function ()
+{
+    const style = new DynamicTextStyle();
 
-DynamicTextStyle.prototype.clone = function () {
-    var style = new DynamicTextStyle();
     style.merge(this);
+
     return style;
 };
 
-DynamicTextStyle.prototype.merge = function (style) {
-
-    if (typeof style === 'object') {
+DynamicTextStyle.prototype.merge = function (style)
+{
+    if (typeof style === 'object')
+    {
         this.respectDirty = false;
-        for (var param in style) {
-            var val = style[param];
+        for (const param in style)
+        {
+            const val = style[param];
+
             if (typeof val === 'function' || param === 'respectDirty' || param === '_parent') continue;
             this[param] = style[param];
         }
@@ -55,271 +63,344 @@ DynamicTextStyle.prototype.merge = function (style) {
     }
 };
 
-DynamicTextStyle.prototype.ctxKey = function (char) {
+DynamicTextStyle.prototype.ctxKey = function (char)
+{
     return [char, this.fill, this.shadow, this.stroke, this.strokeFill, this.strokeShadow].join('|');
 };
 
-DynamicTextStyle.prototype.ctxFont = function () {
-    var fontSize = Math.min(200, Math.max(1, this.fontSize || 26)) + "px ";
-    var fontWeight = this.fontWeight === "bold" ? this.fontWeight + " " : "";
-    var fontStyle = this.fontStyle === "italic" || this.fontStyle === "oblique" ? this.fontStyle + " " : "";
+DynamicTextStyle.prototype.ctxFont = function ()
+{
+    const fontSize = `${Math.min(200, Math.max(1, this.fontSize || 26))}px `;
+    const fontWeight = this.fontWeight === 'bold' ? `${this.fontWeight} ` : '';
+    const fontStyle = this.fontStyle === 'italic' || this.fontStyle === 'oblique' ? `${this.fontStyle} ` : '';
+
     return fontWeight + fontStyle + fontSize + this.fontFamily;
 };
 
 DynamicTextStyle.prototype.constructor = DynamicTextStyle;
-module.exports = DynamicTextStyle;
+
+export { DynamicTextStyle };
 
 Object.defineProperties(DynamicTextStyle.prototype, {
     _dirty: {
-        set: function (val) {
-            if (this.respectDirty) {
-                if (this._parent !== null) {
+        set(val)
+        {
+            if (this.respectDirty)
+            {
+                if (this._parent !== null)
+                {
                     this._parent.dirtyStyle = val;
                     this._parent.update();
                 }
             }
-        }
+        },
     },
     scale: {
-        get: function () {
+        get()
+        {
             return this._scale;
         },
-        set: function (val) {
-            if (val !== this._scale) {
+        set(val)
+        {
+            if (val !== this._scale)
+            {
                 this._scale = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     align: {
-        get: function () {
+        get()
+        {
             return this._align;
         },
-        set: function (val) {
-            if (val !== this._align) {
+        set(val)
+        {
+            if (val !== this._align)
+            {
                 this._align = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     fontFamily: {
-        get: function () {
+        get()
+        {
             return this._fontFamily;
         },
-        set: function (val) {
-            if (val !== this._fontFamily) {
+        set(val)
+        {
+            if (val !== this._fontFamily)
+            {
                 this._fontFamily = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     fontSize: {
-        get: function () {
+        get()
+        {
             return this._fontSize;
         },
-        set: function (val) {
-            if (val !== this._fontSize) {
+        set(val)
+        {
+            if (val !== this._fontSize)
+            {
                 this._fontSize = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     fontWeight: {
-        get: function () {
+        get()
+        {
             return this._fontWeight;
         },
-        set: function (val) {
-            if (val !== this._fontWeight) {
+        set(val)
+        {
+            if (val !== this._fontWeight)
+            {
                 this._fontWeight = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     fontStyle: {
-        get: function () {
+        get()
+        {
             return this._fontStyle;
         },
-        set: function (val) {
-            if (val !== this._fontStyle) {
+        set(val)
+        {
+            if (val !== this._fontStyle)
+            {
                 this._fontStyle = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     letterSpacing: {
-        get: function () {
+        get()
+        {
             return this._letterSpacing;
         },
-        set: function (val) {
-            if (val !== this._letterSpacing) {
+        set(val)
+        {
+            if (val !== this._letterSpacing)
+            {
                 this._letterSpacing = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     lineHeight: {
-        get: function () {
+        get()
+        {
             return this._lineHeight;
         },
-        set: function (val) {
-            if (val !== this._lineHeight) {
+        set(val)
+        {
+            if (val !== this._lineHeight)
+            {
                 this._lineHeight = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     verticalAlign: {
-        get: function () {
+        get()
+        {
             return this._verticalAlign;
         },
-        set: function (val) {
-            if (val !== this._verticalAlign) {
+        set(val)
+        {
+            if (val !== this._verticalAlign)
+            {
                 this._verticalAlign = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     rotation: {
-        get: function () {
+        get()
+        {
             return this._rotation;
         },
-        set: function (val) {
-            if (val !== this._rotation) {
+        set(val)
+        {
+            if (val !== this._rotation)
+            {
                 this._rotation = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     skew: {
-        get: function () {
+        get()
+        {
             return this._skew;
         },
-        set: function (val) {
-            if (val !== this._skew) {
+        set(val)
+        {
+            if (val !== this._skew)
+            {
                 this._skew = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     tint: {
-        get: function () {
+        get()
+        {
             return this._tint;
         },
-        set: function (val) {
-            if (val !== this._tint) {
+        set(val)
+        {
+            if (val !== this._tint)
+            {
                 this._tint = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     fill: {
-        get: function () {
+        get()
+        {
             return this._fill;
         },
-        set: function (val) {
-            if (val !== this._fill) {
+        set(val)
+        {
+            if (val !== this._fill)
+            {
                 this._fill = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     shadow: {
-        get: function () {
+        get()
+        {
             return this._shadow;
         },
-        set: function (val) {
-            if (val !== this._shadow) {
+        set(val)
+        {
+            if (val !== this._shadow)
+            {
                 this._shadow = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     stroke: {
-        get: function () {
+        get()
+        {
             return this._stroke;
         },
-        set: function (val) {
-            if (val !== this._stroke) {
+        set(val)
+        {
+            if (val !== this._stroke)
+            {
                 this._stroke = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     strokeFill: {
-        get: function () {
+        get()
+        {
             return this._strokeFill;
         },
-        set: function (val) {
-            if (val !== this._strokeFill) {
+        set(val)
+        {
+            if (val !== this._strokeFill)
+            {
                 this._strokeFill = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     strokeShadow: {
-        get: function () {
+        get()
+        {
             return this._strokeShadow;
         },
-        set: function (val) {
-            if (val !== this._strokeShadow) {
+        set(val)
+        {
+            if (val !== this._strokeShadow)
+            {
                 this._strokeShadow = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     wrap: {
-        get: function () {
+        get()
+        {
             return this._wrap;
         },
-        set: function (val) {
-            if (val !== this._wrap) {
+        set(val)
+        {
+            if (val !== this._wrap)
+            {
                 this._wrap = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     breakWords: {
-        get: function () {
+        get()
+        {
             return this._breakWords;
         },
-        set: function (val) {
-            if (val !== this._breakWords) {
+        set(val)
+        {
+            if (val !== this._breakWords)
+            {
                 this._breakWords = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     overflowX: {
-        get: function () {
+        get()
+        {
             return this._overflowX;
         },
-        set: function (val) {
-            if (val !== this._overflowX) {
+        set(val)
+        {
+            if (val !== this._overflowX)
+            {
                 this._overflowX = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     overflowY: {
-        get: function () {
+        get()
+        {
             return this._overflowY;
         },
-        set: function (val) {
-            if (val !== this._overflowY) {
+        set(val)
+        {
+            if (val !== this._overflowY)
+            {
                 this._overflowY = val;
                 this._dirty = true;
             }
-        }
+        },
     },
     ellipsis: {
-        get: function () {
+        get()
+        {
             return this._ellipsis;
         },
-        set: function (val) {
-            if (val !== this._ellipsis) {
+        set(val)
+        {
+            if (val !== this._ellipsis)
+            {
                 this._ellipsis = val;
                 this._dirty = true;
             }
-        }
-    }
+        },
+    },
 });

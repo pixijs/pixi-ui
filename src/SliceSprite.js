@@ -1,4 +1,4 @@
-var UIBase = require('./UIBase');
+import { UIBase } from './UIBase';
 
 /**
  * A sliced sprite with dynamic width and height.
@@ -11,25 +11,27 @@ var UIBase = require('./UIBase');
  * @param verticalSlice {Boolean} Slice the sprite vertically
  * @param [tile=false] {Boolean} tile or streach
  */
-function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile) {
+function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile)
+{
     UIBase.call(this, texture.width, texture.height);
 
-    var ftl, ftr, fbl, fbr, ft, fb, fl, fr, ff, stl, str, sbl, sbr, st, sb, sl, sr, sf,
-        bw = borderWidth || 5,
-        vs = typeof verticalSlice !== "undefined" ? verticalSlice : true,
-        hs = typeof horizontalSlice !== "undefined" ? horizontalSlice : true,
-        t = texture.baseTexture,
-        f = texture.frame;
-
+    let ftl; let ftr; let fbl; let fbr; let ft; let fb; let fl; let fr; let ff; let stl; let str; let sbl; let sbr; let st; let sb; let sl; let sr; let sf;
+    const bw = borderWidth || 5;
+    const vs = typeof verticalSlice !== 'undefined' ? verticalSlice : true;
+    const hs = typeof horizontalSlice !== 'undefined' ? horizontalSlice : true;
+    const t = texture.baseTexture;
+    const f = texture.frame;
 
     if (hs) this.setting.minWidth = borderWidth * 2;
     if (vs) this.setting.minHeight = borderWidth * 2;
 
-    this.initialize = function () {
+    this.initialize = function ()
+    {
         UIBase.prototype.initialize.apply(this);
 
-        //get frames
-        if (vs && hs) {
+        // get frames
+        if (vs && hs)
+        {
             ftl = new PIXI.Rectangle(f.x, f.y, bw, bw);
             ftr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, bw);
             fbl = new PIXI.Rectangle(f.x, f.y + f.height - bw, bw, bw);
@@ -40,25 +42,26 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile)
             fr = new PIXI.Rectangle(f.x + f.width - bw, f.y + bw, bw, f.height - bw * 2);
             ff = new PIXI.Rectangle(f.x + bw, f.y + bw, f.width - bw * 2, f.height - bw * 2);
         }
-        else if (hs) {
+        else if (hs)
+        {
             fl = new PIXI.Rectangle(f.x, f.y, bw, f.height);
             fr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, f.height);
             ff = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, f.height);
         }
-        else { //vs
+        else
+        { // vs
             ft = new PIXI.Rectangle(f.x, f.y, f.width, bw);
             fb = new PIXI.Rectangle(f.x, f.y + f.height - bw, f.width, bw);
             ff = new PIXI.Rectangle(f.x, f.y + bw, f.width, f.height - bw * 2);
         }
 
-        //TODO: swap frames if rotation
+        // TODO: swap frames if rotation
 
-
-
-        //make sprites
+        // make sprites
         sf = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ff)) : new PIXI.Sprite(new PIXI.Texture(t, ff));
         this.container.addChildAt(sf, 0);
-        if (vs && hs) {
+        if (vs && hs)
+        {
             stl = new PIXI.Sprite(new PIXI.Texture(t, ftl));
             str = new PIXI.Sprite(new PIXI.Texture(t, ftr));
             sbl = new PIXI.Sprite(new PIXI.Texture(t, fbl));
@@ -67,22 +70,23 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile)
             this.container.addChildAt(str, 0);
             this.container.addChildAt(sbl, 0);
             this.container.addChildAt(sbr, 0);
-
         }
-        if (hs) {
+        if (hs)
+        {
             sl = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fl)) : new PIXI.Sprite(new PIXI.Texture(t, fl));
             sr = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fr)) : new PIXI.Sprite(new PIXI.Texture(t, fr));
             this.container.addChildAt(sl, 0);
             this.container.addChildAt(sr, 0);
         }
-        if (vs) {
+        if (vs)
+        {
             st = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ft)) : new PIXI.Sprite(new PIXI.Texture(t, ft));
             sb = tile ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fb)) : new PIXI.Sprite(new PIXI.Texture(t, fb));
             this.container.addChildAt(st, 0);
             this.container.addChildAt(sb, 0);
         }
 
-        //set constant position and sizes
+        // set constant position and sizes
         if (vs && hs) st.x = sb.x = sl.y = sr.y = stl.width = str.width = sbl.width = sbr.width = stl.height = str.height = sbl.height = sbr.height = bw;
         if (hs) sf.x = sl.width = sr.width = bw;
         if (vs) sf.y = st.height = sb.height = bw;
@@ -93,33 +97,39 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile)
      *
      * @private
      */
-    this.update = function () {
+    this.update = function ()
+    {
         if (!this.initialized) return;
-        if (vs && hs) {
+        if (vs && hs)
+        {
             str.x = sbr.x = sr.x = this._width - bw;
             sbl.y = sbr.y = sb.y = this._height - bw;
             sf.width = st.width = sb.width = this._width - bw * 2;
             sf.height = sl.height = sr.height = this._height - bw * 2;
         }
-        else if (hs) {
+        else if (hs)
+        {
             sr.x = this._width - bw;
             sl.height = sr.height = sf.height = this._height;
             sf.width = this._width - bw * 2;
         }
-        else { //vs
+        else
+        { // vs
             sb.y = this._height - bw;
             st.width = sb.width = sf.width = this._width;
             sf.height = this._height - bw * 2;
         }
 
-        if (this.tint !== null) {
+        if (this.tint !== null)
+        {
             sf.tint = this.tint;
             if (vs && hs) stl.tint = str.tint = sbl.tint = sbr.tint = this.tint;
             if (hs) sl.tint = sr.tint = this.tint;
             if (vs) st.tint = sb.tint = this.tint;
         }
 
-        if (this.blendMode !== null) {
+        if (this.blendMode !== null)
+        {
             sf.blendMode = this.blendMode;
             if (vs && hs) stl.blendMode = str.blendMode = sbl.blendMode = sbr.blendMode = this.blendMode;
             if (hs) sl.blendMode = sr.blendMode = this.blendMode;
@@ -130,7 +140,6 @@ function SliceSprite(texture, borderWidth, horizontalSlice, verticalSlice, tile)
 
 SliceSprite.prototype = Object.create(UIBase.prototype);
 SliceSprite.prototype.constructor = SliceSprite;
-module.exports = SliceSprite;
 
-
+export { SliceSprite };
 

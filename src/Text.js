@@ -1,4 +1,4 @@
-var UIBase = require('./UIBase');
+import { UIBase } from './UIBase';
 
 /**
  * An UI text object
@@ -9,42 +9,48 @@ var UIBase = require('./UIBase');
  * @param Text {String} Text content
  * @param TextStyle {PIXI.TextStyle} Style used for the Text
  */
-function Text(text, PIXITextStyle) {
+function Text(text, PIXITextStyle)
+{
     this._text = new PIXI.Text(text, PIXITextStyle);
     UIBase.call(this, this._text.width, this._text.height);
     this.container.addChild(this._text);
 
-    this.baseupdate = function () {
-        //force original text width unless using anchors
-        if (this._anchorLeft === null || this._anchorRight === null) {
+    this.baseupdate = function ()
+    {
+        // force original text width unless using anchors
+        if (this._anchorLeft === null || this._anchorRight === null)
+        {
             this.setting.width = this._text.width;
             this.setting.widthPct = null;
         }
-        else {
+        else
+        {
             this._text.width = this._width;
         }
 
-        //force original text height unless using anchors
-        if (this._anchorTop === null || this._anchorBottom === null) {
+        // force original text height unless using anchors
+        if (this._anchorTop === null || this._anchorBottom === null)
+        {
             this.setting.height = this._text.height;
             this.setting.heightPct = null;
         }
-        else {
+        else
+        {
             this._text.width = this._width;
         }
-
 
         UIBase.prototype.baseupdate.call(this);
     };
 
-    this.update = function () {
-        //set tint
+    this.update = function ()
+    {
+        // set tint
         if (this.tint !== null)
-            this._text.tint = this.tint;
+        { this._text.tint = this.tint; }
 
-        //set blendmode
+        // set blendmode
         if (this.blendMode !== null)
-            this._text.blendMode = this.blendMode;
+        { this._text.blendMode = this.blendMode; }
     };
 }
 
@@ -52,23 +58,26 @@ Text.prototype = Object.create(UIBase.prototype);
 Text.prototype.constructor = Text;
 module.exports = Text;
 
-
 Object.defineProperties(Text.prototype, {
     value: {
-        get: function () {
+        get()
+        {
             return this._text.text;
         },
-        set: function (val) {
+        set(val)
+        {
             this._text.text = val;
             this.updatesettings(true);
-        }
+        },
     },
     text: {
-        get: function () {
+        get()
+        {
             return this.value;
         },
-        set: function (val) {
+        set(val)
+        {
             this.value = val;
-        }
-    }
+        },
+    },
 });
