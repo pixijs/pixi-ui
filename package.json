@@ -20,9 +20,9 @@
     "start": "parallelshell \"npm run watch:lint\" \"npm run watch\"",
     "watch": "pixify -o pixi-ui -w",
     "watch:lint": "watch \"jshint --reporter=scripts/reporter.js scripts src test || exit 0\" src",
-    "lint": "jshint --reporter=scripts/reporter.js scripts src",
-    "prebuild": "npm run lint && npm run clean",
-    "build": "pixify -o pixi-ui",
+    "lint": "eslint ./src",
+    "prebuildx": "npm run lint && npm run clean",
+    "build": "rollup -c; cp bin/pixi-ui.* example/",
     "docs": "jsdoc -c scripts/jsdoc.conf.json -R README.md"
   },
   "files": [
@@ -37,8 +37,12 @@
     "glslify": "^5.0.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.2",
     "browserify-versionify": "^1.0.6",
     "del": "^2.2.0",
+    "emoji-regex": "6.4.2",
+    "eslint": "^6.8.0",
+    "eslint-config-pixi": "^1.0.1",
     "jaguarjs-jsdoc": "^1.0.1",
     "jsdoc": "^3.4.0",
     "jshint": "^2.9.2",
@@ -47,10 +51,18 @@
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "parallelshell": "^2.0.0",
+    "pixi.js": "^5.2.1",
     "pixify": "^1.4.0",
     "rimraf": "^2.5.3",
-    "watch": "^0.19.1",
-    "emoji-regex": "6.4.2"
+    "rollup": "^1.32.0",
+    "rollup-plugin-minify": "^1.0.3",
+    "rollup-plugin-sourcemaps": "^0.5.0",
+    "rollup-plugin-terser": "^5.2.0",
+    "rollup-plugin-typescript": "^1.0.1",
+    "watch": "^0.19.1"
+  },
+  "peerDependencies": {
+    "pixi.js": "^5.2.1"
   },
   "browserify": {
     "transform": [

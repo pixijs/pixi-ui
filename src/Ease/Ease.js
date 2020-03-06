@@ -1,29 +1,33 @@
-﻿var Ease = {},
-    EaseBase = require('./EaseBase'),
-    ExponentialEase = require('./ExponentialEase'),
-    HALF_PI = Math.PI * 0.5;
+export const Ease = {};
+import { EaseBase } from './EaseBase';
+import { ExponentialEase } from './ExponentialEase';
 
-function create(fn) {
-    var e = Object.create(EaseBase.prototype);
+const HALF_PI = Math.PI * 0.5;
+
+function create(fn)
+{
+    const e = Object.create(EaseBase.prototype);
+
     e.getPosition = fn;
+
     return e;
 }
 
-
-//Liear
+// Liear
 Ease.Linear = new EaseBase();
 
-//Exponetial Eases
-function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction) {
+// Exponetial Eases
+function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction)
+{
     return {
         easeIn: easeInFunction,
         easeOut: easeOutFunction,
-        easeInOut: easeInOutFunction
+        easeInOut: easeInOutFunction,
     };
 }
 
 Ease.Power0 = {
-    "easeNone" : Ease.Linear,
+    easeNone: Ease.Linear,
 };
 
 Ease.Power1 = Ease.Quad = wrapEase(
@@ -46,91 +50,120 @@ Ease.Power4 = Ease.Quint = wrapEase(
     new ExponentialEase(4, 0, 1),
     new ExponentialEase(4, 1, 1));
 
-
-//Bounce
+// Bounce
 Ease.Bounce = {
-    "BounceIn": create(function (p) {
-        if ((p = 1 - p) < 1 / 2.75) {
+    BounceIn: create(function (p)
+    {
+        if ((p = 1 - p) < 1 / 2.75)
+        {
             return 1 - (7.5625 * p * p);
-        } else if (p < 2 / 2.75) {
+        }
+        else if (p < 2 / 2.75)
+        {
             return 1 - (7.5625 * (p -= 1.5 / 2.75) * p + 0.75);
-        } else if (p < 2.5 / 2.75) {
+        }
+        else if (p < 2.5 / 2.75)
+        {
             return 1 - (7.5625 * (p -= 2.25 / 2.75) * p + 0.9375);
         }
+
         return 1 - (7.5625 * (p -= 2.625 / 2.75) * p + 0.984375);
     }),
-    "BounceOut": create(function (p) {
-        if (p < 1 / 2.75) {
+    BounceOut: create(function (p)
+    {
+        if (p < 1 / 2.75)
+        {
             return 7.5625 * p * p;
-        } else if (p < 2 / 2.75) {
+        }
+        else if (p < 2 / 2.75)
+        {
             return 7.5625 * (p -= 1.5 / 2.75) * p + 0.75;
-        } else if (p < 2.5 / 2.75) {
+        }
+        else if (p < 2.5 / 2.75)
+        {
             return 7.5625 * (p -= 2.25 / 2.75) * p + 0.9375;
         }
+
         return 7.5625 * (p -= 2.625 / 2.75) * p + 0.984375;
     }),
-    "BounceInOut": create(function (p) {
-        var invert = (p < 0.5);
-        if (invert) {
+    BounceInOut: create(function (p)
+    {
+        const invert = (p < 0.5);
+
+        if (invert)
+        {
             p = 1 - (p * 2);
-        } else {
+        }
+        else
+        {
             p = (p * 2) - 1;
         }
-        if (p < 1 / 2.75) {
+        if (p < 1 / 2.75)
+        {
             p = 7.5625 * p * p;
-        } else if (p < 2 / 2.75) {
+        }
+        else if (p < 2 / 2.75)
+        {
             p = 7.5625 * (p -= 1.5 / 2.75) * p + 0.75;
-        } else if (p < 2.5 / 2.75) {
+        }
+        else if (p < 2.5 / 2.75)
+        {
             p = 7.5625 * (p -= 2.25 / 2.75) * p + 0.9375;
-        } else {
+        }
+        else
+        {
             p = 7.5625 * (p -= 2.625 / 2.75) * p + 0.984375;
         }
+
         return invert ? (1 - p) * 0.5 : p * 0.5 + 0.5;
-    })
+    }),
 };
 
-//Circ
+// Circ
 Ease.Circ = {
-    "CircIn": create(function (p) {
+    CircIn: create(function (p)
+    {
         return -(Math.sqrt(1 - (p * p)) - 1);
     }),
-    "CircOut": create(function (p) {
+    CircOut: create(function (p)
+    {
         return Math.sqrt(1 - (p = p - 1) * p);
     }),
-    "CircInOut": create(function (p) {
+    CircInOut: create(function (p)
+    {
         return ((p *= 2) < 1) ? -0.5 * (Math.sqrt(1 - p * p) - 1) : 0.5 * (Math.sqrt(1 - (p -= 2) * p) + 1);
-    })
+    }),
 };
 
-
-//Expo
+// Expo
 Ease.Expo = {
-    "ExpoIn": create(function (p) {
+    ExpoIn: create(function (p)
+    {
         return Math.pow(2, 10 * (p - 1)) - 0.001;
     }),
-    "ExpoOut": create(function (p) {
+    ExpoOut: create(function (p)
+    {
         return 1 - Math.pow(2, -10 * p);
     }),
-    "ExpoInOut": create(function (p) {
+    ExpoInOut: create(function (p)
+    {
         return ((p *= 2) < 1) ? 0.5 * Math.pow(2, 10 * (p - 1)) : 0.5 * (2 - Math.pow(2, -10 * (p - 1)));
-    })
+    }),
 };
 
-
-//Sine
+// Sine
 Ease.Sine = {
-    "SineIn": create(function (p) {
+    SineIn: create(function (p)
+    {
         return -Math.cos(p * HALF_PI) + 1;
     }),
-    "SineOut": create(function (p) {
+    SineOut: create(function (p)
+    {
         return Math.sin(p * HALF_PI);
     }),
-    "SineInOut": create(function (p) {
+    SineInOut: create(function (p)
+    {
         return -0.5 * (Math.cos(Math.PI * p) - 1);
-    })
+    }),
 };
-
-
-module.exports = Ease;
-
 

@@ -1,9 +1,13 @@
-﻿var Interaction = {
-    ClickEvent: require('./ClickEvent'),
-    DragEvent: require('./DragEvent'),
-    MouseScrollEvent: require('./MouseScrollEvent'),
-    InputController: require('./InputController')
+import { ClickEvent } from './ClickEvent';
+import { DragEvent } from './DragEvent';
+import { InputController } from './InputController';
+import { MouseScrollEvent } from './MouseScrollEvent';
+
+export const Interaction = {
+    ClickEvent,
+    DragEvent,
+    InputController,
+    MouseScrollEvent,
 };
 
-
-module.exports = Interaction;
+export default Interaction;
