@@ -56,7 +56,7 @@ function Text(text, PIXITextStyle)
 
 Text.prototype = Object.create(UIBase.prototype);
 Text.prototype.constructor = Text;
-module.exports = Text;
+export { Text };
 
 Object.defineProperties(Text.prototype, {
     value: {

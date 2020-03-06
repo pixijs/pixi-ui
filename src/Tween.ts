@@ -1,4 +1,4 @@
-﻿const Helpers = require('./Helpers');
+﻿import { Helpers } from './Helpers';
 const _tweenItemCache = [];
 const _callbackItemCache = [];
 const _tweenObjects = {};

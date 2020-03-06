@@ -1,6 +1,7 @@
 export const Ease = {};
-const EaseBase = require('./EaseBase');
-const ExponentialEase = require('./ExponentialEase');
+import { EaseBase } from './EaseBase';
+import { ExponentialEase } from './ExponentialEase';
+
 const HALF_PI = Math.PI * 0.5;
 
 function create(fn)

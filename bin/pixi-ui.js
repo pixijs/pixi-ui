@@ -2148,11 +2148,6 @@
         return Container;
     }(UIBase));
 
-    var Container$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        Container: Container
-    });
-
     function DynamicTextStyle(parent)
     {
         this.respectDirty = true;
@@ -3657,9 +3652,51 @@
         return result ? `rgba(${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)},${alpha})` : false;
     }
 
+    function EaseBase()
+    {
+        this.getPosition = function (p)
+        {
+            return p;
+        };
+    }
+
+    EaseBase.prototype.constructor = EaseBase;
+
+    function ExponentialEase(power, easeIn, easeOut)
+    {
+        const pow = power;
+        const t = easeIn && easeOut ? 3 : easeOut ? 1 : 2;
+
+        this.getPosition = function (p)
+        {
+            let r = (t === 1) ? 1 - p : (t === 2) ? p : (p < 0.5) ? p * 2 : (1 - p) * 2;
+
+            if (pow === 1)
+            {
+                r *= r;
+            }
+            else if (pow === 2)
+            {
+                r *= r * r;
+            }
+            else if (pow === 3)
+            {
+                r *= r * r * r;
+            }
+            else if (pow === 4)
+            {
+                r *= r * r * r * r;
+            }
+
+            return (t === 1) ? 1 - r : (t === 2) ? r : (p < 0.5) ? r / 2 : 1 - (r / 2);
+        };
+    }
+
+    ExponentialEase.prototype = Object.create(EaseBase.prototype);
+    ExponentialEase.prototype.constructor = ExponentialEase;
+
     const Ease = {};
-    const EaseBase = require('./EaseBase');
-    const ExponentialEase = require('./ExponentialEase');
+
     const HALF_PI = Math.PI * 0.5;
 
     function create(fn)
@@ -3946,7 +3983,6 @@
         },
     };
 
-    var Helpers$1 = require('./Helpers');
     var _tweenItemCache = [];
     var _callbackItemCache = [];
     var _tweenObjects = {};
@@ -4037,8 +4073,8 @@
             this.key = key;
             this.surfix = getSurfix(to);
             if (this.isColor) {
-                this.to = Helpers$1.hexToRgb(to);
-                this.from = Helpers$1.hexToRgb(from);
+                this.to = Helpers.hexToRgb(to);
+                this.from = Helpers.hexToRgb(from);
                 this.currentColor = { r: this.from.r, g: this.from.g, b: this.from.b };
             }
             else {
@@ -4061,13 +4097,13 @@
                 this.t = this.ease.getPosition(this.t);
             }
             if (this.isColor) {
-                this.currentColor.r = Math.round(Helpers$1.Lerp(this.from.r, this.to.r, this.t));
-                this.currentColor.g = Math.round(Helpers$1.Lerp(this.from.g, this.to.g, this.t));
-                this.currentColor.b = Math.round(Helpers$1.Lerp(this.from.b, this.to.b, this.t));
-                this.obj[this.key] = Helpers$1.rgbToNumber(this.currentColor.r, this.currentColor.g, this.currentColor.b);
+                this.currentColor.r = Math.round(Helpers.Lerp(this.from.r, this.to.r, this.t));
+                this.currentColor.g = Math.round(Helpers.Lerp(this.from.g, this.to.g, this.t));
+                this.currentColor.b = Math.round(Helpers.Lerp(this.from.b, this.to.b, this.t));
+                this.obj[this.key] = Helpers.rgbToNumber(this.currentColor.r, this.currentColor.g, this.currentColor.b);
             }
             else {
-                var val = Helpers$1.Lerp(this.from, this.to, this.t);
+                var val = Helpers.Lerp(this.from, this.to, this.t);
                 this.obj[this.key] = this.surfix ? val + this.surfix : val;
             }
             if (this.currentTime >= this.time) {
@@ -4285,11 +4321,6 @@
             }
         },
     };
-
-    var Tween$1 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        Tween: Tween
-    });
 
     /**
     * An UI Slider, the default width/height is 90%
@@ -4936,14 +4967,6 @@
         return ScrollingContainer;
     }(Container));
 
-    function getCjsExportFromNamespace (n) {
-    	return n && n['default'] || n;
-    }
-
-    var Container$2 = getCjsExportFromNamespace(Container$1);
-
-    var Tween$2 = getCjsExportFromNamespace(Tween$1);
-
     /**
      * An UI Container object
      *
@@ -4957,20 +4980,19 @@
 
     function SortableList(desc, tweenTime, tweenEase)
     {
-        Container$2.call(this);
+        Container.call(this);
         this.desc = typeof desc !== 'undefined' ? desc : false;
         this.tweenTime = tweenTime || 0;
         this.tweenEase = tweenEase;
         this.items = [];
     }
 
-    SortableList.prototype = Object.create(Container$2.prototype);
+    SortableList.prototype = Object.create(Container.prototype);
     SortableList.prototype.constructor = SortableList;
-    var SortableList_1 = SortableList;
 
     SortableList.prototype.addChild = function (UIObject, fnValue, fnThenBy)
     {
-        Container$2.prototype.addChild.call(this, UIObject);
+        Container.prototype.addChild.call(this, UIObject);
         if (this.items.indexOf(UIObject) == -1)
         {
             this.items.push(UIObject);
@@ -4999,7 +5021,7 @@
         }
         else
         {
-            Container$2.prototype.removeChild.call(this, UIObject);
+            Container.prototype.removeChild.call(this, UIObject);
             const index = this.items.indexOf(UIObject);
 
             if (index != -1)
@@ -5060,7 +5082,7 @@
 
             if (this.tweenTime > 0)
             {
-                Tween$2.fromTo(item, this.tweenTime, { x: item.x, y: item.y }, { x: 0, y }, this.tweenEase);
+                Tween.fromTo(item, this.tweenTime, { x: item.x, y: item.y }, { x: 0, y }, this.tweenEase);
             }
             else
             {
@@ -5464,7 +5486,6 @@
 
     Text.prototype = Object.create(UIBase.prototype);
     Text.prototype.constructor = Text;
-    module.exports = Text;
 
     Object.defineProperties(Text.prototype, {
         value: {
@@ -6568,11 +6589,12 @@
         Helpers: Helpers,
         ScrollBar: ScrollBar,
         ScrollingContainer: ScrollingContainer,
-        __moduleExports: SortableList_1,
+        SortableList: SortableList,
         Slider: Slider,
         SliceSprite: SliceSprite,
         Sprite: Sprite,
         Stage: Stage,
+        Text: Text,
         TextInput: TextInput,
         TilingSprite: TilingSprite,
         Tween: Tween,

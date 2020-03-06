@@ -1,5 +1,5 @@
-const Container = require('./Container');
-const Tween = require('./Tween');
+import { Container } from './Container';
+import { Tween } from './Tween';
 /**
  * An UI Container object
  *
@@ -22,7 +22,7 @@ function SortableList(desc, tweenTime, tweenEase)
 
 SortableList.prototype = Object.create(Container.prototype);
 SortableList.prototype.constructor = SortableList;
-module.exports = SortableList;
+export { SortableList };
 
 SortableList.prototype.addChild = function (UIObject, fnValue, fnThenBy)
 {
