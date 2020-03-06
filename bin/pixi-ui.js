@@ -1,7 +1,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('pixi.js')) :
     typeof define === 'function' && define.amd ? define(['exports', 'pixi.js'], factory) :
-    (global = global || self, factory(global['pixi-ui'] = {}, global.PIXI));
+    (global = global || self, factory(global.PUXI = {}, global.PIXI));
 }(this, (function (exports, PIXI$1) { 'use strict';
 
     /*! *****************************************************************************

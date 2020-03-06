@@ -7,7 +7,7 @@ export default [
         input: 'src/index.ts',
         output: {
             format: 'umd',
-            name: 'pixi-ui',
+            name: 'PUXI',
             file: 'bin/pixi-ui.js',
             sourcemap: true,
             globals: {
@@ -24,7 +24,7 @@ export default [
         input: 'src/index.ts',
         output: {
             format: 'umd',
-            name: 'pixi-ui',
+            name: 'PUXI',
             file: 'bin/pixi-ui.min.js',
             sourcemap: true,
             globals: {
