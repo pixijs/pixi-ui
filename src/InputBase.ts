@@ -70,7 +70,7 @@ export abstract class InputBase extends UIBase
         }
     }
 
-    private keyDownEvent = (e: any): void =>
+    protected keyDownEvent = (e: any): void =>
     {
         if (e.which === 9)
         {

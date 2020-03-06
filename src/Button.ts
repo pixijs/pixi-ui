@@ -138,6 +138,11 @@ export class Button extends InputBase
         };
     }
 
+    update(): void
+    {
+        // No update needed
+    }
+
     get value(): string
     {
         if (this.uiText)

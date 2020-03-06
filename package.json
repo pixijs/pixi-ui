@@ -21,8 +21,8 @@
     "watch": "pixify -o pixi-ui -w",
     "watch:lint": "watch \"jshint --reporter=scripts/reporter.js scripts src test || exit 0\" src",
     "lint": "eslint ./src",
-    "prebuild": "npm run lint && npm run clean",
-    "build": "rollup -c",
+    "prebuildx": "npm run lint && npm run clean",
+    "build": "rollup -c; cp bin/pixi-ui.* example/",
     "docs": "jsdoc -c scripts/jsdoc.conf.json -R README.md"
   },
   "files": [

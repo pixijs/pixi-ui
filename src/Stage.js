@@ -43,8 +43,10 @@ Stage.prototype.addChild = function (UIObject)
     }
     else
     {
-        if (UIObject.parent !== null)
-        { UIObject.parent.removeChild(UIObject); }
+        if (UIObject.parent)
+        {
+            UIObject.parent.removeChild(UIObject);
+        }
 
         UIObject.parent = this;
         this.UIChildren.push(UIObject);

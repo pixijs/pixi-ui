@@ -112,7 +112,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
     {
         if (!this.initialized)
         {
-            if (this.parent !== null && this.parent.stage !== null && this.parent.initialized)
+            if (this.parent && this.parent.stage && this.parent.initialized)
             {
                 this.initialize();
             }
@@ -148,9 +148,9 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
      *
      * @private
      */
-    updateParent()
+    updateParent(): void
     {
-        if (this.parent !== null)
+        if (this.parent)
         {
             if (this.parent.updatesettings)
             {
@@ -164,10 +164,10 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
      *
      * @private
      */
-    baseupdate()
+    baseupdate(): void
     {
     // return if parent size didnt change
-        if (this.parent !== null)
+        if (this.parent)
         {
             let parentHeight; let
                 parentWidth;
@@ -291,21 +291,35 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
             if (this.horizontalAlign !== null)
             {
                 if (this.horizontalAlign == 'center')
-                { this.container.position.x = parentWidth * 0.5 - this._width * 0.5; }
+                {
+                    this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
+                }
                 else if (this.horizontalAlign == 'right')
-                { this.container.position.x = parentWidth - this._width; }
+                {
+                    this.container.position.x = parentWidth - this._width;
+                }
                 else
-                { this.container.position.x = 0; }
+                {
+                    this.container.position.x = 0;
+                }
+
                 this.container.position.x += pivotXOffset;
             }
             if (this.verticalAlign !== null)
             {
                 if (this.verticalAlign == 'middle')
-                { this.container.position.y = parentHeight * 0.5 - this._height * 0.5; }
+                {
+                    this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
+                }
                 else if (this.verticalAlign == 'bottom')
-                { this.container.position.y = parentHeight - this._height; }
+                {
+                    this.container.position.y = parentHeight - this._height;
+                }
                 else
-                { this.container.position.y = 0; }
+                {
+                    this.container.position.y = 0;
+                }
+
                 this.container.position.y += pivotYOffset;
             }
 
@@ -656,7 +670,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
         this.updatesettings(true);
     }
 
-    actual_minWidth(): number
+    get actual_minWidth(): number
     {
         if (this.dirty)
         {
