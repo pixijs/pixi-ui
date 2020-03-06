@@ -50,8 +50,10 @@ window.onload = function ()
         scrollY: true,
     });
 
-    const mockBg2 = generateBackgroundGraphics();
-    const mockBg3 = generateBackgroundGraphics();
+    const mockBg2 = generateBackgroundGraphics(300, 50, 0xfff000);
+    const mockBg3 = generateBackgroundGraphics(300, 50);
+
+    mockBg3.y = 50;
     const scrollCont = new PUXI.UI.Container(300, 100);
 
     scrollCont.container.addChild(mockBg2);
