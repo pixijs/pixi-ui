@@ -1,12 +1,11 @@
 {
-  "name": "pixi-ui",
+  "name": "puxi.js-monorepo",
   "version": "1.0.0",
-  "description": "Pixi.js User Interface",
+  "description": "PuxiJS Project Monorepo (originally pixi-ui)",
   "author": "Nicolai Mortensen",
   "contributors": [
     "Nicolai Mortensen <njm@skiftselv.dk>"
   ],
-  "main": "./src/index.js",
   "homepage": "http://www.pixijs.com/",
   "bugs": "https://github.com/pixijs/pixi-ui/issues",
   "license": "MIT",
@@ -21,8 +20,6 @@
     "watch": "pixify -o pixi-ui -w",
     "watch:lint": "watch \"jshint --reporter=scripts/reporter.js scripts src test || exit 0\" src",
     "lint": "eslint ./src",
-    "prebuildx": "npm run lint && npm run clean",
-    "build": "rollup -c; cp bin/pixi-ui.* example/",
     "docs": "jsdoc -c scripts/jsdoc.conf.json -R README.md"
   },
   "files": [
@@ -48,6 +45,7 @@
     "jshint": "^2.9.2",
     "jshint-stylish": "^2.2.0",
     "jshint-stylish-summary": "^0.1.2",
+    "lerna": "^3.20.2",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "parallelshell": "^2.0.0",

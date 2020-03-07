@@ -33,3 +33,6 @@ docs/
 
 
 /menu
+
+lerna-debug.log
+npm-debug.log
