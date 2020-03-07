@@ -1,0 +1,37 @@
+{
+  "name": "@puxi/core",
+  "version": "1.0.0",
+  "description": "Default set of PuxiJS UI display objects",
+  "keywords": [
+    "pixi",
+    "ui",
+    "webgl",
+    "canvas",
+    "frontend"
+  ],
+  "author": "Shukant Pal <shukantpal@outlook.com>",
+  "homepage": "https://github.com/pixijs/pixi-ui",
+  "license": "MIT",
+  "main": "bin/puxi-core.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pixijs/pixi-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pixijs/pixi-ui/issues"
+  },
+  "scripts": {
+    "lint": "eslint src/",
+    "build": "rollup -c; cp bin/pixi-ui.* example/"
+  }
+}
