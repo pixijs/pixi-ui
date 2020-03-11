@@ -1,4 +1,4 @@
-import { UIBase } from '../UIBase';
+import { Widget } from '../Widget';
 import { DynamicTextStyle } from './DynamicTextStyle';
 import { DynamicChar }  from './DynamicChar';
 import emojiRegex  from 'emoji-regex';
@@ -20,7 +20,7 @@ function DynamicText(text, options)
 {
     options = options || {};
 
-    UIBase.call(this, options.width || 0, options.height || 0);
+    Widget.call(this, options.width || 0, options.height || 0);
 
     // create atlas
     if (atlas === null)
@@ -481,7 +481,7 @@ function DynamicText(text, options)
     };
 }
 
-DynamicText.prototype = Object.create(UIBase.prototype);
+DynamicText.prototype = Object.create(Widget.prototype);
 DynamicText.prototype.constructor = DynamicText;
 
 export { DynamicText };

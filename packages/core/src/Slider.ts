@@ -1,4 +1,4 @@
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 import { DragEvent } from './Interaction/DragEvent';
 import { Tween } from './Tween';
 import { Ease } from './Ease/Ease';
@@ -24,7 +24,7 @@ interface ISliderOptions
 * An UI Slider, the default width/height is 90%
 *
 * @class
-* @extends UIBase
+* @extends Widget
 * @memberof PIXI.UI
 * @param options {Object} Slider settings
 * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
@@ -38,7 +38,7 @@ interface ISliderOptions
 * @param [options.onValueChange=null] {callback} Callback when the value has changed
 * @param [options.onValueChanging=null] {callback} Callback while the value is changing
 */
-export class Slider extends UIBase
+export class Slider extends Widget
 {
     protected _amt: number;
     protected _disabled: boolean;

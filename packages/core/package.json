@@ -15,7 +15,7 @@
   "main": "bin/puxi-core.js",
   "directories": {
     "lib": "lib",
-    "test": "__tests__"
+    "test": "__test__"
   },
   "files": [
     "lib"
@@ -32,6 +32,14 @@
   },
   "scripts": {
     "lint": "eslint src/",
-    "build": "rollup -c; cp bin/pixi-ui.* example/"
+    "build": "rollup -c; cp bin/pixi-ui.* example/",
+    "test": "jest --testPathPattern=.test.js"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/preset-env": "^7.8.7",
+    "@babel/preset-typescript": "^7.8.3",
+    "canvas": "^2.6.1",
+    "jest": "^25.1.0"
   }
 }

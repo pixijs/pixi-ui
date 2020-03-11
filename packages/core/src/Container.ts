@@ -1,4 +1,4 @@
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 import * as PIXI from 'pixi.js';
 
 /**
@@ -10,7 +10,7 @@ import * as PIXI from 'pixi.js';
  * @param width {Number} Width of the Container
  * @param height {Number} Height of the Container
  */
-export class Container extends UIBase
+export class Container extends Widget
 {
     constructor(width: number, height: number)
     {

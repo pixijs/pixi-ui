@@ -1,4 +1,4 @@
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 import { InputController } from './Interaction/InputController';
 
 /**
@@ -11,7 +11,7 @@ import { InputController } from './Interaction/InputController';
  * @param height {number} passed to uibase
  * @param tabIndex {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
  */
-export abstract class InputBase extends UIBase
+export abstract class InputBase extends Widget
 {
     _focused: boolean;
     _useTab: boolean;

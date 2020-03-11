@@ -1,4 +1,4 @@
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 import * as PIXI from 'pixi.js';
 
 /**
@@ -12,7 +12,7 @@ import * as PIXI from 'pixi.js';
  * @param verticalSlice {Boolean} Slice the sprite vertically
  * @param [tile=false] {Boolean} tile or streach
  */
-export class SliceSprite extends UIBase
+export class SliceSprite extends Widget
 {
     ftl: PIXI.Rectangle;
     ftr: PIXI.Rectangle;

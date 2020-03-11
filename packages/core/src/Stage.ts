@@ -1,4 +1,4 @@
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 import * as PIXI from 'pixi.js';
 
 /**
@@ -17,7 +17,7 @@ export class Stage extends PIXI.Container
     minWidth: number;
     minHeight: number;
     initialized: boolean;
-    UIChildren: UIBase[];
+    UIChildren: Widget[];
 
     stage: any;
 
@@ -38,7 +38,7 @@ export class Stage extends PIXI.Container
         this.resize(width, height);
     }
 
-    addChild(UIObject: UIBase): void
+    addChild(UIObject: Widget): void
     {
         const argumentLenght = arguments.length;
 
@@ -63,7 +63,7 @@ export class Stage extends PIXI.Container
         }
     }
 
-    removeChild(UIObject: UIBase): void
+    removeChild(UIObject: Widget): void
     {
         const argumentLenght = arguments.length;
 

@@ -1,7 +1,7 @@
 import { Container } from './Container';
 import { Tween } from './Tween';
 import { EaseBase } from './Ease/EaseBase';
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 
 /**
  * An UI Container object

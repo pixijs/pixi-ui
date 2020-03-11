@@ -1,4 +1,4 @@
-export * from './UIBase';
+export * from './Widget';
 export * from './Button';
 export * from './CheckBox';
 export * from './Container';
@@ -19,3 +19,8 @@ export * from './TextInput';
 export * from './TilingSprite';
 export * from './Tween';
 export * from './Ticker';
+
+export * from './layout-manager';
+export * from './layout-options';
+export * from './IMeasurable';
+export * from './WidgetGroup';

@@ -1,4 +1,4 @@
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 
 /**
  * An UI text object
@@ -9,7 +9,7 @@ import { UIBase } from './UIBase';
  * @param Text {String} Text content
  * @param TextStyle {PIXI.TextStyle} Style used for the Text
  */
-export class Text extends UIBase
+export class Text extends Widget
 {
     private _text: PIXI.Text;
 

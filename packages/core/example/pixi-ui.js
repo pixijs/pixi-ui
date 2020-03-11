@@ -1,8 +1,10 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('pixi.js')) :
-    typeof define === 'function' && define.amd ? define(['exports', 'pixi.js'], factory) :
-    (global = global || self, factory(global.PUXI = {}, global.PIXI));
-}(this, (function (exports, PIXI$1) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('pixi.js'), require('emoji-regex')) :
+    typeof define === 'function' && define.amd ? define(['exports', 'pixi.js', 'emoji-regex'], factory) :
+    (global = global || self, factory(global.PUXI = {}, global.PIXI, global.emojiRegex));
+}(this, (function (exports, PIXI$1, emojiRegex) { 'use strict';
+
+    emojiRegex = emojiRegex && emojiRegex.hasOwnProperty('default') ? emojiRegex['default'] : emojiRegex;
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -283,21 +285,232 @@
     };
 
     /**
-     * Base class of all UIObjects
+     * @namespace PUXI
+     * @class
+     */
+    var Insets = /** @class */ (function () {
+        function Insets() {
+            this.reset();
+            this.dirtyId = 0;
+        }
+        Insets.prototype.reset = function () {
+            this.left = -1;
+            this.top = -1;
+            this.right = -1;
+            this.bottom = -1;
+        };
+        return Insets;
+    }());
+
+    /**
+     * Alignments supported by layout managers in PuxiJS core.
+     *
+     * @namespace PUXI
+     * @enum
+     */
+    (function (ALIGN) {
+        ALIGN[ALIGN["LEFT"] = 0] = "LEFT";
+        ALIGN[ALIGN["TOP"] = 0] = "TOP";
+        ALIGN[ALIGN["MIDDLE"] = 4081] = "MIDDLE";
+        ALIGN[ALIGN["CENTER"] = 4081] = "CENTER";
+        ALIGN[ALIGN["RIGHT"] = 1048561] = "RIGHT";
+        ALIGN[ALIGN["BOTTOM"] = 1048561] = "BOTTOM";
+        ALIGN[ALIGN["NONE"] = 4294967295] = "NONE";
+    })(exports.ALIGN || (exports.ALIGN = {}));
+
+    /**
+     * This are the base constraints that you can apply on a `PUXI.Widget` under any
+     * layout manager. It specifies the dimensions of a widget, while the position
+     * of the widget is left to the parent to decide. If a dimension (width or height)
+     * is set to a value between -1 and 1, then it is interpreted as a percentage
+     * of the parent's dimension.
+     *
+     * The following example will render a widget at 50% of the parent's width and 10px height:
+     *
+     * ```js
+     * const widget = new PUXI.Widget();
+     * const parent = new PUXI.Widget();
+     *
+     * widget.layoutOptions = new PUXI.LayoutOptions(
+     *      .5,
+     *      10
+     * );
+     * parent.addChild(widget);
+     * ```
+     *
+     * @namespace PUXI
+     * @class
+     */
+    var LayoutOptions = /** @class */ (function () {
+        /**
+         * @param {number}[width = LayoutOptions.WRAP_CONTENT]
+         * @param {number}[height = LayoutOptions.WRAP_CONTENT]
+         */
+        function LayoutOptions(width, height) {
+            if (width === void 0) { width = LayoutOptions.WRAP_CONTENT; }
+            if (height === void 0) { height = LayoutOptions.WRAP_CONTENT; }
+            /**
+             * Preferred width of the widget in pixels. If its value is between -1 and 1, it
+             * is interpreted as a percentage of the parent's width.
+             * @member {number}
+             * @default {PUXI.LayoutOptions.WRAP_CONTENT}
+             */
+            this.width = width;
+            /**
+             * Preferred height of the widget in pixels. If its value is between -1 and 1, it
+             * is interpreted as a percentage of the parent's height.
+             * @member {number}
+             * @default {PUXI.LayoutOptions.WRAP_CONTENT}
+             */
+            this.height = height;
+            this.markers = {};
+        }
+        Object.defineProperty(LayoutOptions.prototype, "marginLeft", {
+            /**
+             * The left margin in pixels of the widget.
+             * @member {number}
+             * @default 0
+             */
+            get: function () {
+                return this._marginLeft || 0;
+            },
+            set: function (val) {
+                this._marginLeft = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayoutOptions.prototype, "marginTop", {
+            /**
+             * This top margin in pixels of the widget.
+             * @member {number}
+             * @default 0
+             */
+            get: function () {
+                return this._marginTop || 0;
+            },
+            set: function (val) {
+                this._marginTop = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayoutOptions.prototype, "marginRight", {
+            /**
+             * The right margin in pixels of the widget.
+             * @member {number}
+             * @default 0
+             */
+            get: function () {
+                return this._marginRight || 0;
+            },
+            set: function (val) {
+                this._marginRight = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(LayoutOptions.prototype, "marginBottom", {
+            /**
+             * The bottom margin in pixels of the widget.
+             * @member {number}
+             * @default 0
+             */
+            get: function () {
+                return this._marginBottom || 0;
+            },
+            set: function (val) {
+                this._marginBottom = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        LayoutOptions.prototype.setMargin = function (left, top, right, bottom) {
+            this._marginLeft = left;
+            this._marginTop = top;
+            this._marginRight = right;
+            this._marginBottom = bottom;
+        };
+        LayoutOptions.FILL_PARENT = 0xfffffff1;
+        LayoutOptions.WRAP_CONTENT = 0xfffffff2;
+        LayoutOptions.DEFAULT = new LayoutOptions();
+        return LayoutOptions;
+    }());
+
+    /**
+     * Anchored layout-options specify the left, top, right, and bottom offsets of a
+     * widget in pixels. If an offset is between -1px and 1px, then it is interpreted
+     * as a percentage of the parent's dimensions.
+     *
+     * The following example will render a widget at 80% of the parent's width and
+     * 60px height.
+     * ```js
+     * const widget: PUXI.Widget = new Widget();
+     * const anchorPane: PUXI.Widget = new Widget();
+     *
+     * widget.layoutOptions = new PUXI.AnchoredLayoutOptions(
+     *      .10,
+     *      .90,
+     *      20,
+     *      80
+     * );
+     *
+     * // Prevent child from requesting natural bounds.
+     * widget.layoutOptions.width = 0;
+     * widget.layoutOptions.height = 0;
+     * ```
+     *
+     * ### Intra-anchor region constraints
+     *
+     * If the offsets given provide a region larger than the widget's dimensions, then
+     * the widget will be aligned accordingly. However, if the width or height of the
+     * child is set to 0, then that child will be scaled to fit in the entire region
+     * in that dimension.
+     *
+     * @extends PUXI.LayoutOptions
+     * @class
+     */
+    var AnchorLayoutOptions = /** @class */ (function (_super) {
+        __extends(AnchorLayoutOptions, _super);
+        function AnchorLayoutOptions(anchorLeft, anchorTop, anchorRight, anchorBottom, horizontalAlign, verticalAlign) {
+            if (horizontalAlign === void 0) { horizontalAlign = exports.ALIGN.NONE; }
+            if (verticalAlign === void 0) { verticalAlign = exports.ALIGN.NONE; }
+            var _this = _super.call(this, LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT) || this;
+            _this.anchorLeft = anchorLeft;
+            _this.anchorTop = anchorTop;
+            _this.anchorBottom = anchorBottom;
+            _this.anchorRight = anchorRight;
+            _this.horizontalAlign = horizontalAlign;
+            _this.verticalAlign = verticalAlign;
+            return _this;
+        }
+        return AnchorLayoutOptions;
+    }(LayoutOptions));
+
+    (function (MeasureMode) {
+        MeasureMode[MeasureMode["UNBOUNDED"] = 0] = "UNBOUNDED";
+        MeasureMode[MeasureMode["EXACTLY"] = 1] = "EXACTLY";
+        MeasureMode[MeasureMode["AT_MOST"] = 2] = "AT_MOST";
+    })(exports.MeasureMode || (exports.MeasureMode = {}));
+
+    /**
+     * A widget is a user interface control that renders content inside its prescribe
+     * rectangle on the screen.
      *
      * @class
-     * @extends PIXI.UI.UIBase
+     * @extends PIXI.Container
      * @param width {Number} Width of the UIObject
      * @param height {Number} Height of the UIObject
      */
-    var UIBase = /** @class */ (function (_super) {
-        __extends(UIBase, _super);
-        function UIBase(width, height) {
+    var Widget = /** @class */ (function (_super) {
+        __extends(Widget, _super);
+        function Widget(width, height) {
             var _this = _super.call(this) || this;
             _this.container = new PIXI$1.Container();
             _this.setting = new UISettings();
-            _this.children = [];
+            _this.widgetChildren = [];
             _this.stage = null;
+            _this.layoutMeasure = new Insets();
             _this.initialized = false;
             _this.dragInitialized = false;
             _this.dropInitialized = false;
@@ -342,7 +555,7 @@
          *
          * @private
          */
-        UIBase.prototype.updatesettings = function (updateChildren, updateParent) {
+        Widget.prototype.updatesettings = function (updateChildren, updateParent) {
             if (!this.initialized) {
                 if (this.parent && this.parent.stage && this.parent.initialized) {
                     this.initialize();
@@ -365,7 +578,7 @@
          *
          * @private
          */
-        UIBase.prototype.updateParent = function () {
+        Widget.prototype.updateParent = function () {
             if (this.parent) {
                 if (this.parent.updatesettings) {
                     this.parent.updatesettings(false, true);
@@ -377,7 +590,7 @@
          *
          * @private
          */
-        UIBase.prototype.baseupdate = function () {
+        Widget.prototype.baseupdate = function () {
             // return if parent size didnt change
             if (this.parent) {
                 var parentHeight = void 0;
@@ -548,12 +761,82 @@
          *
          * @private
          */
-        UIBase.prototype.updateChildren = function () {
-            for (var i = 0; i < this.children.length; i++) {
-                this.children[i].updatesettings(true);
+        Widget.prototype.updateChildren = function () {
+            for (var i = 0; i < this.widgetChildren.length; i++) {
+                this.widgetChildren[i].updatesettings(true);
             }
         };
-        UIBase.prototype.addChild = function (UIObject) {
+        Object.defineProperty(Widget.prototype, "measuredWidth", {
+            get: function () {
+                return this._measuredWidth;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "measuredHeight", {
+            get: function () {
+                return this._measuredHeight;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Widget.prototype.getMeasuredWidth = function () {
+            return this._measuredWidth;
+        };
+        Widget.prototype.getMeasuredHeight = function () {
+            return this._measuredHeight;
+        };
+        Widget.prototype.onMeasure = function (width, height, widthMode, heightMode) {
+            var naturalWidth = this.container.width;
+            var naturalHeight = this.container.height;
+            switch (widthMode) {
+                case exports.MeasureMode.EXACTLY:
+                    this._measuredWidth = width;
+                    break;
+                case exports.MeasureMode.UNBOUNDED:
+                    this._measuredWidth = naturalWidth;
+                    break;
+                case exports.MeasureMode.AT_MOST:
+                    this._measuredWidth = Math.min(width, naturalWidth);
+                    break;
+            }
+            switch (heightMode) {
+                case exports.MeasureMode.EXACTLY:
+                    this._measuredHeight = height;
+                    break;
+                case exports.MeasureMode.UNBOUNDED:
+                    this._measuredHeight = naturalHeight;
+                    break;
+                case exports.MeasureMode.AT_MOST:
+                    this._measuredHeight = Math.min(height, naturalHeight);
+                    break;
+            }
+        };
+        Widget.prototype.measure = function (width, height, widthMode, heightMode) {
+            this.onMeasure(width, height, widthMode, heightMode);
+            for (var i = 0; i < this.widgetChildren.length; i++) {
+                var child = this.widgetChildren[i];
+                var childOptions = child.layoutOptions || LayoutOptions.DEFAULT;
+                var maxWidth = (childOptions.width === LayoutOptions.FILL_PARENT || childOptions.width === LayoutOptions.WRAP_CONTENT)
+                    ? this.measuredWidth : 0;
+                var maxHeight = (childOptions.height === LayoutOptions.FILL_PARENT || childOptions.height === LayoutOptions.WRAP_CONTENT)
+                    ? this.measuredHeight : 0;
+                child.measure(maxWidth, maxHeight, maxWidth ? exports.MeasureMode.AT_MOST : exports.MeasureMode.UNBOUNDED, maxHeight ? exports.MeasureMode.AT_MOST : exports.MeasureMode.UNBOUNDED);
+            }
+        };
+        Widget.prototype.layout = function (l, t, r, b, dirty) {
+            this.layoutMeasure.left = l;
+            this.layoutMeasure.top = t;
+            this.layoutMeasure.right = r;
+            this.layoutMeasure.bottom = b;
+            this._width = r - l;
+            this._height = b - t;
+        };
+        Widget.prototype.setLayoutOptions = function (lopt) {
+            this.layoutOptions = lopt;
+            return this;
+        };
+        Widget.prototype.addChild = function (UIObject) {
             var argumentsLength = arguments.length;
             if (argumentsLength > 1) {
                 for (var i = 0; i < argumentsLength; i++) {
@@ -566,12 +849,12 @@
                 }
                 UIObject.parent = this;
                 this.container.addChild(UIObject.container);
-                this.children.push(UIObject);
+                this.widgetChildren.push(UIObject);
                 this.updatesettings(true, true);
             }
             return UIObject;
         };
-        UIBase.prototype.removeChild = function (UIObject) {
+        Widget.prototype.removeChild = function (UIObject) {
             var argumentLenght = arguments.length;
             if (argumentLenght > 1) {
                 for (var i = 0; i < argumentLenght; i++) {
@@ -579,12 +862,12 @@
                 }
             }
             else {
-                var index = this.children.indexOf(UIObject);
+                var index = this.widgetChildren.indexOf(UIObject);
                 if (index !== -1) {
                     var oldUIParent_1 = UIObject.parent;
                     var oldParent = UIObject.container.parent;
                     UIObject.container.parent.removeChild(UIObject.container);
-                    this.children.splice(index, 1);
+                    this.widgetChildren.splice(index, 1);
                     UIObject.parent = null;
                     // oldParent._recursivePostUpdateTransform();
                     setTimeout(function () {
@@ -600,7 +883,7 @@
          *
          * @private
          */
-        UIBase.prototype.initialize = function () {
+        Widget.prototype.initialize = function () {
             this.initialized = true;
             this.stage = this.parent.stage;
             if (this.draggable) {
@@ -610,13 +893,13 @@
                 this.initDroppable();
             }
         };
-        UIBase.prototype.clearDraggable = function () {
+        Widget.prototype.clearDraggable = function () {
             if (this.dragInitialized) {
                 this.dragInitialized = false;
                 this.drag.stopEvent();
             }
         };
-        UIBase.prototype.initDraggable = function () {
+        Widget.prototype.initDraggable = function () {
             if (!this.dragInitialized) {
                 this.dragInitialized = true;
                 var containerStart_1 = new PIXI$1.Point();
@@ -672,14 +955,14 @@
                 };
             }
         };
-        UIBase.prototype.clearDroppable = function () {
+        Widget.prototype.clearDroppable = function () {
             if (this.dropInitialized) {
                 this.dropInitialized = false;
                 this.container.removeListener('mouseup', this.onDrop);
                 this.container.removeListener('touchend', this.onDrop);
             }
         };
-        UIBase.prototype.initDroppable = function () {
+        Widget.prototype.initDroppable = function () {
             if (!this.dropInitialized) {
                 this.dropInitialized = true;
                 var container = this.container;
@@ -701,7 +984,7 @@
                 container.on('touchend', this.onDrop);
             }
         };
-        Object.defineProperty(UIBase.prototype, "x", {
+        Object.defineProperty(Widget.prototype, "x", {
             get: function () {
                 return this.setting.left;
             },
@@ -711,7 +994,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "y", {
+        Object.defineProperty(Widget.prototype, "y", {
             get: function () {
                 return this.setting.top;
             },
@@ -721,9 +1004,9 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "width", {
+        Object.defineProperty(Widget.prototype, "width", {
             get: function () {
-                return this.setting.width;
+                return this._width;
             },
             set: function (val) {
                 if (isNaN(val) && val.indexOf('%') !== -1) {
@@ -738,7 +1021,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_width", {
+        Object.defineProperty(Widget.prototype, "actual_width", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.widthPct !== null) {
@@ -753,9 +1036,9 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "height", {
+        Object.defineProperty(Widget.prototype, "height", {
             get: function () {
-                return this.setting.height;
+                return this._height;
             },
             set: function (val) {
                 if (isNaN(val) && val.indexOf('%') !== -1) {
@@ -770,7 +1053,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_height", {
+        Object.defineProperty(Widget.prototype, "actual_height", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.heightPct !== null) {
@@ -785,7 +1068,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "minWidth", {
+        Object.defineProperty(Widget.prototype, "minWidth", {
             get: function () {
                 return this.setting.minWidth;
             },
@@ -802,7 +1085,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_minWidth", {
+        Object.defineProperty(Widget.prototype, "actual_minWidth", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.minWidthPct !== null) {
@@ -817,7 +1100,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "minHeight", {
+        Object.defineProperty(Widget.prototype, "minHeight", {
             get: function () {
                 return this.setting.minHeight;
             },
@@ -834,7 +1117,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_minHeight", {
+        Object.defineProperty(Widget.prototype, "actual_minHeight", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.minHeightPct !== null) {
@@ -849,7 +1132,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "maxWidth", {
+        Object.defineProperty(Widget.prototype, "maxWidth", {
             get: function () {
                 return this.setting.maxWidth;
             },
@@ -866,7 +1149,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_maxWidth", {
+        Object.defineProperty(Widget.prototype, "actual_maxWidth", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.maxWidthPct !== null) {
@@ -881,7 +1164,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "maxHeight", {
+        Object.defineProperty(Widget.prototype, "maxHeight", {
             get: function () {
                 return this.setting.maxHeight;
             },
@@ -898,7 +1181,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_maxHeight", {
+        Object.defineProperty(Widget.prototype, "actual_maxHeight", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.maxHeightPct !== null) {
@@ -913,7 +1196,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "anchorLeft", {
+        Object.defineProperty(Widget.prototype, "anchorLeft", {
             get: function () {
                 return this.setting.anchorLeft;
             },
@@ -930,7 +1213,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_anchorLeft", {
+        Object.defineProperty(Widget.prototype, "actual_anchorLeft", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.anchorLeftPct !== null) {
@@ -945,7 +1228,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "anchorRight", {
+        Object.defineProperty(Widget.prototype, "anchorRight", {
             get: function () {
                 return this.setting.anchorRight;
             },
@@ -962,7 +1245,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_anchorRight", {
+        Object.defineProperty(Widget.prototype, "actual_anchorRight", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.anchorRightPct !== null) {
@@ -977,7 +1260,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "anchorTop", {
+        Object.defineProperty(Widget.prototype, "anchorTop", {
             get: function () {
                 return this.setting.anchorTop;
             },
@@ -994,7 +1277,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_anchorTop", {
+        Object.defineProperty(Widget.prototype, "actual_anchorTop", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.anchorTopPct !== null) {
@@ -1009,7 +1292,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "anchorBottom", {
+        Object.defineProperty(Widget.prototype, "anchorBottom", {
             get: function () {
                 return this.setting.anchorBottom;
             },
@@ -1026,7 +1309,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_anchorBottom", {
+        Object.defineProperty(Widget.prototype, "actual_anchorBottom", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.anchorBottomPct !== null) {
@@ -1041,7 +1324,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "left", {
+        Object.defineProperty(Widget.prototype, "left", {
             get: function () {
                 return this.setting.left;
             },
@@ -1058,7 +1341,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_left", {
+        Object.defineProperty(Widget.prototype, "actual_left", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.leftPct !== null) {
@@ -1073,7 +1356,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "right", {
+        Object.defineProperty(Widget.prototype, "right", {
             get: function () {
                 return this.setting.right;
             },
@@ -1090,7 +1373,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_right", {
+        Object.defineProperty(Widget.prototype, "actual_right", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.rightPct !== null) {
@@ -1105,7 +1388,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "top", {
+        Object.defineProperty(Widget.prototype, "top", {
             get: function () {
                 return this.setting.top;
             },
@@ -1122,7 +1405,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_top", {
+        Object.defineProperty(Widget.prototype, "actual_top", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.topPct !== null) {
@@ -1137,7 +1420,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "bottom", {
+        Object.defineProperty(Widget.prototype, "bottom", {
             get: function () {
                 return this.setting.bottom;
             },
@@ -1154,7 +1437,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "actual_bottom", {
+        Object.defineProperty(Widget.prototype, "actual_bottom", {
             get: function () {
                 if (this.dirty) {
                     if (this.setting.bottomPct !== null) {
@@ -1169,7 +1452,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "verticalAlign", {
+        Object.defineProperty(Widget.prototype, "verticalAlign", {
             get: function () {
                 return this.setting.verticalAlign;
             },
@@ -1180,7 +1463,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "valign", {
+        Object.defineProperty(Widget.prototype, "valign", {
             get: function () {
                 return this.setting.verticalAlign;
             },
@@ -1191,7 +1474,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "horizontalAlign", {
+        Object.defineProperty(Widget.prototype, "horizontalAlign", {
             get: function () {
                 return this.setting.horizontalAlign;
             },
@@ -1202,7 +1485,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "align", {
+        Object.defineProperty(Widget.prototype, "align", {
             get: function () {
                 return this.setting.horizontalAlign;
             },
@@ -1213,7 +1496,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "tint", {
+        Object.defineProperty(Widget.prototype, "tint", {
             get: function () {
                 return this.setting.tint;
             },
@@ -1224,7 +1507,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "alpha", {
+        Object.defineProperty(Widget.prototype, "alpha", {
             get: function () {
                 return this.setting.alpha;
             },
@@ -1235,7 +1518,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "rotation", {
+        Object.defineProperty(Widget.prototype, "rotation", {
             get: function () {
                 return this.setting.rotation;
             },
@@ -1246,7 +1529,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "blendMode", {
+        Object.defineProperty(Widget.prototype, "blendMode", {
             get: function () {
                 return this.setting.blendMode;
             },
@@ -1257,7 +1540,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "pivotX", {
+        Object.defineProperty(Widget.prototype, "pivotX", {
             get: function () {
                 return this.setting.pivotX;
             },
@@ -1269,7 +1552,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "pivotY", {
+        Object.defineProperty(Widget.prototype, "pivotY", {
             get: function () {
                 return this.setting.pivotY;
             },
@@ -1281,7 +1564,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "pivot", {
+        Object.defineProperty(Widget.prototype, "pivot", {
             set: function (val) {
                 this.setting.pivotX = val;
                 this.setting.pivotY = val;
@@ -1291,7 +1574,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "scaleX", {
+        Object.defineProperty(Widget.prototype, "scaleX", {
             get: function () {
                 return this.setting.scaleX;
             },
@@ -1302,7 +1585,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "scaleY", {
+        Object.defineProperty(Widget.prototype, "scaleY", {
             get: function () {
                 return this.setting.scaleY;
             },
@@ -1313,7 +1596,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "scale", {
+        Object.defineProperty(Widget.prototype, "scale", {
             get: function () {
                 return this.setting.scaleX;
             },
@@ -1326,7 +1609,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "draggable", {
+        Object.defineProperty(Widget.prototype, "draggable", {
             get: function () {
                 return this.setting.draggable;
             },
@@ -1344,7 +1627,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "dragRestricted", {
+        Object.defineProperty(Widget.prototype, "dragRestricted", {
             get: function () {
                 return this.setting.dragRestricted;
             },
@@ -1354,7 +1637,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "dragRestrictAxis", {
+        Object.defineProperty(Widget.prototype, "dragRestrictAxis", {
             get: function () {
                 return this.setting.dragRestrictAxis;
             },
@@ -1364,7 +1647,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "dragThreshold", {
+        Object.defineProperty(Widget.prototype, "dragThreshold", {
             get: function () {
                 return this.setting.dragThreshold;
             },
@@ -1374,7 +1657,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "dragGroup", {
+        Object.defineProperty(Widget.prototype, "dragGroup", {
             get: function () {
                 return this.setting.dragGroup;
             },
@@ -1384,7 +1667,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "dragContainer", {
+        Object.defineProperty(Widget.prototype, "dragContainer", {
             get: function () {
                 return this.setting.dragContainer;
             },
@@ -1394,7 +1677,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "droppable", {
+        Object.defineProperty(Widget.prototype, "droppable", {
             get: function () {
                 return this.setting.droppable;
             },
@@ -1412,7 +1695,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "droppableReparent", {
+        Object.defineProperty(Widget.prototype, "droppableReparent", {
             get: function () {
                 return this.setting.droppableReparent;
             },
@@ -1422,7 +1705,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "dropGroup", {
+        Object.defineProperty(Widget.prototype, "dropGroup", {
             get: function () {
                 return this.setting.dropGroup;
             },
@@ -1432,7 +1715,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "renderable", {
+        Object.defineProperty(Widget.prototype, "renderable", {
             get: function () {
                 return this.container.renderable;
             },
@@ -1442,7 +1725,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "visible", {
+        Object.defineProperty(Widget.prototype, "visible", {
             get: function () {
                 return this.container.visible;
             },
@@ -1452,7 +1735,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "cacheAsBitmap", {
+        Object.defineProperty(Widget.prototype, "cacheAsBitmap", {
             get: function () {
                 return this.container.cacheAsBitmap;
             },
@@ -1462,7 +1745,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "onClick", {
+        Object.defineProperty(Widget.prototype, "onClick", {
             get: function () {
                 return this.container.click;
             },
@@ -1472,7 +1755,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "interactive", {
+        Object.defineProperty(Widget.prototype, "interactive", {
             get: function () {
                 return this.container.interactive;
             },
@@ -1482,7 +1765,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "interactiveChildren", {
+        Object.defineProperty(Widget.prototype, "interactiveChildren", {
             get: function () {
                 return this.container.interactiveChildren;
             },
@@ -1492,7 +1775,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(UIBase.prototype, "parentLayer", {
+        Object.defineProperty(Widget.prototype, "parentLayer", {
             get: function () {
                 return this.container.parentLayer;
             },
@@ -1502,7 +1785,7 @@
             enumerable: true,
             configurable: true
         });
-        return UIBase;
+        return Widget;
     }(PIXI$1.utils.EventEmitter));
 
     var ClickEvent = /** @class */ (function () {
@@ -1843,7 +2126,7 @@
             }
         };
         return InputBase;
-    }(UIBase));
+    }(Widget));
 
     /**
      * An UI button object
@@ -2154,7 +2437,7 @@
             // }
         };
         return Container;
-    }(UIBase));
+    }(Widget));
 
     function DynamicTextStyle(parent)
     {
@@ -2592,12 +2875,6 @@
 
     DynamicChar.prototype.constructor = DynamicChar;
 
-    var emojiRegex = function () {
-    	// https://mathiasbynens.be/notes/es-unicode-property-escapes#emoji
-    	return (/\uD83D\uDC69(?:\u200D(?:(?:\uD83D\uDC69\u200D)?\uD83D\uDC67|(?:\uD83D\uDC69\u200D)?\uD83D\uDC66)|\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC69\u200D(?:\uD83D\uDC69\u200D)?\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D(?:\uD83D\uDC69\u200D)?\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]\uFE0F|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC6F\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3C-\uDD3E\uDDD6-\uDDDF])\u200D[\u2640\u2642]\uFE0F|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF6\uD83C\uDDE6|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uFE0F\u200D[\u2640\u2642]|(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642])\uFE0F|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2695\u2696\u2708]|\uD83D\uDC69\u200D[\u2695\u2696\u2708]|\uD83D\uDC68(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708]))\uFE0F|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83D\uDC69\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69]))|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67)\uDB40\uDC7F|\uD83D\uDC68(?:\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC66\u200D\uD83D\uDC66|(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92])|(?:\uD83C[\uDFFB-\uDFFF])\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]))|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDD1-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC68(?:\u200D(?:(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC67|(?:(?:\uD83D[\uDC68\uDC69])\u200D)?\uD83D\uDC66)|\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC69\uDC6E\uDC70-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD18-\uDD1C\uDD1E\uDD1F\uDD26\uDD30-\uDD39\uDD3D\uDD3E\uDDD1-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])?|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDEEB\uDEEC\uDEF4-\uDEF8]|\uD83E[\uDD10-\uDD3A\uDD3C-\uDD3E\uDD40-\uDD45\uDD47-\uDD4C\uDD50-\uDD6B\uDD80-\uDD97\uDDC0\uDDD0-\uDDE6])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u2660\u2663\u2665\u2666\u2668\u267B\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEF8]|\uD83E[\uDD10-\uDD3A\uDD3C-\uDD3E\uDD40-\uDD45\uDD47-\uDD4C\uDD50-\uDD6B\uDD80-\uDD97\uDDC0\uDDD0-\uDDE6])\uFE0F/g
-    	);
-    };
-
     let atlas = null;
 
     /**
@@ -2616,7 +2893,7 @@
     {
         options = options || {};
 
-        UIBase.call(this, options.width || 0, options.height || 0);
+        Widget.call(this, options.width || 0, options.height || 0);
 
         // create atlas
         if (atlas === null)
@@ -3074,7 +3351,7 @@
         };
     }
 
-    DynamicText.prototype = Object.create(UIBase.prototype);
+    DynamicText.prototype = Object.create(Widget.prototype);
     DynamicText.prototype.constructor = DynamicText;
 
     DynamicText.settings = {
@@ -4334,7 +4611,7 @@
     * An UI Slider, the default width/height is 90%
     *
     * @class
-    * @extends UIBase
+    * @extends Widget
     * @memberof PIXI.UI
     * @param options {Object} Slider settings
     * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
@@ -4545,7 +4822,7 @@
             configurable: true
         });
         return Slider;
-    }(UIBase));
+    }(Widget));
 
     /**
      * An UI scrollbar to control a ScrollingContainer
@@ -5239,7 +5516,7 @@
             // NO updates
         };
         return SliceSprite;
-    }(UIBase));
+    }(Widget));
 
     /**
      * An UI sprite object
@@ -5273,7 +5550,7 @@
             return new Sprite(new PIXI$1.Texture(new PIXI$1.BaseTexture(imageUrl)));
         };
         return Sprite;
-    }(UIBase));
+    }(Widget));
 
     /**
      * A Stage for UIObjects
@@ -5468,7 +5745,7 @@
             configurable: true
         });
         return Text;
-    }(UIBase));
+    }(Widget));
 
     // Dummy <input> element created for mobile keyboards
     var mockDOMInput;
@@ -6347,38 +6624,267 @@
             configurable: true
         });
         return TilingSprite;
-    }(UIBase));
+    }(Widget));
 
+    /**
+     * `AnchorLayout` is used in conjunction with `AnchorLayoutOptions`.
+     *
+     * @namespace PUXI
+     * @class
+     * @example
+     * ```
+     * parent.useLayout(
+     *    new PUXI.AnchorLayout()
+     * );
+     * ```
+     */
+    var AnchorLayout = /** @class */ (function () {
+        function AnchorLayout() {
+            this.noPercents = false;
+        }
+        AnchorLayout.prototype.onAttach = function (host) {
+            this.host = host;
+        };
+        AnchorLayout.prototype.onDetach = function () {
+            this.host = null;
+        };
+        AnchorLayout.prototype.measureChild = function (child, maxParentWidth, maxParentHeight, widthMode, heightMode) {
+            var lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
+            var anchorLeft = lopt.anchorLeft || 0;
+            var anchorTop = lopt.anchorTop || 0;
+            var anchorRight = lopt.anchorRight || 0;
+            var anchorBottom = lopt.anchorBottom || 0;
+            var maxWidgetWidth = 0;
+            var maxWidgetHeight = 0;
+            var widgetWidthMode;
+            var widgetHeightMode;
+            // Widget width measurement
+            if (this.noPercents || (Math.abs(anchorLeft) > 1 && Math.abs(anchorRight) > 1)) {
+                maxWidgetWidth = Math.ceil(anchorRight) - Math.floor(anchorLeft);
+                widgetWidthMode = exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorLeft) < 1 && Math.abs(anchorRight) < 1) {
+                maxWidgetWidth = maxParentWidth * (anchorRight - anchorLeft);
+                widgetWidthMode = (widthMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorLeft) < 1) {
+                maxWidgetWidth = anchorRight;
+                widgetWidthMode = exports.MeasureMode.AT_MOST;
+            }
+            else {
+                maxWidgetWidth = (maxParentWidth * anchorRight) - anchorLeft;
+                widgetWidthMode = (widthMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            // Widget height measurement
+            if (this.noPercents || (Math.abs(anchorTop) > 1 && Math.abs(anchorBottom) > 1)) {
+                maxWidgetHeight = Math.ceil(anchorBottom) - Math.floor(anchorTop);
+                widgetHeightMode = exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorTop) < 1 && Math.abs(anchorBottom) < 1) {
+                maxWidgetHeight = maxParentHeight * (anchorBottom - anchorTop);
+                widgetHeightMode = (heightMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorTop) < 1) {
+                maxWidgetHeight = anchorBottom;
+                widgetHeightMode = exports.MeasureMode.AT_MOST;
+            }
+            else {
+                maxWidgetHeight = (maxParentHeight * anchorBottom) - anchorTop;
+                widgetHeightMode = (heightMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            child.measure(maxWidgetWidth, maxWidgetHeight, widgetWidthMode, widgetHeightMode);
+        };
+        AnchorLayout.prototype.measureStretch = function (lowerAnchor, upperAnchor, childDimen) {
+            if (this.noPercents || (Math.abs(upperAnchor) > 1 && Math.abs(lowerAnchor) > 1)) {
+                return Math.max(lowerAnchor, upperAnchor);
+            }
+            else if (Math.abs(lowerAnchor) < 1 && Math.abs(upperAnchor) < 1) {
+                return childDimen / (upperAnchor - lowerAnchor);
+            }
+            else if (Math.abs(lowerAnchor) < 1) {
+                return upperAnchor;
+            }
+            return (childDimen + lowerAnchor) / upperAnchor;
+        };
+        AnchorLayout.prototype.measureChildren = function (maxParentWidth, maxParentHeight, widthMode, heightMode) {
+            var children = this.host.widgetChildren;
+            for (var i = 0, j = children.length; i < j; i++) {
+                this.measureChild(children[i], maxParentWidth, maxParentHeight, widthMode, heightMode);
+            }
+        };
+        AnchorLayout.prototype.onMeasure = function (maxWidth, maxHeight, widthMode, heightMode) {
+            if (widthMode === exports.MeasureMode.EXACTLY && heightMode === exports.MeasureMode.EXACTLY) {
+                this.measuredWidth = maxWidth;
+                this.measuredHeight = maxHeight;
+                this.measureChildren(this.measuredWidth, this.measuredHeight, exports.MeasureMode.EXACTLY, exports.MeasureMode.EXACTLY);
+            }
+            var maxX = 0;
+            var maxY = 0;
+            var children = this.host.widgetChildren;
+            this.measureChildren(maxWidth, maxHeight, widthMode, heightMode);
+            for (var i = 0, j = children.length; i < j; i++) {
+                var child = children[i];
+                var lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
+                var anchorLeft = lopt.anchorLeft || 0;
+                var anchorTop = lopt.anchorTop || 0;
+                var anchorRight = lopt.anchorRight || 0;
+                var anchorBottom = lopt.anchorBottom || 0;
+                maxX = Math.max(maxX, this.measureStretch(anchorLeft, anchorRight, child.getMeasuredWidth()));
+                maxY = Math.max(maxY, this.measureStretch(anchorTop, anchorBottom, child.getMeasuredHeight()));
+            }
+            if (widthMode === exports.MeasureMode.EXACTLY) {
+                this.measuredWidth = maxWidth;
+            }
+            else if (widthMode === exports.MeasureMode.AT_MOST) {
+                this.measuredWidth = Math.min(maxX, maxWidth);
+            }
+            else {
+                this.measuredWidth = maxX;
+            }
+            if (heightMode === exports.MeasureMode.EXACTLY) {
+                this.measuredHeight = maxHeight;
+            }
+            else if (heightMode === exports.MeasureMode.AT_MOST) {
+                this.measuredHeight = Math.min(maxY, maxHeight);
+            }
+            else {
+                this.measuredHeight = maxY;
+            }
+            this.measureChildren(this.measuredWidth, this.measuredHeight, exports.MeasureMode.EXACTLY, exports.MeasureMode.EXACTLY);
+        };
+        AnchorLayout.prototype.getMeasuredWidth = function () {
+            return this.measuredWidth;
+        };
+        AnchorLayout.prototype.getMeasuredHeight = function () {
+            return this.measuredHeight;
+        };
+        AnchorLayout.prototype.onLayout = function (parent) {
+            var widgetChildren = parent.widgetChildren;
+            for (var i = 0; i < widgetChildren.length; i++) {
+                var child = widgetChildren[i];
+                var layoutOptions = (child.layoutOptions || {});
+                var childWidth = child.measuredWidth;
+                var childHeight = child.measuredHeight;
+                var anchorLeft = layoutOptions.anchorLeft || 0;
+                var anchorTop = layoutOptions.anchorTop || 0;
+                var anchorRight = layoutOptions.anchorRight || 0;
+                var anchorBottom = layoutOptions.anchorBottom || 0;
+                if (anchorLeft > -1 && anchorLeft <= 1) {
+                    anchorLeft *= parent.width;
+                }
+                if (anchorTop > -1 && anchorTop <= 1) {
+                    anchorTop *= parent.height;
+                }
+                if (anchorRight > -1 && anchorRight <= 1) {
+                    anchorRight *= parent.width;
+                }
+                if (anchorBottom > -1 && anchorBottom <= 1) {
+                    anchorBottom *= parent.height;
+                }
+                var x = 0;
+                var y = 0;
+                if (childWidth !== 0) {
+                    switch (layoutOptions.horizontalAlign || exports.ALIGN.NONE) {
+                        case exports.ALIGN.LEFT:
+                            x = anchorLeft;
+                            break;
+                        case exports.ALIGN.MIDDLE:
+                            x = (anchorRight - anchorLeft - childWidth) / 2;
+                            break;
+                        case exports.ALIGN.RIGHT:
+                            x = anchorRight - childWidth;
+                            break;
+                    }
+                }
+                else {
+                    x = anchorLeft;
+                    childWidth = anchorRight - anchorLeft;
+                }
+                if (childHeight !== 0) {
+                    switch (layoutOptions.verticalAlign || exports.ALIGN.NONE) {
+                        case exports.ALIGN.TOP:
+                            y = anchorTop;
+                            break;
+                        case exports.ALIGN.MIDDLE:
+                            y = (anchorBottom - anchorTop - childHeight) / 2;
+                            break;
+                        case exports.ALIGN.RIGHT:
+                            y = anchorBottom - childWidth;
+                            break;
+                    }
+                }
+                else {
+                    y = anchorRight;
+                    childHeight = anchorBottom - anchorTop;
+                }
+                child.layout(x, y, x + childWidth, y + childHeight);
+            }
+        };
+        return AnchorLayout;
+    }());
 
+    var WidgetGroup = /** @class */ (function (_super) {
+        __extends(WidgetGroup, _super);
+        function WidgetGroup() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        WidgetGroup.prototype.useLayout = function (layoutMgr) {
+            if (this.layoutMgr) {
+                this.layoutMgr.onDetach(this);
+            }
+            this.layoutMgr = layoutMgr;
+            if (layoutMgr) {
+                this.layoutMgr.onAttach(this);
+            }
+        };
+        WidgetGroup.prototype.measure = function (width, height, widthMode, heightMode) {
+            _super.prototype.measure.call(this, width, height, widthMode, heightMode);
+            this.layoutMgr.onMeasure(width, height, widthMode, heightMode);
+            this._measuredWidth = Math.max(this.measuredWidth, this.layoutMgr.getMeasuredWidth());
+            this._measuredHeight = Math.max(this.measuredHeight, this.layoutMgr.getMeasuredHeight());
+        };
+        WidgetGroup.prototype.layout = function (l, t, r, b, dirty) {
+            if (dirty === void 0) { dirty = true; }
+            _super.prototype.layout.call(this, l, t, r, b, dirty);
+            this.layoutMgr.onLayout(this);
+        };
+        return WidgetGroup;
+    }(Widget));
 
-    var _UI = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        UIBase: UIBase,
-        Button: Button,
-        CheckBox: CheckBox,
-        Container: Container,
-        DynamicText: DynamicText,
-        DynamicTextStyle: DynamicTextStyle,
-        Ease: Ease,
-        Interaction: Interaction,
-        Helpers: Helpers,
-        ScrollBar: ScrollBar,
-        ScrollingContainer: ScrollingContainer,
-        SortableList: SortableList,
-        Slider: Slider,
-        SliceSprite: SliceSprite,
-        Sprite: Sprite,
-        Stage: Stage,
-        Text: Text,
-        TextInput: TextInput,
-        TilingSprite: TilingSprite,
-        Tween: Tween,
-        Ticker: Ticker
-    });
-
-    var UI = _UI;
-
-    exports.UI = UI;
+    exports.AnchorLayout = AnchorLayout;
+    exports.AnchorLayoutOptions = AnchorLayoutOptions;
+    exports.Button = Button;
+    exports.CheckBox = CheckBox;
+    exports.Container = Container;
+    exports.DynamicText = DynamicText;
+    exports.DynamicTextStyle = DynamicTextStyle;
+    exports.Ease = Ease;
+    exports.Helpers = Helpers;
+    exports.Insets = Insets;
+    exports.Interaction = Interaction;
+    exports.LayoutOptions = LayoutOptions;
+    exports.ScrollBar = ScrollBar;
+    exports.ScrollingContainer = ScrollingContainer;
+    exports.SliceSprite = SliceSprite;
+    exports.Slider = Slider;
+    exports.SortableList = SortableList;
+    exports.Sprite = Sprite;
+    exports.Stage = Stage;
+    exports.Text = Text;
+    exports.TextInput = TextInput;
+    exports.Ticker = Ticker;
+    exports.TilingSprite = TilingSprite;
+    exports.Tween = Tween;
+    exports.Widget = Widget;
+    exports.WidgetGroup = WidgetGroup;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

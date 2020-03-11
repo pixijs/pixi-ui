@@ -2,20 +2,25 @@ import { UISettings } from './UISettings';
 import { DragEvent } from './Interaction/DragEvent';
 import { DragDropController } from './Interaction/DragDropController';
 import * as PIXI from 'pixi.js';
+import { Insets } from './layout-options/Insets';
+import { LayoutOptions } from './layout-options';
+import { MeasureMode, IMeasurable } from './IMeasurable';
 
 /**
- * Base class of all UIObjects
+ * A widget is a user interface control that renders content inside its prescribe
+ * rectangle on the screen.
  *
  * @class
- * @extends PIXI.UI.UIBase
+ * @extends PIXI.Container
  * @param width {Number} Width of the UIObject
  * @param height {Number} Height of the UIObject
  */
-export abstract class UIBase extends PIXI.utils.EventEmitter
+export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 {
+    content: PIXI.Container;
     container: PIXI.Container;
     setting: UISettings;
-    children: UIBase[];
+    widgetChildren: Widget[];
     stage: any;
 
     initialized: boolean;
@@ -43,9 +48,14 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
     _bottom: number;
 
     _dragPosition: any;
-    parent: UIBase;
+    parent: Widget;
     _parentWidth: number;
     _parentHeight: number;
+
+    protected _measuredWidth: number;
+    protected _measuredHeight: number;
+    public layoutMeasure: Insets;
+    public layoutOptions: LayoutOptions;
 
     constructor(width: number, height: number)
     {
@@ -53,8 +63,9 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
 
         this.container = new PIXI.Container();
         this.setting = new UISettings();
-        this.children = [];
+        this.widgetChildren = [];
         this.stage = null;
+        this.layoutMeasure = new Insets();
 
         this.initialized = false;
         this.dragInitialized = false;
@@ -359,10 +370,103 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
      */
     updateChildren(): void
     {
-        for (let i = 0; i < this.children.length; i++)
+        for (let i = 0; i < this.widgetChildren.length; i++)
         {
-            this.children[i].updatesettings(true);
+            this.widgetChildren[i].updatesettings(true);
         }
+    }
+
+    get measuredWidth(): number
+    {
+        return this._measuredWidth;
+    }
+
+    get measuredHeight(): number
+    {
+        return this._measuredHeight;
+    }
+
+    getMeasuredWidth(): number
+    {
+        return this._measuredWidth;
+    }
+
+    getMeasuredHeight(): number
+    {
+        return this._measuredHeight;
+    }
+
+    onMeasure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
+    {
+        const naturalWidth = this.container.width;
+        const naturalHeight = this.container.height;
+
+        switch (widthMode)
+        {
+            case MeasureMode.EXACTLY:
+                this._measuredWidth = width;
+                break;
+            case MeasureMode.UNBOUNDED:
+                this._measuredWidth = naturalWidth;
+                break;
+            case MeasureMode.AT_MOST:
+                this._measuredWidth = Math.min(width, naturalWidth);
+                break;
+        }
+
+        switch (heightMode)
+        {
+            case MeasureMode.EXACTLY:
+                this._measuredHeight = height;
+                break;
+            case MeasureMode.UNBOUNDED:
+                this._measuredHeight = naturalHeight;
+                break;
+            case MeasureMode.AT_MOST:
+                this._measuredHeight = Math.min(height, naturalHeight);
+                break;
+        }
+    }
+
+    measure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
+    {
+        this.onMeasure(width, height, widthMode, heightMode);
+
+        for (let i = 0; i < this.widgetChildren.length; i++)
+        {
+            const child = this.widgetChildren[i];
+            const childOptions = child.layoutOptions || LayoutOptions.DEFAULT;
+
+            const maxWidth = (childOptions.width === LayoutOptions.FILL_PARENT || childOptions.width === LayoutOptions.WRAP_CONTENT)
+                ? this.measuredWidth : 0;
+            const maxHeight = (childOptions.height === LayoutOptions.FILL_PARENT || childOptions.height === LayoutOptions.WRAP_CONTENT)
+                ? this.measuredHeight : 0;
+
+            child.measure(
+                maxWidth,
+                maxHeight,
+                maxWidth ? MeasureMode.AT_MOST : MeasureMode.UNBOUNDED,
+                maxHeight ? MeasureMode.AT_MOST : MeasureMode.UNBOUNDED,
+            );
+        }
+    }
+
+    layout(l: number, t: number, r: number, b: number, dirty = true): void
+    {
+        this.layoutMeasure.left = l;
+        this.layoutMeasure.top = t;
+        this.layoutMeasure.right = r;
+        this.layoutMeasure.bottom = b;
+
+        this._width = r - l;
+        this._height = b - t;
+    }
+
+    setLayoutOptions(lopt: LayoutOptions): Widget
+    {
+        this.layoutOptions = lopt;
+
+        return this;
     }
 
     addChild(UIObject): any
@@ -385,7 +489,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
 
             UIObject.parent = this;
             this.container.addChild(UIObject.container);
-            this.children.push(UIObject);
+            this.widgetChildren.push(UIObject);
             this.updatesettings(true, true);
         }
 
@@ -405,7 +509,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
         }
         else
         {
-            const index = this.children.indexOf(UIObject);
+            const index = this.widgetChildren.indexOf(UIObject);
 
             if (index !== -1)
             {
@@ -413,7 +517,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
                 const oldParent = UIObject.container.parent;
 
                 UIObject.container.parent.removeChild(UIObject.container);
-                this.children.splice(index, 1);
+                this.widgetChildren.splice(index, 1);
                 UIObject.parent = null;
 
                 // oldParent._recursivePostUpdateTransform();
@@ -593,7 +697,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
 
     get width(): number
     {
-        return this.setting.width;
+        return this._width;
     }
     set width(val: number)
     {
@@ -625,7 +729,7 @@ export abstract class UIBase extends PIXI.utils.EventEmitter
 
     get height(): number
     {
-        return this.setting.height;
+        return this._height;
     }
     set height(val: number)
     {

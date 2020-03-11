@@ -4,7 +4,8 @@
     "noEmit": true, // Do not compile the JS (or TS) files in this project on build
     "sourceMap": true,
     "esModuleInterop": true,
-    "target": "ES5"
+    "target": "ES5",
+    "declaration": false
   },
   "exclude": [
     "node_modules" // Don't include any JavaScript found under "node_modules"

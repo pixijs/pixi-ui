@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 
 /**
  * An UI sprite object
@@ -11,7 +11,7 @@ import { UIBase } from './UIBase';
  * @param [Width=Texture.width] {number} Width of tilingsprite
  * @param [Height=Texture.height] {number} Height of tiling sprite
  */
-export class TilingSprite extends UIBase
+export class TilingSprite extends Widget
 {
     protected sprite: PIXI.extras.TilingSprite;
 

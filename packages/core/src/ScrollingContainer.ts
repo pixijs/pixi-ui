@@ -4,7 +4,7 @@ import { Ticker } from './Ticker';
 import { DragEvent } from './Interaction/DragEvent';
 import { MouseScrollEvent } from './Interaction/MouseScrollEvent';
 import * as PIXI from 'pixi.js';
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 
 interface IScrollingContainerOptions
 {
@@ -141,7 +141,7 @@ export class ScrollingContainer extends Container
         }
     }
 
-    addChild(...newChildren: UIBase[]): UIBase
+    addChild(...newChildren: Widget[]): Widget
     {
         const argumentsLength = newChildren.length;
 

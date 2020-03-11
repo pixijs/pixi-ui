@@ -1,4 +1,4 @@
-import { UIBase } from './UIBase';
+import { Widget } from './Widget';
 import * as PIXI from 'pixi.js';
 
 /**
@@ -9,7 +9,7 @@ import * as PIXI from 'pixi.js';
  * @memberof PIXI.UI
  * @param Texture {PIXI.Texture} The texture for the sprite
  */
-export class Sprite extends UIBase
+export class Sprite extends Widget
 {
     sprite: PIXI.Sprite;
 

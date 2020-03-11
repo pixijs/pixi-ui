@@ -14,6 +14,7 @@
     "url": "https://github.com/pixijs/pixi-ui.git"
   },
   "scripts": {
+    "bootstrap": "lerna bootstrap",
     "clean": "rimraf bin && mkdirp bin",
     "prestart": "npm run clean",
     "start": "parallelshell \"npm run watch:lint\" \"npm run watch\"",
@@ -41,6 +42,7 @@
     "eslint": "^6.8.0",
     "eslint-config-pixi": "^1.0.1",
     "jaguarjs-jsdoc": "^1.0.1",
+    "jest": "^25.1.0",
     "jsdoc": "^3.4.0",
     "jshint": "^2.9.2",
     "jshint-stylish": "^2.2.0",
