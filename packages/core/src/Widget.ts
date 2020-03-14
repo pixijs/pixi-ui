@@ -7,18 +7,18 @@ import { LayoutOptions } from './layout-options';
 import { MeasureMode, IMeasurable } from './IMeasurable';
 
 /**
- * A widget is a user interface control that renders content inside its prescribe
+ * A widget is a user interface control that renders content inside its prescribed
  * rectangle on the screen.
  *
+ * @namespace PUXI
  * @class
- * @extends PIXI.Container
- * @param width {Number} Width of the UIObject
- * @param height {Number} Height of the UIObject
+ * @extends PIXI.utils.EventEmitter
+ * @implements PUXI.IMeasurable
  */
 export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 {
-    content: PIXI.Container;
-    container: PIXI.Container;
+    insetContainer: PIXI.Container;
+    contentContainer: PIXI.Container;
     setting: UISettings;
     widgetChildren: Widget[];
     stage: any;
@@ -57,11 +57,18 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     public layoutMeasure: Insets;
     public layoutOptions: LayoutOptions;
 
+    private background: PIXI.Container;
+    private _paddingLeft: number;
+    private _paddingTop: number;
+    private _paddingRight: number;
+    private _paddingBottom: number;
+
     constructor(width: number, height: number)
     {
         super();
 
-        this.container = new PIXI.Container();
+        this.insetContainer = new PIXI.Container();
+        this.contentContainer = this.insetContainer.addChild(new PIXI.Container());
         this.setting = new UISettings();
         this.widgetChildren = [];
         this.stage = null;
@@ -110,6 +117,11 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         this._right = null;
         this._top = null;
         this._bottom = null;
+
+        this._paddingLeft = 0;
+        this._paddingTop = 0;
+        this._paddingRight = 0;
+        this._paddingBottom = 0;
 
         this._dragPosition = null; // used for overriding positions if tweens is playing
     }
@@ -231,26 +243,26 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                 if (useLeftRight)
                 {
                     if (this._left !== null)
-                    { this.container.position.x = this._left; }
+                    { this.contentContainer.position.x = this._left; }
                     else if (this._right !== null)
-                    { this.container.position.x = parentWidth - this._right; }
+                    { this.contentContainer.position.x = parentWidth - this._right; }
                 }
                 else if (useHorizontalAnchor)
                 {
                     if (this._anchorLeft !== null && this._anchorRight === null)
-                    { this.container.position.x = this._anchorLeft; }
+                    { this.contentContainer.position.x = this._anchorLeft; }
                     else if (this._anchorLeft === null && this._anchorRight !== null)
-                    { this.container.position.x = parentWidth - this._width - this._anchorRight; }
+                    { this.contentContainer.position.x = parentWidth - this._width - this._anchorRight; }
                     else if (this._anchorLeft !== null && this._anchorRight !== null)
                     {
-                        this.container.position.x = this._anchorLeft;
+                        this.contentContainer.position.x = this._anchorLeft;
                         this._width = parentWidth - this._anchorLeft - this._anchorRight;
                     }
-                    this.container.position.x += pivotXOffset;
+                    this.contentContainer.position.x += pivotXOffset;
                 }
                 else
                 {
-                    this.container.position.x = 0;
+                    this.contentContainer.position.x = 0;
                 }
             }
 
@@ -268,26 +280,26 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                 if (useTopBottom)
                 {
                     if (this._top !== null)
-                    { this.container.position.y = this._top; }
+                    { this.contentContainer.position.y = this._top; }
                     else if (this._bottom !== null)
-                    { this.container.position.y = parentHeight - this._bottom; }
+                    { this.contentContainer.position.y = parentHeight - this._bottom; }
                 }
                 else if (useVerticalAnchor)
                 {
                     if (this._anchorTop !== null && this._anchorBottom === null)
-                    { this.container.position.y = this._anchorTop; }
+                    { this.contentContainer.position.y = this._anchorTop; }
                     else if (this._anchorTop === null && this._anchorBottom !== null)
-                    { this.container.position.y = parentHeight - this._height - this._anchorBottom; }
+                    { this.contentContainer.position.y = parentHeight - this._height - this._anchorBottom; }
                     else if (this._anchorTop !== null && this._anchorBottom !== null)
                     {
-                        this.container.position.y = this._anchorTop;
+                        this.contentContainer.position.y = this._anchorTop;
                         this._height = parentHeight - this._anchorTop - this._anchorBottom;
                     }
-                    this.container.position.y += pivotYOffset;
+                    this.contentContainer.position.y += pivotYOffset;
                 }
                 else
                 {
-                    this.container.position.y = 0;
+                    this.contentContainer.position.y = 0;
                 }
             }
 
@@ -303,62 +315,62 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
             {
                 if (this.horizontalAlign == 'center')
                 {
-                    this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
+                    this.contentContainer.position.x = parentWidth * 0.5 - this._width * 0.5;
                 }
                 else if (this.horizontalAlign == 'right')
                 {
-                    this.container.position.x = parentWidth - this._width;
+                    this.contentContainer.position.x = parentWidth - this._width;
                 }
                 else
                 {
-                    this.container.position.x = 0;
+                    this.contentContainer.position.x = 0;
                 }
 
-                this.container.position.x += pivotXOffset;
+                this.contentContainer.position.x += pivotXOffset;
             }
             if (this.verticalAlign !== null)
             {
                 if (this.verticalAlign == 'middle')
                 {
-                    this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
+                    this.contentContainer.position.y = parentHeight * 0.5 - this._height * 0.5;
                 }
                 else if (this.verticalAlign == 'bottom')
                 {
-                    this.container.position.y = parentHeight - this._height;
+                    this.contentContainer.position.y = parentHeight - this._height;
                 }
                 else
                 {
-                    this.container.position.y = 0;
+                    this.contentContainer.position.y = 0;
                 }
 
-                this.container.position.y += pivotYOffset;
+                this.contentContainer.position.y += pivotYOffset;
             }
 
             // Unrestricted dragging
             if (this.dragging && !this.setting.dragRestricted)
             {
-                this.container.position.x = this._dragPosition.x;
-                this.container.position.y = this._dragPosition.y;
+                this.contentContainer.position.x = this._dragPosition.x;
+                this.contentContainer.position.y = this._dragPosition.y;
             }
 
             // scale
-            if (this.setting.scaleX !== null) this.container.scale.x = this.setting.scaleX;
-            if (this.setting.scaleY !== null) this.container.scale.y = this.setting.scaleY;
+            if (this.setting.scaleX !== null) this.contentContainer.scale.x = this.setting.scaleX;
+            if (this.setting.scaleY !== null) this.contentContainer.scale.y = this.setting.scaleY;
 
             // pivot
-            if (this.setting.pivotX !== null) this.container.pivot.x = pivotXOffset;
-            if (this.setting.pivotY !== null) this.container.pivot.y = pivotYOffset;
+            if (this.setting.pivotX !== null) this.contentContainer.pivot.x = pivotXOffset;
+            if (this.setting.pivotY !== null) this.contentContainer.pivot.y = pivotYOffset;
 
-            if (this.setting.alpha !== null) this.container.alpha = this.setting.alpha;
-            if (this.setting.rotation !== null) this.container.rotation = this.setting.rotation;
+            if (this.setting.alpha !== null) this.contentContainer.alpha = this.setting.alpha;
+            if (this.setting.rotation !== null) this.contentContainer.rotation = this.setting.rotation;
 
             // make pixel perfect
             if (this.pixelPerfect)
             {
                 this._width = Math.round(this._width);
                 this._height = Math.round(this._height);
-                this.container.position.x = Math.round(this.container.position.x);
-                this.container.position.y = Math.round(this.container.position.y);
+                this.contentContainer.position.x = Math.round(this.contentContainer.position.x);
+                this.contentContainer.position.y = Math.round(this.contentContainer.position.y);
             }
         }
     }
@@ -374,6 +386,28 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         {
             this.widgetChildren[i].updatesettings(true);
         }
+    }
+
+    getBackground(): PIXI.Container
+    {
+        return this.background;
+    }
+
+    setBackground(bg: PIXI.Container): Widget
+    {
+        if (!this.background)
+        {
+            this.insetContainer.removeChild(this.background);
+        }
+
+        this.background = bg;
+
+        if (bg)
+        {
+            this.insetContainer.addChildAt(bg, 0);
+        }
+
+        return this;
     }
 
     get measuredWidth(): number
@@ -398,8 +432,8 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
 
     onMeasure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
-        const naturalWidth = this.container.width;
-        const naturalHeight = this.container.height;
+        const naturalWidth = this.contentContainer.width + this.paddingHorizontal;
+        const naturalHeight = this.contentContainer.height + this.paddingVertical;
 
         switch (widthMode)
         {
@@ -451,7 +485,18 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         }
     }
 
-    layout(l: number, t: number, r: number, b: number, dirty = true): void
+    /**
+     * This method should set the frame in which rendering will occur and lay out
+     * child widgets in that frame.
+     *
+     * @param l
+     * @param t
+     * @param r
+     * @param b
+     * @param dirty
+     * @protected
+     */
+    layout(l: number, t: number = l, r: number = l, b: number = t, dirty = true): void
     {
         this.layoutMeasure.left = l;
         this.layoutMeasure.top = t;
@@ -460,11 +505,98 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
 
         this._width = r - l;
         this._height = b - t;
+
+        if (this.background)
+        {
+            this.background.x = 0;
+            this.background.y = 0;
+            this.background.width = r - l;
+            this.background.height = b - t;
+        }
+
+        // Update parallel PIXI node too!
+        this.insetContainer.x = l;
+        this.insetContainer.y = t;
+        this.contentContainer.x = this._paddingLeft;
+        this.contentContainer.y = this._paddingTop;
+        // this.container.width = r - l;
+        // this.container.height = b - t;
     }
 
     setLayoutOptions(lopt: LayoutOptions): Widget
     {
         this.layoutOptions = lopt;
+
+        return this;
+    }
+
+    get paddingLeft(): number
+    {
+        return this._paddingLeft;
+    }
+    set paddingLeft(val: number)
+    {
+        this._paddingLeft = val;
+        this.dirty = true;
+    }
+
+    get paddingTop(): number
+    {
+        return this._paddingTop;
+    }
+    set paddingTop(val: number)
+    {
+        this._paddingTop = val;
+        this.dirty = true;
+    }
+
+    get paddingRight(): number
+    {
+        return this._paddingRight;
+    }
+    set paddingRight(val: number)
+    {
+        this._paddingRight = val;
+        this.dirty = true;
+    }
+
+    get paddingBottom(): number
+    {
+        return this._paddingBottom;
+    }
+    set paddingBottom(val: number)
+    {
+        this._paddingBottom = val;
+        this.dirty = true;
+    }
+
+    get paddingHorizontal(): number
+    {
+        return this._paddingLeft + this._paddingRight;
+    }
+
+    get paddingVertical(): number
+    {
+        return this._paddingTop + this._paddingBottom;
+    }
+
+    get interactive(): boolean
+    {
+        return this.insetContainer.interactive;
+    }
+    set interactive(val: boolean)
+    {
+        this.insetContainer.interactive = true;
+        this.contentContainer.interactive = true;
+    }
+
+    setPadding(l: number, t: number, r: number, b: number): Widget
+    {
+        this._paddingLeft = l;
+        this._paddingTop = t;
+        this._paddingRight = r;
+        this._paddingBottom = b;
+        this.dirty = true;
 
         return this;
     }
@@ -488,7 +620,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
             }
 
             UIObject.parent = this;
-            this.container.addChild(UIObject.container);
+            this.contentContainer.addChild(UIObject.insetContainer);
             this.widgetChildren.push(UIObject);
             this.updatesettings(true, true);
         }
@@ -516,7 +648,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                 const oldUIParent = UIObject.parent;
                 const oldParent = UIObject.container.parent;
 
-                UIObject.container.parent.removeChild(UIObject.container);
+                UIObject.container.parent.removeChild(UIObject.insetContainer);
                 this.widgetChildren.splice(index, 1);
                 UIObject.parent = null;
 
@@ -617,15 +749,15 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                     // Return to container after 0ms if not picked up by a droppable
                     setTimeout(function ()
                     {
-                        self.container.interactive = true;
+                        self.contentContainer.interactive = true;
                         const item = DragDropController.getItem(self);
 
                         if (item)
                         {
-                            const container = self.parent === self.stage ? self.stage : self.parent.container;
+                            const container = self.parent === self.stage ? self.stage : self.parent.contentContainer;
 
-                            container.toLocal(self.container.position, self.container.parent, self);
-                            if (container != self.container)
+                            container.toLocal(self.contentContainer.position, self.contentContainer.parent, self);
+                            if (container != self.contentContainer)
                             {
                                 self.parent.addChild(self);
                             }
@@ -642,8 +774,8 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         if (this.dropInitialized)
         {
             this.dropInitialized = false;
-            this.container.removeListener('mouseup', this.onDrop);
-            this.container.removeListener('touchend', this.onDrop);
+            this.contentContainer.removeListener('mouseup', this.onDrop);
+            this.contentContainer.removeListener('touchend', this.onDrop);
         }
     }
 
@@ -652,10 +784,10 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         if (!this.dropInitialized)
         {
             this.dropInitialized = true;
-            const container = this.container;
+            const container = this.contentContainer;
             const self = this;
 
-            this.container.interactive = true;
+            this.contentContainer.interactive = true;
             this.onDrop = function (event)
             {
                 const item = DragDropController.getEventItem(event, self.dropGroup);
@@ -1200,7 +1332,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     set alpha(val: number)
     {
         this.setting.alpha = val;
-        this.container.alpha = val;
+        this.contentContainer.alpha = val;
     }
 
     get rotation(): number
@@ -1210,7 +1342,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     set rotation(val: number)
     {
         this.setting.rotation = val;
-        this.container.rotation = val;
+        this.contentContainer.rotation = val;
     }
 
     get blendMode(): number
@@ -1260,7 +1392,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     set scaleX(val: number)
     {
         this.setting.scaleX = val;
-        this.container.scale.x = val;
+        this.contentContainer.scale.x = val;
     }
 
     get scaleY(): number
@@ -1270,7 +1402,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     set scaleY(val: number)
     {
         this.setting.scaleY = val;
-        this.container.scale.y = val;
+        this.contentContainer.scale.y = val;
     }
 
     get scale(): number
@@ -1281,8 +1413,8 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     {
         this.setting.scaleX = val;
         this.setting.scaleY = val;
-        this.container.scale.x = val;
-        this.container.scale.y = val;
+        this.contentContainer.scale.x = val;
+        this.contentContainer.scale.y = val;
     }
 
     get draggable(): boolean
@@ -1382,64 +1514,55 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
 
     get renderable(): boolean
     {
-        return this.container.renderable;
+        return this.contentContainer.renderable;
     }
     set renderable(val: boolean)
     {
-        this.container.renderable = val;
+        this.contentContainer.renderable = val;
     }
 
     get visible(): boolean
     {
-        return this.container.visible;
+        return this.contentContainer.visible;
     }
     set visible(val: boolean)
     {
-        this.container.visible = val;
+        this.contentContainer.visible = val;
     }
 
     get cacheAsBitmap(): boolean
     {
-        return this.container.cacheAsBitmap;
+        return this.contentContainer.cacheAsBitmap;
     }
     set cacheAsBitmap(val: boolean)
     {
-        this.container.cacheAsBitmap = val;
+        this.contentContainer.cacheAsBitmap = val;
     }
 
     get onClick(): any
     {
-        return this.container.click;
+        return this.contentContainer.click;
     }
     set onClick(val: any)
     {
-        this.container.click = val;
-    }
-
-    get interactive(): boolean
-    {
-        return this.container.interactive;
-    }
-    set interactive(val: boolean)
-    {
-        this.container.interactive = val;
+        this.contentContainer.click = val;
     }
 
     get interactiveChildren(): boolean
     {
-        return this.container.interactiveChildren;
+        return this.contentContainer.interactiveChildren;
     }
     set interactiveChildren(val: boolean)
     {
-        this.container.interactiveChildren = val;
+        this.contentContainer.interactiveChildren = val;
     }
 
     get parentLayer(): any
     {
-        return this.container.parentLayer;
+        return this.contentContainer.parentLayer;
     }
     set parentLayer(val: any)
     {
-        this.container.parentLayer = val;
+        this.contentContainer.parentLayer = val;
     }
 }

@@ -909,10 +909,10 @@ export class TextInput extends InputBase
         {
             super.focus();
 
-            const l = `${this.container.worldTransform.tx}px`;
-            const t = `${this.container.worldTransform.ty}px`;
-            const h = `${this.container.height}px`;
-            const w = `${this.container.width}px`;
+            const l = `${this.contentContainer.worldTransform.tx}px`;
+            const t = `${this.contentContainer.worldTransform.ty}px`;
+            const h = `${this.contentContainer.height}px`;
+            const w = `${this.contentContainer.width}px`;
 
             mockDOMInput.setAttribute('style', `position:fixed; left:${l}; top:${t}; height:${h}; width:${w};`);
             mockDOMInput.value = '';

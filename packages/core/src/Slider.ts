@@ -84,7 +84,7 @@ export class Slider extends Widget
             this.track.addChild(this.fill);
         }
         this.addChild(this.handle);
-        this.handle.container.buttonMode = true;
+        this.handle.contentContainer.buttonMode = true;
 
         if (this.vertical)
         {
@@ -119,7 +119,7 @@ export class Slider extends Widget
 
         if (this.vertical)
         {
-            handleSize = this.handle._height || this.handle.container.height;
+            handleSize = this.handle._height || this.handle.contentContainer.height;
             val = ((this._height - handleSize) * this._amt) + (handleSize * 0.5);
             if (soft)
             {
@@ -134,7 +134,7 @@ export class Slider extends Widget
         }
         else
         {
-            handleSize = this.handle._width || this.handle.container.width;
+            handleSize = this.handle._width || this.handle.contentContainer.width;
             val = ((this._width - handleSize) * this._amt) + (handleSize * 0.5);
             if (soft)
             {
@@ -189,7 +189,7 @@ export class Slider extends Widget
 
         const updatePositionToMouse = (mousePosition, soft): void =>
         {
-            this.track.container.toLocal(mousePosition, null, localMousePosition, true);
+            this.track.contentContainer.toLocal(mousePosition, null, localMousePosition, true);
 
             const newPos = this.vertical ? localMousePosition.y - this.handle._height * 0.5 : localMousePosition.x - this.handle._width * 0.5;
             const maxPos = this.vertical ? this._height - this.handle._height : this._width - this.handle._width;
@@ -297,9 +297,9 @@ export class Slider extends Widget
         if (val !== this._disabled)
         {
             this._disabled = val;
-            this.handle.container.buttonMode = !val;
-            this.handle.container.interactive = !val;
-            this.track.container.interactive = !val;
+            this.handle.contentContainer.buttonMode = !val;
+            this.handle.contentContainer.interactive = !val;
+            this.track.contentContainer.interactive = !val;
         }
     }
 }

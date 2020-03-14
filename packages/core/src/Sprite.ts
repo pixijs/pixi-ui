@@ -20,7 +20,7 @@ export class Sprite extends Widget
         super(sprite.width, sprite.height);
 
         this.sprite = sprite;
-        this.container.addChild(this.sprite);
+        this.contentContainer.addChild(this.sprite);
     }
 
     update(): void

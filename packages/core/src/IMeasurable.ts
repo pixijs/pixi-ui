@@ -1,3 +1,7 @@
+/**
+ * @namespace PUXI
+ * @enum
+ */
 export enum MeasureMode
 {
     UNBOUNDED = 0,

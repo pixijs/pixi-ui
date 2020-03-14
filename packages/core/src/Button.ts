@@ -1,12 +1,14 @@
-import { ClickEvent } from './Interaction/ClickEvent.js';
+import { ClickEvent } from './Interaction/ClickEvent';
 import { InputBase } from './InputBase';
 import { Sprite } from './Sprite';
+import { Text } from './Text';
 import * as PIXI from 'pixi.js';
+import { LayoutOptions, FastLayoutOptions } from './layout-options';
 
 interface IButtonOptions
 {
     background?: Sprite;
-    text?: string;
+    text?: Text;
     tabIndex?: number;
     tabGroup?: any;
     width?: number;
@@ -17,8 +19,8 @@ interface IButtonOptions
  * An UI button object
  *
  * @class
- * @extends PIXI.UI.InputBase
- * @memberof PIXI.UI
+ * @extends PUXI.InputBase
+ * @memberof PUXI
  * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
  * @param [options.text=null] {PIXI.UI.Text} optional text
  * @param [options.tabIndex=0] {Number} input tab index
@@ -30,7 +32,8 @@ export class Button extends InputBase
 {
     background: Sprite;
     isHover: boolean;
-    uiText: any;
+
+    protected textWidget: Text;
 
     click: () => void;
     initialize: () => void;
@@ -57,16 +60,21 @@ export class Button extends InputBase
         }
 
         this.isHover = false;
-        this.uiText = options.text;
+        this.textWidget = options.text.setLayoutOptions(
+            new FastLayoutOptions(
+                LayoutOptions.WRAP_CONTENT,
+                LayoutOptions.WRAP_CONTENT,
+                0.5, 0.5,
+                FastLayoutOptions.CENTER_ANCHOR,
+            ),
+        ) as Text;
 
-        if (this.uiText)
+        if (this.textWidget)
         {
-            this.uiText.verticalAlign = 'middle';
-            this.uiText.horizontalAlign = 'center';
-            this.addChild(this.uiText);
+            this.addChild(this.textWidget);
         }
 
-        this.container.buttonMode = true;
+        this.contentContainer.buttonMode = true;
     }
 
     private setupClick(): void
@@ -121,14 +129,14 @@ export class Button extends InputBase
         this.initialize = (): void =>
         {
             super.initialize();
-            this.container.interactiveChildren = false;
+            this.contentContainer.interactiveChildren = false;
             // lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
 
             setTimeout(() =>
             {
-                const bounds = this.container.getLocalBounds();
+                const bounds = this.contentContainer.getLocalBounds();
 
-                this.container.hitArea = new PIXI.Rectangle(
+                this.contentContainer.hitArea = new PIXI.Rectangle(
                     bounds.x < 0 ? bounds.x : 0,
                     bounds.y < 0 ? bounds.y : 0,
                     Math.max(bounds.x + bounds.width + (bounds.x < 0 ? -bounds.x : 0), this._width),
@@ -145,24 +153,24 @@ export class Button extends InputBase
 
     get value(): string
     {
-        if (this.uiText)
+        if (this.textWidget)
         {
-            return this.uiText.text;
+            return this.textWidget.text;
         }
 
         return '';
     }
     set value(val: string)
     {
-        if (this.uiText)
+        if (this.textWidget)
         {
-            this.uiText.text = val;
+            this.textWidget.text = val;
         }
     }
 
     get text(): any
     {
-        return this.uiText;
+        return this.textWidget;
     }
     set text(val: any)
     {

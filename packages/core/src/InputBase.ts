@@ -1,17 +1,17 @@
-import { Widget } from './Widget';
 import { InputController } from './Interaction/InputController';
+import { WidgetGroup } from './WidgetGroup';
 
 /**
  * Represents a view that can accept any form of input. It can gain and loose focus.
  *
  * @class
- * @extends PIXI.UI.UIBase
- * @memberof PIXI.UI
+ * @extends PUXI.WidgetGroup
+ * @memberof PUXI
  * @param width {number} passed to uibase
  * @param height {number} passed to uibase
  * @param tabIndex {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
  */
-export abstract class InputBase extends Widget
+export abstract class InputBase extends WidgetGroup
 {
     _focused: boolean;
     _useTab: boolean;
@@ -26,21 +26,21 @@ export abstract class InputBase extends Widget
 
         this._focused = false;
         this._useTab = this._usePrev = this._useNext = true;
-        this.container.interactive = true;
+        this.contentContainer.interactive = true;
         InputController.registrer(this, tabIndex, tabGroup);
 
-        this.container.on('pointerdown', (e) =>
+        this.contentContainer.on('pointerdown', (e) =>
         {
             this.focus();
             this.__down = true;
         });
 
-        this.container.on('pointerup', (e) =>
+        this.contentContainer.on('pointerup', (e) =>
         {
             this.__down = false;
         });
 
-        this.container.on('pointerupoutside', (e) =>
+        this.contentContainer.on('pointerupoutside', (e) =>
         {
             this.__down = false;
         });

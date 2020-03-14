@@ -175,7 +175,7 @@
             this.dragging = false;
             this.id = 0;
             this.obj = obj;
-            this.obj.container.interactive = true;
+            this.obj.interactive = true;
             this.startEvent();
         }
         DragEvent.prototype.stopEvent = function () {
@@ -189,13 +189,13 @@
                 obj.stage.removeListener('touchendoutside', _onDragEnd);
                 this.bound = false;
             }
-            obj.container.removeListener('mousedown', _onDragStart);
-            obj.container.removeListener('touchstart', _onDragStart);
+            obj.contentContainer.removeListener('mousedown', _onDragStart);
+            obj.contentContainer.removeListener('touchstart', _onDragStart);
         };
         DragEvent.prototype.startEvent = function () {
             var _a = this, obj = _a.obj, _onDragStart = _a._onDragStart;
-            obj.container.on('mousedown', _onDragStart);
-            obj.container.on('touchstart', _onDragStart);
+            obj.contentContainer.on('mousedown', _onDragStart);
+            obj.contentContainer.on('touchstart', _onDragStart);
         };
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         DragEvent.prototype.onPress = function (e, isPressed) {
@@ -433,6 +433,7 @@
         };
         LayoutOptions.FILL_PARENT = 0xfffffff1;
         LayoutOptions.WRAP_CONTENT = 0xfffffff2;
+        LayoutOptions.MAX_DIMEN = 0xfffffff0;
         LayoutOptions.DEFAULT = new LayoutOptions();
         return LayoutOptions;
     }());
@@ -487,6 +488,56 @@
         return AnchorLayoutOptions;
     }(LayoutOptions));
 
+    /**
+     * `PUXI.FastLayoutOptions` is an extension to `PUXI.LayoutOptions` that also
+     * defines the x & y coordinates. It is accepted by the stage and `PUXI.FastLayout`.
+     *
+     * If x or y is between -1 and 1, then that dimension will be interpreted as a
+     * percentage of the parent's width or height.
+     *
+     * @namespace PUXI
+     * @extends PUXI.LayoutOptions
+     * @class
+     */
+    var FastLayoutOptions = /** @class */ (function (_super) {
+        __extends(FastLayoutOptions, _super);
+        function FastLayoutOptions(width, height, x, y, anchor) {
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            var _this = _super.call(this, width, height) || this;
+            /**
+             * X-coordinate of the widget in its parent's reference frame. If it is
+             * absolutely less than 1, then it will be interpreted as a percent of
+             * the parent's width.
+             * @member {number}
+             */
+            _this.x = x;
+            /**
+             * Y-coordinate of the widget in its parent's reference frame. If it is
+             * absolutely less than 1, then it will be interpreted as a percent of
+             * the parent's height.
+             * @member {number}
+             */
+            _this.y = y;
+            /**
+             * The anchor is a normalized point telling where the (x,y) position of the
+             * widget lies inside of it. By default, it is (0, 0), which means that the
+             * top-left corner of the widget will be at (x,y); however, setting it to
+             * (.5,.5) will make the _center of the widget_ be at (x,y) in the parent's
+             * reference frame.
+             */
+            _this.anchor = anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
+            return _this;
+        }
+        FastLayoutOptions.DEFAULT_ANCHOR = new PIXI$1.Point(0, 0);
+        FastLayoutOptions.CENTER_ANCHOR = new PIXI$1.Point(0.5, 0.5); // fragile, shouldn't be modified
+        return FastLayoutOptions;
+    }(LayoutOptions));
+
+    /**
+     * @namespace PUXI
+     * @enum
+     */
     (function (MeasureMode) {
         MeasureMode[MeasureMode["UNBOUNDED"] = 0] = "UNBOUNDED";
         MeasureMode[MeasureMode["EXACTLY"] = 1] = "EXACTLY";
@@ -494,19 +545,20 @@
     })(exports.MeasureMode || (exports.MeasureMode = {}));
 
     /**
-     * A widget is a user interface control that renders content inside its prescribe
+     * A widget is a user interface control that renders content inside its prescribed
      * rectangle on the screen.
      *
+     * @namespace PUXI
      * @class
-     * @extends PIXI.Container
-     * @param width {Number} Width of the UIObject
-     * @param height {Number} Height of the UIObject
+     * @extends PIXI.utils.EventEmitter
+     * @implements PUXI.IMeasurable
      */
     var Widget = /** @class */ (function (_super) {
         __extends(Widget, _super);
         function Widget(width, height) {
             var _this = _super.call(this) || this;
-            _this.container = new PIXI$1.Container();
+            _this.insetContainer = new PIXI$1.Container();
+            _this.contentContainer = _this.insetContainer.addChild(new PIXI$1.Container());
             _this.setting = new UISettings();
             _this.widgetChildren = [];
             _this.stage = null;
@@ -547,6 +599,10 @@
             _this._right = null;
             _this._top = null;
             _this._bottom = null;
+            _this._paddingLeft = 0;
+            _this._paddingTop = 0;
+            _this._paddingRight = 0;
+            _this._paddingBottom = 0;
             _this._dragPosition = null; // used for overriding positions if tweens is playing
             return _this;
         }
@@ -636,27 +692,27 @@
                     var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
                     if (useLeftRight) {
                         if (this._left !== null) {
-                            this.container.position.x = this._left;
+                            this.contentContainer.position.x = this._left;
                         }
                         else if (this._right !== null) {
-                            this.container.position.x = parentWidth - this._right;
+                            this.contentContainer.position.x = parentWidth - this._right;
                         }
                     }
                     else if (useHorizontalAnchor) {
                         if (this._anchorLeft !== null && this._anchorRight === null) {
-                            this.container.position.x = this._anchorLeft;
+                            this.contentContainer.position.x = this._anchorLeft;
                         }
                         else if (this._anchorLeft === null && this._anchorRight !== null) {
-                            this.container.position.x = parentWidth - this._width - this._anchorRight;
+                            this.contentContainer.position.x = parentWidth - this._width - this._anchorRight;
                         }
                         else if (this._anchorLeft !== null && this._anchorRight !== null) {
-                            this.container.position.x = this._anchorLeft;
+                            this.contentContainer.position.x = this._anchorLeft;
                             this._width = parentWidth - this._anchorLeft - this._anchorRight;
                         }
-                        this.container.position.x += pivotXOffset;
+                        this.contentContainer.position.x += pivotXOffset;
                     }
                     else {
-                        this.container.position.x = 0;
+                        this.contentContainer.position.x = 0;
                     }
                 }
                 if (this.verticalAlign === null) {
@@ -671,27 +727,27 @@
                     var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
                     if (useTopBottom) {
                         if (this._top !== null) {
-                            this.container.position.y = this._top;
+                            this.contentContainer.position.y = this._top;
                         }
                         else if (this._bottom !== null) {
-                            this.container.position.y = parentHeight - this._bottom;
+                            this.contentContainer.position.y = parentHeight - this._bottom;
                         }
                     }
                     else if (useVerticalAnchor) {
                         if (this._anchorTop !== null && this._anchorBottom === null) {
-                            this.container.position.y = this._anchorTop;
+                            this.contentContainer.position.y = this._anchorTop;
                         }
                         else if (this._anchorTop === null && this._anchorBottom !== null) {
-                            this.container.position.y = parentHeight - this._height - this._anchorBottom;
+                            this.contentContainer.position.y = parentHeight - this._height - this._anchorBottom;
                         }
                         else if (this._anchorTop !== null && this._anchorBottom !== null) {
-                            this.container.position.y = this._anchorTop;
+                            this.contentContainer.position.y = this._anchorTop;
                             this._height = parentHeight - this._anchorTop - this._anchorBottom;
                         }
-                        this.container.position.y += pivotYOffset;
+                        this.contentContainer.position.y += pivotYOffset;
                     }
                     else {
-                        this.container.position.y = 0;
+                        this.contentContainer.position.y = 0;
                     }
                 }
                 // min/max sizes
@@ -706,53 +762,53 @@
                 // pure vertical/horizontal align
                 if (this.horizontalAlign !== null) {
                     if (this.horizontalAlign == 'center') {
-                        this.container.position.x = parentWidth * 0.5 - this._width * 0.5;
+                        this.contentContainer.position.x = parentWidth * 0.5 - this._width * 0.5;
                     }
                     else if (this.horizontalAlign == 'right') {
-                        this.container.position.x = parentWidth - this._width;
+                        this.contentContainer.position.x = parentWidth - this._width;
                     }
                     else {
-                        this.container.position.x = 0;
+                        this.contentContainer.position.x = 0;
                     }
-                    this.container.position.x += pivotXOffset;
+                    this.contentContainer.position.x += pivotXOffset;
                 }
                 if (this.verticalAlign !== null) {
                     if (this.verticalAlign == 'middle') {
-                        this.container.position.y = parentHeight * 0.5 - this._height * 0.5;
+                        this.contentContainer.position.y = parentHeight * 0.5 - this._height * 0.5;
                     }
                     else if (this.verticalAlign == 'bottom') {
-                        this.container.position.y = parentHeight - this._height;
+                        this.contentContainer.position.y = parentHeight - this._height;
                     }
                     else {
-                        this.container.position.y = 0;
+                        this.contentContainer.position.y = 0;
                     }
-                    this.container.position.y += pivotYOffset;
+                    this.contentContainer.position.y += pivotYOffset;
                 }
                 // Unrestricted dragging
                 if (this.dragging && !this.setting.dragRestricted) {
-                    this.container.position.x = this._dragPosition.x;
-                    this.container.position.y = this._dragPosition.y;
+                    this.contentContainer.position.x = this._dragPosition.x;
+                    this.contentContainer.position.y = this._dragPosition.y;
                 }
                 // scale
                 if (this.setting.scaleX !== null)
-                    this.container.scale.x = this.setting.scaleX;
+                    this.contentContainer.scale.x = this.setting.scaleX;
                 if (this.setting.scaleY !== null)
-                    this.container.scale.y = this.setting.scaleY;
+                    this.contentContainer.scale.y = this.setting.scaleY;
                 // pivot
                 if (this.setting.pivotX !== null)
-                    this.container.pivot.x = pivotXOffset;
+                    this.contentContainer.pivot.x = pivotXOffset;
                 if (this.setting.pivotY !== null)
-                    this.container.pivot.y = pivotYOffset;
+                    this.contentContainer.pivot.y = pivotYOffset;
                 if (this.setting.alpha !== null)
-                    this.container.alpha = this.setting.alpha;
+                    this.contentContainer.alpha = this.setting.alpha;
                 if (this.setting.rotation !== null)
-                    this.container.rotation = this.setting.rotation;
+                    this.contentContainer.rotation = this.setting.rotation;
                 // make pixel perfect
                 if (this.pixelPerfect) {
                     this._width = Math.round(this._width);
                     this._height = Math.round(this._height);
-                    this.container.position.x = Math.round(this.container.position.x);
-                    this.container.position.y = Math.round(this.container.position.y);
+                    this.contentContainer.position.x = Math.round(this.contentContainer.position.x);
+                    this.contentContainer.position.y = Math.round(this.contentContainer.position.y);
                 }
             }
         };
@@ -765,6 +821,19 @@
             for (var i = 0; i < this.widgetChildren.length; i++) {
                 this.widgetChildren[i].updatesettings(true);
             }
+        };
+        Widget.prototype.getBackground = function () {
+            return this.background;
+        };
+        Widget.prototype.setBackground = function (bg) {
+            if (!this.background) {
+                this.insetContainer.removeChild(this.background);
+            }
+            this.background = bg;
+            if (bg) {
+                this.insetContainer.addChildAt(bg, 0);
+            }
+            return this;
         };
         Object.defineProperty(Widget.prototype, "measuredWidth", {
             get: function () {
@@ -787,8 +856,8 @@
             return this._measuredHeight;
         };
         Widget.prototype.onMeasure = function (width, height, widthMode, heightMode) {
-            var naturalWidth = this.container.width;
-            var naturalHeight = this.container.height;
+            var naturalWidth = this.contentContainer.width + this.paddingHorizontal;
+            var naturalHeight = this.contentContainer.height + this.paddingVertical;
             switch (widthMode) {
                 case exports.MeasureMode.EXACTLY:
                     this._measuredWidth = width;
@@ -824,16 +893,120 @@
                 child.measure(maxWidth, maxHeight, maxWidth ? exports.MeasureMode.AT_MOST : exports.MeasureMode.UNBOUNDED, maxHeight ? exports.MeasureMode.AT_MOST : exports.MeasureMode.UNBOUNDED);
             }
         };
+        /**
+         * This method should set the frame in which rendering will occur and lay out
+         * child widgets in that frame.
+         *
+         * @param l
+         * @param t
+         * @param r
+         * @param b
+         * @param dirty
+         * @protected
+         */
         Widget.prototype.layout = function (l, t, r, b, dirty) {
+            if (t === void 0) { t = l; }
+            if (r === void 0) { r = l; }
+            if (b === void 0) { b = t; }
             this.layoutMeasure.left = l;
             this.layoutMeasure.top = t;
             this.layoutMeasure.right = r;
             this.layoutMeasure.bottom = b;
             this._width = r - l;
             this._height = b - t;
+            if (this.background) {
+                this.background.x = 0;
+                this.background.y = 0;
+                this.background.width = r - l;
+                this.background.height = b - t;
+            }
+            // Update parallel PIXI node too!
+            this.insetContainer.x = l;
+            this.insetContainer.y = t;
+            this.contentContainer.x = this._paddingLeft;
+            this.contentContainer.y = this._paddingTop;
+            // this.container.width = r - l;
+            // this.container.height = b - t;
         };
         Widget.prototype.setLayoutOptions = function (lopt) {
             this.layoutOptions = lopt;
+            return this;
+        };
+        Object.defineProperty(Widget.prototype, "paddingLeft", {
+            get: function () {
+                return this._paddingLeft;
+            },
+            set: function (val) {
+                this._paddingLeft = val;
+                this.dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "paddingTop", {
+            get: function () {
+                return this._paddingTop;
+            },
+            set: function (val) {
+                this._paddingTop = val;
+                this.dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "paddingRight", {
+            get: function () {
+                return this._paddingRight;
+            },
+            set: function (val) {
+                this._paddingRight = val;
+                this.dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "paddingBottom", {
+            get: function () {
+                return this._paddingBottom;
+            },
+            set: function (val) {
+                this._paddingBottom = val;
+                this.dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "paddingHorizontal", {
+            get: function () {
+                return this._paddingLeft + this._paddingRight;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "paddingVertical", {
+            get: function () {
+                return this._paddingTop + this._paddingBottom;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "interactive", {
+            get: function () {
+                return this.insetContainer.interactive;
+            },
+            set: function (val) {
+                this.insetContainer.interactive = true;
+                this.contentContainer.interactive = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Widget.prototype.setPadding = function (l, t, r, b) {
+            this._paddingLeft = l;
+            this._paddingTop = t;
+            this._paddingRight = r;
+            this._paddingBottom = b;
+            this.dirty = true;
             return this;
         };
         Widget.prototype.addChild = function (UIObject) {
@@ -848,7 +1021,7 @@
                     UIObject.parent.removeChild(UIObject);
                 }
                 UIObject.parent = this;
-                this.container.addChild(UIObject.container);
+                this.contentContainer.addChild(UIObject.insetContainer);
                 this.widgetChildren.push(UIObject);
                 this.updatesettings(true, true);
             }
@@ -866,7 +1039,7 @@
                 if (index !== -1) {
                     var oldUIParent_1 = UIObject.parent;
                     var oldParent = UIObject.container.parent;
-                    UIObject.container.parent.removeChild(UIObject.container);
+                    UIObject.container.parent.removeChild(UIObject.insetContainer);
                     this.widgetChildren.splice(index, 1);
                     UIObject.parent = null;
                     // oldParent._recursivePostUpdateTransform();
@@ -940,12 +1113,12 @@
                         this.dragging = false;
                         // Return to container after 0ms if not picked up by a droppable
                         setTimeout(function () {
-                            self_1.container.interactive = true;
+                            self_1.contentContainer.interactive = true;
                             var item = DragDropController.getItem(self_1);
                             if (item) {
-                                var container = self_1.parent === self_1.stage ? self_1.stage : self_1.parent.container;
-                                container.toLocal(self_1.container.position, self_1.container.parent, self_1);
-                                if (container != self_1.container) {
+                                var container = self_1.parent === self_1.stage ? self_1.stage : self_1.parent.contentContainer;
+                                container.toLocal(self_1.contentContainer.position, self_1.contentContainer.parent, self_1);
+                                if (container != self_1.contentContainer) {
                                     self_1.parent.addChild(self_1);
                                 }
                             }
@@ -958,16 +1131,16 @@
         Widget.prototype.clearDroppable = function () {
             if (this.dropInitialized) {
                 this.dropInitialized = false;
-                this.container.removeListener('mouseup', this.onDrop);
-                this.container.removeListener('touchend', this.onDrop);
+                this.contentContainer.removeListener('mouseup', this.onDrop);
+                this.contentContainer.removeListener('touchend', this.onDrop);
             }
         };
         Widget.prototype.initDroppable = function () {
             if (!this.dropInitialized) {
                 this.dropInitialized = true;
-                var container = this.container;
+                var container = this.contentContainer;
                 var self_2 = this;
-                this.container.interactive = true;
+                this.contentContainer.interactive = true;
                 this.onDrop = function (event) {
                     var item = DragDropController.getEventItem(event, self_2.dropGroup);
                     if (item && item.dragging) {
@@ -1513,7 +1686,7 @@
             },
             set: function (val) {
                 this.setting.alpha = val;
-                this.container.alpha = val;
+                this.contentContainer.alpha = val;
             },
             enumerable: true,
             configurable: true
@@ -1524,7 +1697,7 @@
             },
             set: function (val) {
                 this.setting.rotation = val;
-                this.container.rotation = val;
+                this.contentContainer.rotation = val;
             },
             enumerable: true,
             configurable: true
@@ -1580,7 +1753,7 @@
             },
             set: function (val) {
                 this.setting.scaleX = val;
-                this.container.scale.x = val;
+                this.contentContainer.scale.x = val;
             },
             enumerable: true,
             configurable: true
@@ -1591,7 +1764,7 @@
             },
             set: function (val) {
                 this.setting.scaleY = val;
-                this.container.scale.y = val;
+                this.contentContainer.scale.y = val;
             },
             enumerable: true,
             configurable: true
@@ -1603,8 +1776,8 @@
             set: function (val) {
                 this.setting.scaleX = val;
                 this.setting.scaleY = val;
-                this.container.scale.x = val;
-                this.container.scale.y = val;
+                this.contentContainer.scale.x = val;
+                this.contentContainer.scale.y = val;
             },
             enumerable: true,
             configurable: true
@@ -1717,70 +1890,60 @@
         });
         Object.defineProperty(Widget.prototype, "renderable", {
             get: function () {
-                return this.container.renderable;
+                return this.contentContainer.renderable;
             },
             set: function (val) {
-                this.container.renderable = val;
+                this.contentContainer.renderable = val;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "visible", {
             get: function () {
-                return this.container.visible;
+                return this.contentContainer.visible;
             },
             set: function (val) {
-                this.container.visible = val;
+                this.contentContainer.visible = val;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "cacheAsBitmap", {
             get: function () {
-                return this.container.cacheAsBitmap;
+                return this.contentContainer.cacheAsBitmap;
             },
             set: function (val) {
-                this.container.cacheAsBitmap = val;
+                this.contentContainer.cacheAsBitmap = val;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "onClick", {
             get: function () {
-                return this.container.click;
+                return this.contentContainer.click;
             },
             set: function (val) {
-                this.container.click = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "interactive", {
-            get: function () {
-                return this.container.interactive;
-            },
-            set: function (val) {
-                this.container.interactive = val;
+                this.contentContainer.click = val;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "interactiveChildren", {
             get: function () {
-                return this.container.interactiveChildren;
+                return this.contentContainer.interactiveChildren;
             },
             set: function (val) {
-                this.container.interactiveChildren = val;
+                this.contentContainer.interactiveChildren = val;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "parentLayer", {
             get: function () {
-                return this.container.parentLayer;
+                return this.contentContainer.parentLayer;
             },
             set: function (val) {
-                this.container.parentLayer = val;
+                this.contentContainer.parentLayer = val;
             },
             enumerable: true,
             configurable: true
@@ -1797,11 +1960,11 @@
                 _this.id = event.data.identifier;
                 _this.onPress.call(_this.obj, event, true);
                 if (!_this.bound) {
-                    obj.container.on(eventname_mouseup, _onMouseUp);
-                    obj.container.on(eventname_mouseupoutside, _onMouseUpOutside);
+                    obj.contentContainer.on(eventname_mouseup, _onMouseUp);
+                    obj.contentContainer.on(eventname_mouseupoutside, _onMouseUpOutside);
                     if (!right) {
-                        obj.container.on('touchend', _onMouseUp);
-                        obj.container.on('touchendoutside', _onMouseUpOutside);
+                        obj.contentContainer.on('touchend', _onMouseUp);
+                        obj.contentContainer.on('touchendoutside', _onMouseUpOutside);
                     }
                     _this.bound = true;
                 }
@@ -1823,11 +1986,11 @@
                 }
                 _this.offset.set(event.data.global.x - _this.mouse.x, event.data.global.y - _this.mouse.y);
                 if (_this.bound) {
-                    obj.container.removeListener(eventname_mouseup, _onMouseUp);
-                    obj.container.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
+                    obj.contentContainer.removeListener(eventname_mouseup, _onMouseUp);
+                    obj.contentContainer.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
                     if (!_this.right) {
-                        obj.container.removeListener('touchend', _onMouseUp);
-                        obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+                        obj.contentContainer.removeListener('touchend', _onMouseUp);
+                        obj.contentContainer.removeListener('touchendoutside', _onMouseUpOutside);
                     }
                     _this.bound = false;
                 }
@@ -1859,16 +2022,16 @@
             this._onMouseOver = function (event) {
                 if (!_this.ishover) {
                     _this.ishover = true;
-                    _this.obj.container.on('mousemove', _this._onMouseMove);
-                    _this.obj.container.on('touchmove', _this._onMouseMove);
+                    _this.obj.contentContainer.on('mousemove', _this._onMouseMove);
+                    _this.obj.contentContainer.on('touchmove', _this._onMouseMove);
                     _this.onHover.call(_this.obj, event, true);
                 }
             };
             this._onMouseOut = function (event) {
                 if (_this.ishover) {
                     _this.ishover = false;
-                    _this.obj.container.removeListener('mousemove', _this._onMouseMove);
-                    _this.obj.container.removeListener('touchmove', _this._onMouseMove);
+                    _this.obj.contentContainer.removeListener('mousemove', _this._onMouseMove);
+                    _this.obj.contentContainer.removeListener('touchmove', _this._onMouseMove);
                     _this.onHover.call(_this.obj, event, false);
                 }
             };
@@ -1878,34 +2041,34 @@
             this.stopEvent = function () {
                 var _a = _this, obj = _a.obj, eventname_mouseup = _a.eventname_mouseup, _onMouseUp = _a._onMouseUp, eventname_mouseupoutside = _a.eventname_mouseupoutside, _onMouseUpOutside = _a._onMouseUpOutside, _onMouseDown = _a._onMouseDown, _onMouseOver = _a._onMouseOver, _onMouseOut = _a._onMouseOut, _onMouseMove = _a._onMouseMove;
                 if (_this.bound) {
-                    obj.container.removeListener(eventname_mouseup, _onMouseUp);
-                    obj.container.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
+                    obj.contentContainer.removeListener(eventname_mouseup, _onMouseUp);
+                    obj.contentContainer.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
                     if (!_this.right) {
-                        obj.container.removeListener('touchend', _onMouseUp);
-                        obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+                        obj.contentContainer.removeListener('touchend', _onMouseUp);
+                        obj.contentContainer.removeListener('touchendoutside', _onMouseUpOutside);
                     }
                     _this.bound = false;
                 }
-                obj.container.removeListener(eventname_mousedown, _onMouseDown);
+                obj.contentContainer.removeListener(eventname_mousedown, _onMouseDown);
                 if (!_this.right) {
-                    obj.container.removeListener('touchstart', _onMouseDown);
+                    obj.contentContainer.removeListener('touchstart', _onMouseDown);
                 }
                 if (_this.hover) {
-                    obj.container.removeListener('mouseover', _onMouseOver);
-                    obj.container.removeListener('mouseout', _onMouseOut);
-                    obj.container.removeListener('mousemove', _onMouseMove);
-                    obj.container.removeListener('touchmove', _onMouseMove);
+                    obj.contentContainer.removeListener('mouseover', _onMouseOver);
+                    obj.contentContainer.removeListener('mouseout', _onMouseOut);
+                    obj.contentContainer.removeListener('mousemove', _onMouseMove);
+                    obj.contentContainer.removeListener('touchmove', _onMouseMove);
                 }
             };
             this.startEvent = function () {
                 var _a = _this, obj = _a.obj, eventname_mousedown = _a.eventname_mousedown, _onMouseDown = _a._onMouseDown, _onMouseOver = _a._onMouseOver, _onMouseOut = _a._onMouseOut;
-                obj.container.on(eventname_mousedown, _onMouseDown);
+                obj.contentContainer.on(eventname_mousedown, _onMouseDown);
                 if (!_this.right) {
-                    obj.container.on('touchstart', _onMouseDown);
+                    obj.contentContainer.on('touchstart', _onMouseDown);
                 }
                 if (_this.hover) {
-                    obj.container.on('mouseover', _onMouseOver);
-                    obj.container.on('mouseout', _onMouseOut);
+                    obj.contentContainer.on('mouseover', _onMouseOver);
+                    obj.contentContainer.on('mouseout', _onMouseOut);
                 }
             };
             this.obj = obj;
@@ -1922,7 +2085,7 @@
             this.eventname_mousedown = this.right ? 'rightdown' : 'mousedown';
             this.eventname_mouseup = this.right ? 'rightup' : 'mouseup';
             this.eventname_mouseupoutside = this.right ? 'rightupoutside' : 'mouseupoutside';
-            obj.container.interactive = true;
+            obj.interactive = true;
             this.time = 0;
             this.startEvent();
         }
@@ -2041,11 +2204,175 @@
     };
 
     /**
+     * `PUXI.FastLayout` is used in conjunction with `PUXI.FastLayoutOptions`. It is the
+     * default layout for most widget groups.
+     *
+     * @namespace PUXI
+     * @extends PUXI.ILayoutManager
+     * @class
+     * @example
+     * ```
+     * parent.useLayout(new PUXI.FastLayout())
+     * ```
+     */
+    var FastLayout = /** @class */ (function () {
+        function FastLayout() {
+        }
+        FastLayout.prototype.onAttach = function (host) {
+            this.host = host;
+        };
+        FastLayout.prototype.onDetach = function () {
+            this.host = null;
+        };
+        FastLayout.prototype.onMeasure = function (maxWidth, maxHeight, widthMode, heightMode) {
+            this._measuredWidth = maxWidth;
+            this._measuredHeight = maxHeight;
+            var children = this.host.widgetChildren;
+            // Measure children
+            for (var i = 0, j = children.length; i < j; i++) {
+                var widget = children[i];
+                var lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+                var widthMeasureMode = this.getChildMeasureMode(lopt.width, widthMode);
+                var heightMeasureMode = this.getChildMeasureMode(lopt.height, heightMode);
+                var loptWidth = (Math.abs(lopt.width) < 1) ? lopt.width * maxWidth : lopt.width;
+                var loptHeight = (Math.abs(lopt.height) < 1) ? lopt.height * maxHeight : lopt.height;
+                widget.measure(widthMeasureMode === exports.MeasureMode.EXACTLY ? loptWidth : maxWidth, heightMeasureMode === exports.MeasureMode.EXACTLY ? loptHeight : maxHeight, widthMeasureMode, heightMeasureMode);
+            }
+            if (widthMode === exports.MeasureMode.UNBOUNDED || widthMode === exports.MeasureMode.AT_MOST) {
+                this._measuredWidth = 0;
+                for (var i = 0, j = children.length; i < j; i++) {
+                    var widget = children[i];
+                    var childWidth = widget.getMeasuredWidth();
+                    var lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+                    var x = lopt.x ? lopt.x : 0;
+                    // If lopt.x is %, then (1 - lopt.x)% of parent width should be as large
+                    // as child's width.
+                    var minr = childWidth + (Math.abs(x) < 1 ? childWidth / (1 - x) : x);
+                    this._measuredWidth = Math.max(this._measuredWidth, minr);
+                }
+                if (widthMode === exports.MeasureMode.AT_MOST) {
+                    this._measuredWidth = Math.min(maxWidth, this._measuredWidth);
+                }
+            }
+            if (heightMode === exports.MeasureMode.UNBOUNDED || heightMode === exports.MeasureMode.AT_MOST) {
+                this._measuredHeight = 0;
+                for (var i = 0, j = children.length; i < j; i++) {
+                    var widget = children[i];
+                    var childHeight = widget.getMeasuredHeight();
+                    var lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+                    var y = lopt.y ? lopt.y : 0;
+                    var minb = childHeight + (Math.abs(y) < 1 ? childHeight / (1 - y) : y);
+                    this._measuredHeight = Math.max(this._measuredHeight, minb);
+                }
+                if (heightMode === exports.MeasureMode.AT_MOST) {
+                    this._measuredHeight = Math.min(maxHeight, this._measuredHeight);
+                }
+            }
+        };
+        FastLayout.prototype.getChildMeasureMode = function (dimen, parentMeasureMode) {
+            if (parentMeasureMode === exports.MeasureMode.UNBOUNDED) {
+                return exports.MeasureMode.UNBOUNDED;
+            }
+            if (dimen === LayoutOptions.FILL_PARENT || dimen === LayoutOptions.WRAP_CONTENT) {
+                return exports.MeasureMode.AT_MOST;
+            }
+            return exports.MeasureMode.EXACTLY;
+        };
+        FastLayout.prototype.onLayout = function () {
+            var parent = this.host;
+            var width = parent.width, height = parent.height, children = parent.widgetChildren;
+            for (var i = 0, j = children.length; i < j; i++) {
+                var widget = children[i];
+                var lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+                var x = lopt.x ? lopt.x : 0;
+                var y = lopt.y ? lopt.y : 0;
+                if (Math.abs(x) < 1) {
+                    x *= width;
+                }
+                if (Math.abs(y) < 1) {
+                    y *= height;
+                }
+                var anchor = lopt.anchor || FastLayoutOptions.DEFAULT_ANCHOR;
+                var l = x - (anchor.x * widget.getMeasuredWidth());
+                var t = y - (anchor.y * widget.getMeasuredHeight());
+                widget.layout(l, t, l + widget.getMeasuredWidth(), t + widget.getMeasuredHeight());
+            }
+        };
+        FastLayout.prototype.getMeasuredWidth = function () {
+            return this._measuredWidth;
+        };
+        FastLayout.prototype.getMeasuredHeight = function () {
+            return this._measuredHeight;
+        };
+        return FastLayout;
+    }());
+
+    /**
+     * A widget group is a layout owner that can position its children according
+     * to the layout given to it.
+     *
+     * @namespace PUXI
+     * @class
+     * @extends PUXI.Widget
+     */
+    var WidgetGroup = /** @class */ (function (_super) {
+        __extends(WidgetGroup, _super);
+        function WidgetGroup() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        /**
+         * Will set the given layout-manager to be used for positioning child widgets.
+         *
+         * @param {ILayoutManager} layoutMgr
+         */
+        WidgetGroup.prototype.useLayout = function (layoutMgr) {
+            if (this.layoutMgr) {
+                this.layoutMgr.onDetach();
+            }
+            this.layoutMgr = layoutMgr;
+            if (layoutMgr) {
+                this.layoutMgr.onAttach(this);
+            }
+        };
+        /**
+         * Sets the widget-recommended layout manager. By default (if not overriden by widget
+         * group class), this is a fast-layout.
+         */
+        WidgetGroup.prototype.useDefaultLayout = function () {
+            this.useLayout(new FastLayout());
+        };
+        WidgetGroup.prototype.measure = function (width, height, widthMode, heightMode) {
+            _super.prototype.measure.call(this, width, height, widthMode, heightMode);
+            if (this.widgetChildren.length === 0) {
+                return;
+            }
+            if (!this.layoutMgr) {
+                this.useDefaultLayout();
+            }
+            this.layoutMgr.onMeasure(width, height, widthMode, heightMode);
+            this._measuredWidth = Math.max(this.measuredWidth, this.layoutMgr.getMeasuredWidth());
+            this._measuredHeight = Math.max(this.measuredHeight, this.layoutMgr.getMeasuredHeight());
+        };
+        WidgetGroup.prototype.layout = function (l, t, r, b, dirty) {
+            if (dirty === void 0) { dirty = true; }
+            _super.prototype.layout.call(this, l, t, r, b, dirty);
+            if (this.widgetChildren.length === 0) {
+                return;
+            }
+            if (!this.layoutMgr) {
+                this.useDefaultLayout();
+            }
+            this.layoutMgr.onLayout(); // layoutMgr is attached to this
+        };
+        return WidgetGroup;
+    }(Widget));
+
+    /**
      * Represents a view that can accept any form of input. It can gain and loose focus.
      *
      * @class
-     * @extends PIXI.UI.UIBase
-     * @memberof PIXI.UI
+     * @extends PUXI.WidgetGroup
+     * @memberof PUXI
      * @param width {number} passed to uibase
      * @param height {number} passed to uibase
      * @param tabIndex {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
@@ -2093,16 +2420,16 @@
             };
             _this._focused = false;
             _this._useTab = _this._usePrev = _this._useNext = true;
-            _this.container.interactive = true;
+            _this.contentContainer.interactive = true;
             InputController.registrer(_this, tabIndex, tabGroup);
-            _this.container.on('pointerdown', function (e) {
+            _this.contentContainer.on('pointerdown', function (e) {
                 _this.focus();
                 _this.__down = true;
             });
-            _this.container.on('pointerup', function (e) {
+            _this.contentContainer.on('pointerup', function (e) {
                 _this.__down = false;
             });
-            _this.container.on('pointerupoutside', function (e) {
+            _this.contentContainer.on('pointerupoutside', function (e) {
                 _this.__down = false;
             });
             return _this;
@@ -2126,14 +2453,14 @@
             }
         };
         return InputBase;
-    }(Widget));
+    }(WidgetGroup));
 
     /**
      * An UI button object
      *
      * @class
-     * @extends PIXI.UI.InputBase
-     * @memberof PIXI.UI
+     * @extends PUXI.InputBase
+     * @memberof PUXI
      * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
      * @param [options.text=null] {PIXI.UI.Text} optional text
      * @param [options.tabIndex=0] {Number} input tab index
@@ -2155,13 +2482,11 @@
                 _this.addChild(_this.background);
             }
             _this.isHover = false;
-            _this.uiText = options.text;
-            if (_this.uiText) {
-                _this.uiText.verticalAlign = 'middle';
-                _this.uiText.horizontalAlign = 'center';
-                _this.addChild(_this.uiText);
+            _this.textWidget = options.text.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
+            if (_this.textWidget) {
+                _this.addChild(_this.textWidget);
             }
-            _this.container.buttonMode = true;
+            _this.contentContainer.buttonMode = true;
             return _this;
         }
         Button.prototype.setupClick = function () {
@@ -2198,11 +2523,11 @@
             };
             this.initialize = function () {
                 _super.prototype.initialize.call(_this);
-                _this.container.interactiveChildren = false;
+                _this.contentContainer.interactiveChildren = false;
                 // lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
                 setTimeout(function () {
-                    var bounds = _this.container.getLocalBounds();
-                    _this.container.hitArea = new PIXI$1.Rectangle(bounds.x < 0 ? bounds.x : 0, bounds.y < 0 ? bounds.y : 0, Math.max(bounds.x + bounds.width + (bounds.x < 0 ? -bounds.x : 0), _this._width), Math.max(bounds.y + bounds.height + (bounds.y < 0 ? -bounds.y : 0), _this._height));
+                    var bounds = _this.contentContainer.getLocalBounds();
+                    _this.contentContainer.hitArea = new PIXI$1.Rectangle(bounds.x < 0 ? bounds.x : 0, bounds.y < 0 ? bounds.y : 0, Math.max(bounds.x + bounds.width + (bounds.x < 0 ? -bounds.x : 0), _this._width), Math.max(bounds.y + bounds.height + (bounds.y < 0 ? -bounds.y : 0), _this._height));
                 }, 20);
             };
         };
@@ -2211,14 +2536,14 @@
         };
         Object.defineProperty(Button.prototype, "value", {
             get: function () {
-                if (this.uiText) {
-                    return this.uiText.text;
+                if (this.textWidget) {
+                    return this.textWidget.text;
                 }
                 return '';
             },
             set: function (val) {
-                if (this.uiText) {
-                    this.uiText.text = val;
+                if (this.textWidget) {
+                    this.textWidget.text = val;
                 }
             },
             enumerable: true,
@@ -2226,7 +2551,7 @@
         });
         Object.defineProperty(Button.prototype, "text", {
             get: function () {
-                return this.uiText;
+                return this.textWidget;
             },
             set: function (val) {
                 this.value = val;
@@ -2292,7 +2617,7 @@
                 }
                 _this.addChild(_this.checkmark);
             }
-            _this.container.buttonMode = true;
+            _this.contentContainer.buttonMode = true;
             if (_this.checkGroup !== null) {
                 InputController.registrerCheckGroup(_this);
             }
@@ -2427,13 +2752,13 @@
         __extends(Container, _super);
         function Container(width, height) {
             var _this = _super.call(this, width, height) || this;
-            _this.container.hitArea = new PIXI$1.Rectangle(0, 0, 0, 0);
+            _this.contentContainer.hitArea = new PIXI$1.Rectangle(0, 0, 0, 0);
             return _this;
         }
         Container.prototype.update = function () {
             // if (this.container.interactive) {
-            this.container.hitArea.width = this._width;
-            this.container.hitArea.height = this._height;
+            this.contentContainer.hitArea.width = this._width;
+            this.contentContainer.hitArea.height = this._height;
             // }
         };
         return Container;
@@ -4200,13 +4525,13 @@
                 document.removeEventListener('DOMMouseScroll', onMouseScrollImpl);
                 this.bound = false;
             }
-            obj.container.removeListener('mouseover', onHoverImpl);
-            obj.container.removeListener('mouseout', onMouseOutImpl);
+            obj.contentContainer.removeListener('mouseover', onHoverImpl);
+            obj.contentContainer.removeListener('mouseout', onMouseOutImpl);
         };
         MouseScrollEvent.prototype.startEvent = function () {
             var _a = this, obj = _a.obj, onHoverImpl = _a.onHoverImpl, onMouseOutImpl = _a.onMouseOutImpl;
-            obj.container.on('mouseover', onHoverImpl);
-            obj.container.on('mouseout', onMouseOutImpl);
+            obj.contentContainer.on('mouseover', onHoverImpl);
+            obj.contentContainer.on('mouseout', onMouseOutImpl);
         };
         return MouseScrollEvent;
     }());
@@ -4648,7 +4973,7 @@
                 _this.track.addChild(_this.fill);
             }
             _this.addChild(_this.handle);
-            _this.handle.container.buttonMode = true;
+            _this.handle.contentContainer.buttonMode = true;
             if (_this.vertical) {
                 _this.height = '100%';
                 _this.width = _this.track.width;
@@ -4674,7 +4999,7 @@
             var handleSize;
             var val;
             if (this.vertical) {
-                handleSize = this.handle._height || this.handle.container.height;
+                handleSize = this.handle._height || this.handle.contentContainer.height;
                 val = ((this._height - handleSize) * this._amt) + (handleSize * 0.5);
                 if (soft) {
                     Tween.to(this.handle, 0.3, { top: val }, Ease.Power2.easeOut);
@@ -4688,7 +5013,7 @@
                 }
             }
             else {
-                handleSize = this.handle._width || this.handle.container.width;
+                handleSize = this.handle._width || this.handle.contentContainer.width;
                 val = ((this._width - handleSize) * this._amt) + (handleSize * 0.5);
                 if (soft) {
                     Tween.to(this.handle, 0.3, { left: val }, Ease.Power2.easeOut);
@@ -4727,7 +5052,7 @@
                 }
             };
             var updatePositionToMouse = function (mousePosition, soft) {
-                _this.track.container.toLocal(mousePosition, null, localMousePosition, true);
+                _this.track.contentContainer.toLocal(mousePosition, null, localMousePosition, true);
                 var newPos = _this.vertical ? localMousePosition.y - _this.handle._height * 0.5 : localMousePosition.x - _this.handle._width * 0.5;
                 var maxPos = _this.vertical ? _this._height - _this.handle._height : _this._width - _this.handle._width;
                 _this._amt = !maxPos ? 0 : Math.max(0, Math.min(1, newPos / maxPos));
@@ -4813,9 +5138,9 @@
             set: function (val) {
                 if (val !== this._disabled) {
                     this._disabled = val;
-                    this.handle.container.buttonMode = !val;
-                    this.handle.container.interactive = !val;
-                    this.track.container.interactive = !val;
+                    this.handle.contentContainer.buttonMode = !val;
+                    this.handle.contentContainer.interactive = !val;
+                    this.track.contentContainer.interactive = !val;
                 }
             },
             enumerable: true,
@@ -5009,9 +5334,9 @@
             _this.mask = new PIXI$1.Graphics();
             _this.innerContainer = new PIXI$1.Container();
             _this.innerBounds = new PIXI$1.Rectangle();
-            _this.container.addChild(_this.mask);
-            _this.container.addChild(_this.innerContainer);
-            _this.container.mask = _this.mask;
+            _this.contentContainer.addChild(_this.mask);
+            _this.contentContainer.addChild(_this.innerContainer);
+            _this.contentContainer.mask = _this.mask;
             _this.scrollX = options.scrollX !== undefined ? options.scrollX : false;
             _this.scrollY = options.scrollY !== undefined ? options.scrollY : false;
             _this.dragScrolling = options.dragScrolling !== undefined ? options.dragScrolling : true;
@@ -5072,7 +5397,7 @@
             }
             else {
                 _super.prototype.addChild.call(this, newChildren[0]);
-                this.innerContainer.addChild(newChildren[0].container);
+                this.innerContainer.addChild(newChildren[0].contentContainer);
                 this.getInnerBounds(true); // make sure bounds is updated instantly when a child is added
             }
             return newChildren[0];
@@ -5459,16 +5784,16 @@
             this.sf = this.tile
                 ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, ff))
                 : new PIXI$1.Sprite(new PIXI$1.Texture(t, ff));
-            this.container.addChildAt(this.sf, 0);
+            this.contentContainer.addChildAt(this.sf, 0);
             if (this.vs && this.hs) {
                 this.stl = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.ftl));
                 this.str = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.ftr));
                 this.sbl = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.fbl));
                 this.sbr = new PIXI$1.Sprite(new PIXI$1.Texture(t, this.fbr));
-                this.container.addChildAt(this.stl, 0);
-                this.container.addChildAt(this.str, 0);
-                this.container.addChildAt(this.sbl, 0);
-                this.container.addChildAt(this.sbr, 0);
+                this.contentContainer.addChildAt(this.stl, 0);
+                this.contentContainer.addChildAt(this.str, 0);
+                this.contentContainer.addChildAt(this.sbl, 0);
+                this.contentContainer.addChildAt(this.sbr, 0);
             }
             if (hs) {
                 this.sl = this.tile
@@ -5477,8 +5802,8 @@
                 this.sr = this.tile
                     ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, fr))
                     : new PIXI$1.Sprite(new PIXI$1.Texture(t, fr));
-                this.container.addChildAt(this.sl, 0);
-                this.container.addChildAt(this.sr, 0);
+                this.contentContainer.addChildAt(this.sl, 0);
+                this.contentContainer.addChildAt(this.sr, 0);
             }
             if (this.vs) {
                 this.st = this.tile
@@ -5487,8 +5812,8 @@
                 this.sb = this.tile
                     ? new PIXI$1.extras.TilingSprite(new PIXI$1.Texture(t, fb))
                     : new PIXI$1.Sprite(new PIXI$1.Texture(t, fb));
-                this.container.addChildAt(this.st, 0);
-                this.container.addChildAt(this.sb, 0);
+                this.contentContainer.addChildAt(this.st, 0);
+                this.contentContainer.addChildAt(this.sb, 0);
             }
             // set constant position and sizes
             if (this.vs && this.hs) {
@@ -5533,7 +5858,7 @@
             var sprite = new PIXI$1.Sprite(texture);
             _this = _super.call(this, sprite.width, sprite.height) || this;
             _this.sprite = sprite;
-            _this.container.addChild(_this.sprite);
+            _this.contentContainer.addChild(_this.sprite);
             return _this;
         }
         Sprite.prototype.update = function () {
@@ -5553,23 +5878,28 @@
     }(Widget));
 
     /**
-     * A Stage for UIObjects
+     * The stage is the root node in the PUXI scene graph. It does not provide a
+     * sophisticated layout model; however, it will accept constraints defined by
+     * `PUXI.FastLayoutOptions` or `PUXI.LayoutOptions` in its children.
+     *
+     * The stage is not a `PUXI.Widget` and its dimensions are always fixed.
      *
      * @class
-     * @extends PIXI.UI.Container
-     * @memberof PIXI.UI
-     * @param width {Number} Width of the Stage
-     * @param height {Number} Height of the Stage
+     * @memberof PUXI
      */
     var Stage = /** @class */ (function (_super) {
         __extends(Stage, _super);
+        /**
+         * @param {number} width - width of the stage
+         * @param {number} height - height of the stage
+         */
         function Stage(width, height) {
             var _this = _super.call(this) || this;
             _this.__width = width;
             _this.__height = height;
             _this.minWidth = 0;
             _this.minHeight = 0;
-            _this.UIChildren = [];
+            _this.widgetChildren = [];
             _this.interactive = true;
             _this.stage = _this;
             _this.hitArea = new PIXI$1.Rectangle(0, 0, 0, 0);
@@ -5577,6 +5907,33 @@
             _this.resize(width, height);
             return _this;
         }
+        Stage.prototype.measureAndLayout = function () {
+            for (var i = 0, j = this.widgetChildren.length; i < j; i++) {
+                var widget = this.widgetChildren[i];
+                var lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+                var widthMeasureMode = lopt.width < LayoutOptions.MAX_DIMEN
+                    ? exports.MeasureMode.EXACTLY
+                    : exports.MeasureMode.AT_MOST;
+                var heightMeasureMode = lopt.height < LayoutOptions.MAX_DIMEN
+                    ? exports.MeasureMode.EXACTLY
+                    : exports.MeasureMode.AT_MOST;
+                var loptWidth = (Math.abs(lopt.width) < 1) ? lopt.width * this._width : lopt.width;
+                var loptHeight = (Math.abs(lopt.height) < 1) ? lopt.height * this._height : lopt.height;
+                widget.measure(widthMeasureMode === exports.MeasureMode.EXACTLY ? loptWidth : this._width, heightMeasureMode === exports.MeasureMode.EXACTLY ? loptHeight : this._height, widthMeasureMode, heightMeasureMode);
+                var x = lopt.x ? lopt.x : 0;
+                var y = lopt.y ? lopt.y : 0;
+                if (Math.abs(x) < 1) {
+                    x *= this._width;
+                }
+                if (Math.abs(y) < 1) {
+                    y *= this._height;
+                }
+                var anchor = lopt.anchor || FastLayoutOptions.DEFAULT_ANCHOR;
+                var l = x - (anchor.x * widget.getMeasuredWidth());
+                var t = y - (anchor.y * widget.getMeasuredHeight());
+                widget.layout(l, t, l + widget.getMeasuredWidth(), t + widget.getMeasuredHeight(), true);
+            }
+        };
         Stage.prototype.addChild = function (UIObject) {
             var argumentLenght = arguments.length;
             if (argumentLenght > 1) {
@@ -5589,10 +5946,11 @@
                     UIObject.parent.removeChild(UIObject);
                 }
                 UIObject.parent = this;
-                this.UIChildren.push(UIObject);
-                _super.prototype.addChild.call(this, UIObject.container);
-                UIObject.updatesettings(true);
+                this.widgetChildren.push(UIObject);
+                _super.prototype.addChild.call(this, UIObject.insetContainer);
+                // UIObject.updatesettings(true);
             }
+            this.measureAndLayout();
         };
         Stage.prototype.removeChild = function (UIObject) {
             var argumentLenght = arguments.length;
@@ -5602,13 +5960,14 @@
                 }
             }
             else {
-                _super.prototype.removeChild.call(this, UIObject.container);
-                var index = this.UIChildren.indexOf(UIObject);
+                _super.prototype.removeChild.call(this, UIObject.insetContainer);
+                var index = this.widgetChildren.indexOf(UIObject);
                 if (index !== -1) {
                     this.children.splice(index, 1);
                     UIObject.parent = null;
                 }
             }
+            this.measureAndLayout();
         };
         Stage.prototype.resize = function (width, height) {
             if (!isNaN(height))
@@ -5642,9 +6001,10 @@
                 this.hitArea.width = this.__width;
                 this.hitArea.height = this.__height;
             }
-            for (var i = 0; i < this.UIChildren.length; i++) {
-                this.UIChildren[i].updatesettings(true, false);
+            for (var i = 0; i < this.widgetChildren.length; i++) {
+                this.widgetChildren[i].updatesettings(true, false);
             }
+            this.measureAndLayout();
         };
         Object.defineProperty(Stage.prototype, "_width", {
             get: function () {
@@ -5676,22 +6036,24 @@
     }(PIXI$1.Container));
 
     /**
-     * An UI text object
+     * A static text widget. It cannot retain children.
      *
      * @class
-     * @extends PIXI.UI.UIBase
-     * @memberof PIXI.UI
-     * @param Text {String} Text content
-     * @param TextStyle {PIXI.TextStyle} Style used for the Text
+     * @extends PUXI.Widget
+     * @memberof PUXI
      */
     var Text = /** @class */ (function (_super) {
         __extends(Text, _super);
+        /**
+         * @param {string} text - text content
+         * @param {PIXI.TextStyle} textStyle - styled used for text
+         */
         function Text(text, textStyle) {
             var _this = this;
-            var textDisplay = new PIXI.Text(text, textStyle);
+            var textDisplay = new PIXI$1.Text(text, textStyle);
             _this = _super.call(this, textDisplay.width, textDisplay.height) || this;
             _this._text = textDisplay;
-            _this.container.addChild(_this._text);
+            _this.contentContainer.addChild(_this._text);
             return _this;
         }
         Text.prototype.baseupdate = function () {
@@ -5982,10 +6344,10 @@
             _this.focus = function () {
                 if (!_this._focused) {
                     _super.prototype.focus.call(_this);
-                    var l = _this.container.worldTransform.tx + "px";
-                    var t = _this.container.worldTransform.ty + "px";
-                    var h = _this.container.height + "px";
-                    var w = _this.container.width + "px";
+                    var l = _this.contentContainer.worldTransform.tx + "px";
+                    var t = _this.contentContainer.worldTransform.ty + "px";
+                    var h = _this.contentContainer.height + "px";
+                    var w = _this.contentContainer.width + "px";
                     mockDOMInput.setAttribute('style', "position:fixed; left:" + l + "; top:" + t + "; height:" + h + "; width:" + w + ";");
                     mockDOMInput.value = '';
                     mockDOMInput.focus();
@@ -6581,7 +6943,7 @@
             var sprite = new PIXI$1.extras.TilingSprite(t);
             _this = _super.call(this, width || sprite.width, height || sprite.height) || this;
             _this.sprite = sprite;
-            _this.container.addChild(_this.sprite);
+            _this.contentContainer.addChild(_this.sprite);
             return _this;
         }
         /**
@@ -6633,9 +6995,7 @@
      * @class
      * @example
      * ```
-     * parent.useLayout(
-     *    new PUXI.AnchorLayout()
-     * );
+     * parent.useLayout(new PUXI.AnchorLayout());
      * ```
      */
     var AnchorLayout = /** @class */ (function () {
@@ -6766,7 +7126,8 @@
         AnchorLayout.prototype.getMeasuredHeight = function () {
             return this.measuredHeight;
         };
-        AnchorLayout.prototype.onLayout = function (parent) {
+        AnchorLayout.prototype.onLayout = function () {
+            var parent = this.host;
             var widgetChildren = parent.widgetChildren;
             for (var i = 0; i < widgetChildren.length; i++) {
                 var child = widgetChildren[i];
@@ -6831,34 +7192,6 @@
         return AnchorLayout;
     }());
 
-    var WidgetGroup = /** @class */ (function (_super) {
-        __extends(WidgetGroup, _super);
-        function WidgetGroup() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        WidgetGroup.prototype.useLayout = function (layoutMgr) {
-            if (this.layoutMgr) {
-                this.layoutMgr.onDetach(this);
-            }
-            this.layoutMgr = layoutMgr;
-            if (layoutMgr) {
-                this.layoutMgr.onAttach(this);
-            }
-        };
-        WidgetGroup.prototype.measure = function (width, height, widthMode, heightMode) {
-            _super.prototype.measure.call(this, width, height, widthMode, heightMode);
-            this.layoutMgr.onMeasure(width, height, widthMode, heightMode);
-            this._measuredWidth = Math.max(this.measuredWidth, this.layoutMgr.getMeasuredWidth());
-            this._measuredHeight = Math.max(this.measuredHeight, this.layoutMgr.getMeasuredHeight());
-        };
-        WidgetGroup.prototype.layout = function (l, t, r, b, dirty) {
-            if (dirty === void 0) { dirty = true; }
-            _super.prototype.layout.call(this, l, t, r, b, dirty);
-            this.layoutMgr.onLayout(this);
-        };
-        return WidgetGroup;
-    }(Widget));
-
     exports.AnchorLayout = AnchorLayout;
     exports.AnchorLayoutOptions = AnchorLayoutOptions;
     exports.Button = Button;
@@ -6867,6 +7200,7 @@
     exports.DynamicText = DynamicText;
     exports.DynamicTextStyle = DynamicTextStyle;
     exports.Ease = Ease;
+    exports.FastLayoutOptions = FastLayoutOptions;
     exports.Helpers = Helpers;
     exports.Insets = Insets;
     exports.Interaction = Interaction;

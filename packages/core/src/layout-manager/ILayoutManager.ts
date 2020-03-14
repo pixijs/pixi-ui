@@ -12,11 +12,11 @@ export interface ILayoutManager extends IMeasurable
 {
     onAttach(host: WidgetGroup);
 
-    onDetach(host: WidgetGroup);
+    onDetach();
 
     /**
      * Lays out the children of the parent.
      * @param parent
      */
-    onLayout(parent: WidgetGroup);
+    onLayout();
 }

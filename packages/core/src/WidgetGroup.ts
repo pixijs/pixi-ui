@@ -1,16 +1,30 @@
 import { Widget } from './Widget';
 import { ILayoutManager } from './layout-manager/ILayoutManager';
 import { MeasureMode } from './IMeasurable';
+import { FastLayout } from './layout-manager/FastLayout';
 
+/**
+ * A widget group is a layout owner that can position its children according
+ * to the layout given to it.
+ *
+ * @namespace PUXI
+ * @class
+ * @extends PUXI.Widget
+ */
 export abstract class WidgetGroup extends Widget
 {
-    public layoutMgr: ILayoutManager;
+    public layoutMgr: ILayoutManager;// lazily initialized (via useLayout(), useDefaultLayout())
 
+    /**
+     * Will set the given layout-manager to be used for positioning child widgets.
+     *
+     * @param {ILayoutManager} layoutMgr
+     */
     useLayout(layoutMgr: ILayoutManager): void
     {
         if (this.layoutMgr)
         {
-            this.layoutMgr.onDetach(this);
+            this.layoutMgr.onDetach();
         }
 
         this.layoutMgr = layoutMgr;
@@ -21,9 +35,27 @@ export abstract class WidgetGroup extends Widget
         }
     }
 
+    /**
+     * Sets the widget-recommended layout manager. By default (if not overriden by widget
+     * group class), this is a fast-layout.
+     */
+    useDefaultLayout(): void
+    {
+        this.useLayout(new FastLayout());
+    }
+
     measure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
         super.measure(width, height, widthMode, heightMode);
+
+        if (this.widgetChildren.length === 0)
+        {
+            return;
+        }
+        if (!this.layoutMgr)
+        {
+            this.useDefaultLayout();
+        }
 
         this.layoutMgr.onMeasure(width, height, widthMode, heightMode);
 
@@ -35,6 +67,15 @@ export abstract class WidgetGroup extends Widget
     {
         super.layout(l, t, r, b, dirty);
 
-        this.layoutMgr.onLayout(this);
+        if (this.widgetChildren.length === 0)
+        {
+            return;
+        }
+        if (!this.layoutMgr)
+        {
+            this.useDefaultLayout();
+        }
+
+        this.layoutMgr.onLayout();// layoutMgr is attached to this
     }
 }

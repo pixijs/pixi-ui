@@ -1,14 +1,17 @@
 import { Widget } from './Widget';
 import * as PIXI from 'pixi.js';
+import { MeasureMode } from './IMeasurable';
+import { LayoutOptions, FastLayoutOptions } from './layout-options';
 
 /**
- * A Stage for UIObjects
+ * The stage is the root node in the PUXI scene graph. It does not provide a
+ * sophisticated layout model; however, it will accept constraints defined by
+ * `PUXI.FastLayoutOptions` or `PUXI.LayoutOptions` in its children.
+ *
+ * The stage is not a `PUXI.Widget` and its dimensions are always fixed.
  *
  * @class
- * @extends PIXI.UI.Container
- * @memberof PIXI.UI
- * @param width {Number} Width of the Stage
- * @param height {Number} Height of the Stage
+ * @memberof PUXI
  */
 export class Stage extends PIXI.Container
 {
@@ -17,10 +20,14 @@ export class Stage extends PIXI.Container
     minWidth: number;
     minHeight: number;
     initialized: boolean;
-    UIChildren: Widget[];
+    widgetChildren: Widget[];
 
     stage: any;
 
+    /**
+     * @param {number} width - width of the stage
+     * @param {number} height - height of the stage
+     */
     constructor(width: number, height: number)
     {
         super();
@@ -30,12 +37,57 @@ export class Stage extends PIXI.Container
         this.minWidth = 0;
         this.minHeight = 0;
 
-        this.UIChildren = [];
+        this.widgetChildren = [];
         this.interactive = true;
         this.stage = this;
         this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
         this.initialized = true;
         this.resize(width, height);
+    }
+
+    protected measureAndLayout(): void
+    {
+        for (let i = 0, j = this.widgetChildren.length; i < j; i++)
+        {
+            const widget = this.widgetChildren[i];
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
+
+            const widthMeasureMode = lopt.width < LayoutOptions.MAX_DIMEN
+                ? MeasureMode.EXACTLY
+                : MeasureMode.AT_MOST;
+            const heightMeasureMode = lopt.height < LayoutOptions.MAX_DIMEN
+                ? MeasureMode.EXACTLY
+                : MeasureMode.AT_MOST;
+            const loptWidth = (Math.abs(lopt.width) < 1) ? lopt.width * this._width : lopt.width;
+            const loptHeight = (Math.abs(lopt.height) < 1) ? lopt.height * this._height : lopt.height;
+
+            widget.measure(
+                widthMeasureMode === MeasureMode.EXACTLY ? loptWidth : this._width,
+                heightMeasureMode === MeasureMode.EXACTLY ? loptHeight : this._height,
+                widthMeasureMode,
+                heightMeasureMode);
+
+            let x = lopt.x ? lopt.x : 0;
+            let y = lopt.y ? lopt.y : 0;
+
+            if (Math.abs(x) < 1)
+            {
+                x *= this._width;
+            }
+            if (Math.abs(y) < 1)
+            {
+                y *= this._height;
+            }
+
+            const anchor = lopt.anchor || FastLayoutOptions.DEFAULT_ANCHOR;
+            const l = x - (anchor.x * widget.getMeasuredWidth());
+            const t = y - (anchor.y * widget.getMeasuredHeight());
+
+            widget.layout(l, t,
+                l + widget.getMeasuredWidth(),
+                t + widget.getMeasuredHeight(),
+                true);
+        }
     }
 
     addChild(UIObject: Widget): void
@@ -57,10 +109,12 @@ export class Stage extends PIXI.Container
             }
 
             UIObject.parent = this;
-            this.UIChildren.push(UIObject);
-            super.addChild(UIObject.container);
-            UIObject.updatesettings(true);
+            this.widgetChildren.push(UIObject);
+            super.addChild(UIObject.insetContainer);
+            // UIObject.updatesettings(true);
         }
+
+        this.measureAndLayout();
     }
 
     removeChild(UIObject: Widget): void
@@ -76,9 +130,9 @@ export class Stage extends PIXI.Container
         }
         else
         {
-            super.removeChild(UIObject.container);
+            super.removeChild(UIObject.insetContainer);
 
-            const index = this.UIChildren.indexOf(UIObject);
+            const index = this.widgetChildren.indexOf(UIObject);
 
             if (index !== -1)
             {
@@ -86,6 +140,8 @@ export class Stage extends PIXI.Container
                 UIObject.parent = null;
             }
         }
+
+        this.measureAndLayout();
     }
 
     resize(width?: number, height?: number): void
@@ -132,10 +188,12 @@ export class Stage extends PIXI.Container
             this.hitArea.height = this.__height;
         }
 
-        for (let i = 0; i < this.UIChildren.length; i++)
+        for (let i = 0; i < this.widgetChildren.length; i++)
         {
-            this.UIChildren[i].updatesettings(true, false);
+            this.widgetChildren[i].updatesettings(true, false);
         }
+
+        this.measureAndLayout();
     }
 
     get _width(): number

@@ -81,16 +81,16 @@ export class MouseScrollEvent
             this.bound = false;
         }
 
-        obj.container.removeListener('mouseover', onHoverImpl);
-        obj.container.removeListener('mouseout', onMouseOutImpl);
+        obj.contentContainer.removeListener('mouseover', onHoverImpl);
+        obj.contentContainer.removeListener('mouseout', onMouseOutImpl);
     }
 
     startEvent(): void
     {
         const { obj, onHoverImpl, onMouseOutImpl } = this;
 
-        obj.container.on('mouseover', onHoverImpl);
-        obj.container.on('mouseout', onMouseOutImpl);
+        obj.contentContainer.on('mouseover', onHoverImpl);
+        obj.contentContainer.on('mouseout', onMouseOutImpl);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

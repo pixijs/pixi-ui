@@ -11,9 +11,7 @@ import { WidgetGroup } from '../WidgetGroup';
  * @class
  * @example
  * ```
- * parent.useLayout(
- *    new PUXI.AnchorLayout()
- * );
+ * parent.useLayout(new PUXI.AnchorLayout());
  * ```
  */
 export class AnchorLayout implements ILayoutManager
@@ -223,8 +221,9 @@ export class AnchorLayout implements ILayoutManager
         return this.measuredHeight;
     }
 
-    onLayout(parent: Widget): void
+    onLayout(): void
     {
+        const parent = this.host;
         const { widgetChildren } = parent;
 
         for (let i = 0; i < widgetChildren.length; i++)

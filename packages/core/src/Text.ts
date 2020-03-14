@@ -1,25 +1,28 @@
 import { Widget } from './Widget';
+import * as PIXI from 'pixi.js';
 
 /**
- * An UI text object
+ * A static text widget. It cannot retain children.
  *
  * @class
- * @extends PIXI.UI.UIBase
- * @memberof PIXI.UI
- * @param Text {String} Text content
- * @param TextStyle {PIXI.TextStyle} Style used for the Text
+ * @extends PUXI.Widget
+ * @memberof PUXI
  */
 export class Text extends Widget
 {
     private _text: PIXI.Text;
 
+    /**
+     * @param {string} text - text content
+     * @param {PIXI.TextStyle} textStyle - styled used for text
+     */
     constructor(text: string, textStyle: PIXI.TextStyle)
     {
         const textDisplay = new PIXI.Text(text, textStyle);
 
         super(textDisplay.width, textDisplay.height);
         this._text = textDisplay;
-        this.container.addChild(this._text);
+        this.contentContainer.addChild(this._text);
     }
 
     baseupdate(): void

@@ -73,9 +73,9 @@ export class ScrollingContainer extends Container
         this.mask = new PIXI.Graphics();
         this.innerContainer = new PIXI.Container();
         this.innerBounds = new PIXI.Rectangle();
-        this.container.addChild(this.mask);
-        this.container.addChild(this.innerContainer);
-        this.container.mask = this.mask;
+        this.contentContainer.addChild(this.mask);
+        this.contentContainer.addChild(this.innerContainer);
+        this.contentContainer.mask = this.mask;
 
         this.scrollX = options.scrollX !== undefined ? options.scrollX : false;
         this.scrollY = options.scrollY !== undefined ? options.scrollY : false;
@@ -155,7 +155,7 @@ export class ScrollingContainer extends Container
         else
         {
             super.addChild(newChildren[0]);
-            this.innerContainer.addChild(newChildren[0].container);
+            this.innerContainer.addChild(newChildren[0].contentContainer);
             this.getInnerBounds(true); // make sure bounds is updated instantly when a child is added
         }
 

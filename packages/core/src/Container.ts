@@ -15,14 +15,14 @@ export class Container extends Widget
     constructor(width: number, height: number)
     {
         super(width, height);
-        this.container.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+        this.contentContainer.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     }
 
     update()
     {
         // if (this.container.interactive) {
-        this.container.hitArea.width = this._width;
-        this.container.hitArea.height = this._height;
+        this.contentContainer.hitArea.width = this._width;
+        this.contentContainer.hitArea.height = this._height;
         // }
     }
 }

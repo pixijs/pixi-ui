@@ -1,11 +1,12 @@
 import * as PIXI from 'pixi.js';
+import { Widget } from '../Widget';
 
 export class ClickEvent
 {
     private bound: boolean;
     private id: number;
     private ishover: boolean;
-    private obj: any;
+    private obj: Widget;
 
     private movementX: number;
     private movementY: number;
@@ -41,7 +42,7 @@ export class ClickEvent
         this.eventname_mouseup = this.right ? 'rightup' : 'mouseup';
         this.eventname_mouseupoutside = this.right ? 'rightupoutside' : 'mouseupoutside';
 
-        obj.container.interactive = true;
+        obj.interactive = true;
         this.time = 0;
 
         this.startEvent();
@@ -64,13 +65,13 @@ export class ClickEvent
 
         if (!this.bound)
         {
-            obj.container.on(eventname_mouseup, _onMouseUp);
-            obj.container.on(eventname_mouseupoutside, _onMouseUpOutside);
+            obj.contentContainer.on(eventname_mouseup, _onMouseUp);
+            obj.contentContainer.on(eventname_mouseupoutside, _onMouseUpOutside);
 
             if (!right)
             {
-                obj.container.on('touchend', _onMouseUp);
-                obj.container.on('touchendoutside', _onMouseUpOutside);
+                obj.contentContainer.on('touchend', _onMouseUp);
+                obj.contentContainer.on('touchendoutside', _onMouseUpOutside);
             }
 
             this.bound = true;
@@ -112,13 +113,13 @@ export class ClickEvent
 
         if (this.bound)
         {
-            obj.container.removeListener(eventname_mouseup, _onMouseUp);
-            obj.container.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
+            obj.contentContainer.removeListener(eventname_mouseup, _onMouseUp);
+            obj.contentContainer.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
 
             if (!this.right)
             {
-                obj.container.removeListener('touchend', _onMouseUp);
-                obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+                obj.contentContainer.removeListener('touchend', _onMouseUp);
+                obj.contentContainer.removeListener('touchendoutside', _onMouseUpOutside);
             }
 
             this.bound = false;
@@ -169,8 +170,8 @@ export class ClickEvent
         if (!this.ishover)
         {
             this.ishover = true;
-            this.obj.container.on('mousemove', this._onMouseMove);
-            this.obj.container.on('touchmove', this._onMouseMove);
+            this.obj.contentContainer.on('mousemove', this._onMouseMove);
+            this.obj.contentContainer.on('touchmove', this._onMouseMove);
 
             this.onHover.call(this.obj, event, true);
         }
@@ -181,8 +182,8 @@ export class ClickEvent
         if (this.ishover)
         {
             this.ishover = false;
-            this.obj.container.removeListener('mousemove', this._onMouseMove);
-            this.obj.container.removeListener('touchmove', this._onMouseMove);
+            this.obj.contentContainer.removeListener('mousemove', this._onMouseMove);
+            this.obj.contentContainer.removeListener('touchmove', this._onMouseMove);
 
             this.onHover.call(this.obj, event, false);
         }
@@ -209,31 +210,31 @@ export class ClickEvent
 
         if (this.bound)
         {
-            obj.container.removeListener(eventname_mouseup, _onMouseUp);
-            obj.container.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
+            obj.contentContainer.removeListener(eventname_mouseup, _onMouseUp);
+            obj.contentContainer.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
 
             if (!this.right)
             {
-                obj.container.removeListener('touchend', _onMouseUp);
-                obj.container.removeListener('touchendoutside', _onMouseUpOutside);
+                obj.contentContainer.removeListener('touchend', _onMouseUp);
+                obj.contentContainer.removeListener('touchendoutside', _onMouseUpOutside);
             }
 
             this.bound = false;
         }
 
-        obj.container.removeListener(eventname_mousedown, _onMouseDown);
+        obj.contentContainer.removeListener(eventname_mousedown, _onMouseDown);
 
         if (!this.right)
         {
-            obj.container.removeListener('touchstart', _onMouseDown);
+            obj.contentContainer.removeListener('touchstart', _onMouseDown);
         }
 
         if (this.hover)
         {
-            obj.container.removeListener('mouseover', _onMouseOver);
-            obj.container.removeListener('mouseout', _onMouseOut);
-            obj.container.removeListener('mousemove', _onMouseMove);
-            obj.container.removeListener('touchmove', _onMouseMove);
+            obj.contentContainer.removeListener('mouseover', _onMouseOver);
+            obj.contentContainer.removeListener('mouseout', _onMouseOut);
+            obj.contentContainer.removeListener('mousemove', _onMouseMove);
+            obj.contentContainer.removeListener('touchmove', _onMouseMove);
         }
     };
 
@@ -247,17 +248,17 @@ export class ClickEvent
             _onMouseOut,
         } = this;
 
-        obj.container.on(eventname_mousedown, _onMouseDown);
+        obj.contentContainer.on(eventname_mousedown, _onMouseDown);
 
         if (!this.right)
         {
-            obj.container.on('touchstart', _onMouseDown);
+            obj.contentContainer.on('touchstart', _onMouseDown);
         }
 
         if (this.hover)
         {
-            obj.container.on('mouseover', _onMouseOver);
-            obj.container.on('mouseout', _onMouseOut);
+            obj.contentContainer.on('mouseover', _onMouseOver);
+            obj.contentContainer.on('mouseout', _onMouseOut);
         }
     };
 

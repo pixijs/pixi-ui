@@ -29,7 +29,7 @@ export class DragEvent
         this.id = 0;
 
         this.obj = obj;
-        this.obj.container.interactive = true;
+        this.obj.interactive = true;
 
         this.startEvent();
     }
@@ -172,16 +172,16 @@ export class DragEvent
             this.bound = false;
         }
 
-        obj.container.removeListener('mousedown', _onDragStart);
-        obj.container.removeListener('touchstart', _onDragStart);
+        obj.contentContainer.removeListener('mousedown', _onDragStart);
+        obj.contentContainer.removeListener('touchstart', _onDragStart);
     }
 
     startEvent(): void
     {
         const { obj, _onDragStart } = this;
 
-        obj.container.on('mousedown', _onDragStart);
-        obj.container.on('touchstart', _onDragStart);
+        obj.contentContainer.on('mousedown', _onDragStart);
+        obj.contentContainer.on('touchstart', _onDragStart);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

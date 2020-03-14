@@ -7,6 +7,8 @@ export function createMockWidget(content)
 
     mock.container.addChild(content);
 
+    mock.update = () => {};
+
     return mock;
 }
 

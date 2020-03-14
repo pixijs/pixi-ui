@@ -73,7 +73,7 @@ export class CheckBox extends InputBase
             this.addChild(this.checkmark);
         }
 
-        this.container.buttonMode = true;
+        this.contentContainer.buttonMode = true;
 
         if (this.checkGroup !== null)
         {

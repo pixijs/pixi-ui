@@ -25,6 +25,7 @@ export class LayoutOptions
 {
     public static FILL_PARENT = 0xfffffff1;
     public static WRAP_CONTENT = 0xfffffff2;
+    public static MAX_DIMEN = 0xfffffff0;
 
     public static DEFAULT = new LayoutOptions();
 

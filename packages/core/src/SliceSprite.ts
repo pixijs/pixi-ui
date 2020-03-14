@@ -151,7 +151,7 @@ export class SliceSprite extends Widget
         this.sf = this.tile
             ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ff))
             : new PIXI.Sprite(new PIXI.Texture(t, ff));
-        this.container.addChildAt(this.sf, 0);
+        this.contentContainer.addChildAt(this.sf, 0);
 
         if (this.vs && this.hs)
         {
@@ -159,10 +159,10 @@ export class SliceSprite extends Widget
             this.str = new PIXI.Sprite(new PIXI.Texture(t, this.ftr));
             this.sbl = new PIXI.Sprite(new PIXI.Texture(t, this.fbl));
             this.sbr = new PIXI.Sprite(new PIXI.Texture(t, this.fbr));
-            this.container.addChildAt(this.stl, 0);
-            this.container.addChildAt(this.str, 0);
-            this.container.addChildAt(this.sbl, 0);
-            this.container.addChildAt(this.sbr, 0);
+            this.contentContainer.addChildAt(this.stl, 0);
+            this.contentContainer.addChildAt(this.str, 0);
+            this.contentContainer.addChildAt(this.sbl, 0);
+            this.contentContainer.addChildAt(this.sbr, 0);
         }
         if (hs)
         {
@@ -173,8 +173,8 @@ export class SliceSprite extends Widget
                 ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fr))
                 : new PIXI.Sprite(new PIXI.Texture(t, fr));
 
-            this.container.addChildAt(this.sl, 0);
-            this.container.addChildAt(this.sr, 0);
+            this.contentContainer.addChildAt(this.sl, 0);
+            this.contentContainer.addChildAt(this.sr, 0);
         }
         if (this.vs)
         {
@@ -184,8 +184,8 @@ export class SliceSprite extends Widget
             this.sb = this.tile
                 ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fb))
                 : new PIXI.Sprite(new PIXI.Texture(t, fb));
-            this.container.addChildAt(this.st, 0);
-            this.container.addChildAt(this.sb, 0);
+            this.contentContainer.addChildAt(this.st, 0);
+            this.contentContainer.addChildAt(this.sb, 0);
         }
 
         // set constant position and sizes

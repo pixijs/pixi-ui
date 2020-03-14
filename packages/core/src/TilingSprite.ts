@@ -22,7 +22,7 @@ export class TilingSprite extends Widget
         super(width || sprite.width, height || sprite.height);
 
         this.sprite = sprite;
-        this.container.addChild(this.sprite);
+        this.contentContainer.addChild(this.sprite);
     }
 
     /**
