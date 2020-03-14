@@ -24,6 +24,8 @@ export class Stage extends PIXI.Container
 
     stage: any;
 
+    protected background: PIXI.Container;
+
     /**
      * @param {number} width - width of the stage
      * @param {number} height - height of the stage
@@ -88,6 +90,41 @@ export class Stage extends PIXI.Container
                 t + widget.getMeasuredHeight(),
                 true);
         }
+    }
+
+    getBackground(): PIXI.Container
+    {
+        return this.background;
+    }
+
+    setBackground(bg: PIXI.Container): void
+    {
+        if (this.background)
+        {
+            super.removeChild(this.background);
+        }
+
+        this.background = bg;
+
+        if (bg)
+        {
+            super.addChildAt(bg, 0);
+        }
+    }
+
+    private update(widgets: Widget[]): void
+    {
+        for (let i = 0, j = widgets.length; i < j; i++)
+        {
+            this.update(widgets[i].widgetChildren);
+            widgets[i].update();
+        }
+    }
+
+    render(renderer: PIXI.Renderer): void
+    {
+        this.update(this.widgetChildren);
+        super.render(renderer);
     }
 
     addChild(UIObject: Widget): void

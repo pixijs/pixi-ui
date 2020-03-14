@@ -11,15 +11,6 @@ function generateBackgroundGraphics(width = 300, height = 50, color = 0xffff)
     return mockBg;
 }
 
-function generateBackgroundUI(width = 300, height = 50, color)
-{
-    const mockContainer = new PUXI.Container(width, height);
-
-    mockContainer.contentContainer.addChild(generateBackgroundGraphics(width, height, color));
-
-    return mockContainer;
-}
-
 window.onload = function ()
 {
     const app = new PIXI.Application({
@@ -31,6 +22,7 @@ window.onload = function ()
 
     const uxStage = new PUXI.Stage(512, 512);
 
+    // Add title
     const mockTitle = new PUXI.Text('PUXI Expo')
         .setBackground(new this.PIXI.Graphics()
             .beginFill(0xabcdef)
@@ -38,6 +30,7 @@ window.onload = function ()
             .endFill())
         .setPadding(8, 8, 8, 8);
 
+    // Add rounded button in center
     const mockButton = new PUXI.Button({
         text: new PUXI.Text('Hello world!'),
     })
@@ -49,21 +42,26 @@ window.onload = function ()
             PUXI.FastLayoutOptions.CENTER_ANCHOR,
         ))
         .setBackground(new PIXI.Graphics()
-            .beginFill(0xffaabb)
+            .beginFill(0xffaabb, 0.5)
             .drawRoundedRect(0, 0, 300, 100, 16)
             .endFill());
 
-    mockButton.verticalAlign = 'middle';
-    mockButton.horizontalAlign = 'center';
-
-    const mockBgWrapper = this.generateBackgroundUI();
+    // Text input at bottom
     const mockInput = new PUXI.TextInput({
         multiLine: false,
-        background: mockBgWrapper,
-    });
+        background: new PIXI.Graphics().beginFill(0xffffff).drawRect(0, 0, 20, 10).endFill(),
+    }).setLayoutOptions(
+        new PUXI.FastLayoutOptions(
+            512,
+            PUXI.LayoutOptions.WRAP_CONTENT,
+            0,
+            0.9,
+        ),
+    );
 
-    mockInput.verticalAlign = 'bottom';
-    mockInput.horizontalAlign = 'center';
+    mockInput.on('focus', () => { console.log('TextInput focused!'); }); // eslint-disable-line no-console
+    mockInput.on('blur', () => { console.log('TextInput blur'); }); // eslint-disable-line no-console
+    mockInput.on('keydown', () => { console.log('TextInput keydowned!'); }); // eslint-disable-line no-console
 
     const mockScroll = new PUXI.ScrollingContainer({
         width: 300,
@@ -75,7 +73,7 @@ window.onload = function ()
     const mockBg3 = generateBackgroundGraphics(300, 50);
 
     mockBg3.y = 50;
-    const scrollCont = new PUXI.Container(300, 100);
+    const scrollCont = new PUXI.WidgetGroup(300, 100);
 
     scrollCont.contentContainer.addChild(mockBg2);
     scrollCont.contentContainer.addChild(mockBg3);
@@ -84,17 +82,31 @@ window.onload = function ()
 
     const mockCheckbox = new PUXI.CheckBox({
         checked: true,
-        background: this.generateBackgroundUI(30, 30),
-        checkmark: this.generateBackgroundUI(10, 10, 0xff),
-    });
+        background: generateBackgroundGraphics(30, 30),
+        checkmark: generateBackgroundGraphics(10, 10, 0xff),
+    }).setLayoutOptions(
+        new PUXI.FastLayoutOptions(
+            0.1, 30, 0.9, 0,
+        ),
+    );
 
     uxStage.addChild(mockTitle);
     uxStage.addChild(mockButton);
+    uxStage.addChild(mockInput);
+    uxStage.addChild(mockCheckbox);
     // uxStage.addChild(mockInput);
     // uxStage.addChild(mockScroll);
     // uxStage.addChild(mockCheckbox);
+
+    uxStage.setBackground(new PIXI.Sprite.from('./bg.png'));
+
     app.stage.addChild(uxStage);
 
     window.app = app;
     window.stage = uxStage;
+
+    window.mockTitle = mockTitle;
+    window.mockButton = mockButton;
+    window.mockTextInput = mockInput;
+    window.mockCheckbox = mockCheckbox;
 };

@@ -1,15 +1,14 @@
-import { InputBase } from './InputBase';
-import { Container } from './Container';
+import { InputBase, IInputBaseOptions } from './InputBase';
+import { InteractiveGroup } from './InteractiveGroup';
 import { DragEvent } from './Interaction/DragEvent';
 import { ScrollingContainer } from './ScrollingContainer';
 import * as PIXI from 'pixi.js';
-import { Sprite } from './Sprite';
 
-interface ITextInputOptions
+interface ITextInputOptions extends IInputBaseOptions
 {
     multiLine?: boolean;
     style?: PIXI.TextStyle;
-    background?: Sprite;
+    background?: PIXI.Container;
     selectedColor?: string | number[];
     selectedBackgroundColor?: string;
     width?: number;
@@ -69,7 +68,6 @@ export class TextInput extends InputBase
     private selection: PIXI.Graphics;
     private textContainer: ScrollingContainer;
 
-    public background: Sprite;
     public maxLength: number;
 
     private chars: any[];
@@ -112,16 +110,7 @@ export class TextInput extends InputBase
 
     constructor(options: ITextInputOptions)
     {
-        super(
-            typeof options.width !== 'undefined' // eslint-disable-line no-nested-ternary
-                ? options.width
-                : (options.background ? options.background.width : 150),
-            typeof options.height !== 'undefined' // eslint-disable-line no-nested-ternary
-                ? options.height
-                : (options.background ? options.background.height : 150),
-            options.tabIndex || 0,
-            options.tabGroup || 0,
-        );
+        super(options);
 
         // create temp input (for mobile keyboard)
         if (typeof mockDOMInput === 'undefined')
@@ -172,20 +161,11 @@ export class TextInput extends InputBase
         this.caret.moveTo(0, 0);
         this.caret.lineTo(0, this.textHeight);
 
-        // insert bg
-        if (options.background)
-        {
-            this.background = options.background;
-            this.background.width = '100%';
-            this.background.height = '100%';
-            this.addChild(this.background);
-        }
-
         // var padding
-        const paddingLeft = options.paddingLeft !== undefined ? options.paddingLeft : options.padding !== undefined ? options.padding : 3;
-        const paddingRight = options.paddingRight !== undefined ? options.paddingRight : options.padding !== undefined ? options.padding : 3;
-        const paddingBottom = options.paddingBottom !== undefined ? options.paddingBottom : options.padding !== undefined ? options.padding : 3;
-        const paddingTop = options.paddingTop !== undefined ? options.paddingTop : options.padding !== undefined ? options.padding : 3;
+        const paddingLeft = options.paddingLeft !== undefined ? options.paddingLeft : options.padding;
+        const paddingRight = options.paddingRight !== undefined ? options.paddingRight : options.padding;
+        const paddingBottom = options.paddingBottom !== undefined ? options.paddingBottom : options.padding;
+        const paddingTop = options.paddingTop !== undefined ? options.paddingTop : options.padding;
 
         // insert text container (scrolling container)
         this.textContainer = new ScrollingContainer({
@@ -196,11 +176,13 @@ export class TextInput extends InputBase
             softness: 0.2,
             overflowX: 40,
             overflowY: 40,
-        });
-        this.textContainer.anchorTop = paddingTop;
-        this.textContainer.anchorBottom = paddingBottom;
-        this.textContainer.anchorLeft = paddingLeft;
-        this.textContainer.anchorRight = paddingRight;
+        }).setPadding(
+            paddingLeft || 3,
+            paddingTop || 3,
+            paddingRight || 3,
+            paddingBottom || 3,
+        ) as ScrollingContainer;
+
         this.addChild(this.textContainer);
 
         if (this.multiLine)
@@ -335,7 +317,7 @@ export class TextInput extends InputBase
 
     update(): void
     {
-        if (this._width !== this._lastWidth)
+        if (this.width !== this._lastWidth)
         {
             this._lastWidth = this._width;
 

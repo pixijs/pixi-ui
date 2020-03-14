@@ -11,32 +11,27 @@ import * as PIXI from 'pixi.js';
  */
 export class Sprite extends Widget
 {
-    sprite: PIXI.Sprite;
+    private spriteDisplay: PIXI.Sprite;
 
     constructor(texture: PIXI.Texture)
     {
-        const sprite = new PIXI.Sprite(texture);
+        super();
 
-        super(sprite.width, sprite.height);
-
-        this.sprite = sprite;
-        this.contentContainer.addChild(this.sprite);
+        this.spriteDisplay = new PIXI.Sprite(texture);
+        this.contentContainer.addChild(this.spriteDisplay);
     }
 
     update(): void
     {
         if (this.tint !== null)
         {
-            this.sprite.tint = this.tint;
+            this.spriteDisplay.tint = this.tint;
         }
 
         if (this.blendMode !== null)
         {
-            this.sprite.blendMode = this.blendMode;
+            this.spriteDisplay.blendMode = this.blendMode;
         }
-
-        this.sprite.width = this._width;
-        this.sprite.height = this._height;
     }
 
     static fromImage(imageUrl): Sprite

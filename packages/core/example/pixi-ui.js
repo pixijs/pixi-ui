@@ -35,65 +35,6 @@
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
-    /**
-     * Layout and rendering configuration for a `PIXI.UI.UIBase`.
-     *
-     * @class
-     * @memberof PIXI.UI
-     */
-    var UISettings = /** @class */ (function () {
-        function UISettings() {
-            this.width = 0;
-            this.height = 0;
-            this.minWidth = 0;
-            this.minHeight = 0;
-            this.maxWidth = null;
-            this.maxHeight = null;
-            this.left = null;
-            this.right = null;
-            this.top = null;
-            this.bottom = null;
-            this.anchorLeft = null;
-            this.anchorRight = null;
-            this.anchorTop = null;
-            this.anchorBottom = null;
-            this.widthPct = null;
-            this.heightPct = null;
-            this.minWidthPct = null;
-            this.minHeightPct = null;
-            this.maxWidthPct = null;
-            this.maxHeightPct = null;
-            this.leftPct = null;
-            this.rightPct = null;
-            this.topPct = null;
-            this.bottomPct = null;
-            this.anchorLeftPct = null;
-            this.anchorRightPct = null;
-            this.anchorTopPct = null;
-            this.anchorBottomPct = null;
-            this.pivotX = 0;
-            this.pivotY = 0;
-            this.scaleX = 1;
-            this.scaleY = 1;
-            this.verticalAlign = null;
-            this.horizontalAlign = null;
-            this.rotation = null;
-            this.blendMode = null;
-            this.tint = null;
-            this.alpha = 1;
-            this.draggable = null;
-            this.dragRestricted = false;
-            this.dragRestrictAxis = null; // x, y
-            this.dragThreshold = 0;
-            this.dragGroup = null;
-            this.dragContainer = null;
-            this.droppable = null;
-            this.droppableReparent = null;
-            this.dropGroup = null;
-        }
-        return UISettings;
-    }());
-
     var DragEvent = /** @class */ (function () {
         function DragEvent(obj) {
             var _this = this;
@@ -525,6 +466,8 @@
              * top-left corner of the widget will be at (x,y); however, setting it to
              * (.5,.5) will make the _center of the widget_ be at (x,y) in the parent's
              * reference frame.
+             * @member {PIXI.Point}
+             * @default PUXI.FastLayoutOptions.DEFAULT_ANCHOR
              */
             _this.anchor = anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
             return _this;
@@ -555,11 +498,10 @@
      */
     var Widget = /** @class */ (function (_super) {
         __extends(Widget, _super);
-        function Widget(width, height) {
+        function Widget() {
             var _this = _super.call(this) || this;
             _this.insetContainer = new PIXI$1.Container();
             _this.contentContainer = _this.insetContainer.addChild(new PIXI$1.Container());
-            _this.setting = new UISettings();
             _this.widgetChildren = [];
             _this.stage = null;
             _this.layoutMeasure = new Insets();
@@ -570,258 +512,15 @@
             _this._oldWidth = -1;
             _this._oldHeight = -1;
             _this.pixelPerfect = true;
-            if (width && isNaN(width) && width.indexOf('%') != -1) {
-                _this.setting.widthPct = parseFloat(width.replace('%', '')) * 0.01;
-            }
-            else {
-                _this.setting.widthPct = null;
-            }
-            if (height && isNaN(height) && height.indexOf('%') != -1) {
-                _this.setting.heightPct = parseFloat(height.replace('%', '')) * 0.01;
-            }
-            else {
-                _this.setting.heightPct = null;
-            }
-            _this.setting.width = width || 0;
-            _this.setting.height = height || 0;
-            // actual values
-            _this._width = 0;
-            _this._height = 0;
-            _this._minWidth = null;
-            _this._minHeight = null;
-            _this._maxWidth = null;
-            _this._maxHeight = null;
-            _this._anchorLeft = null;
-            _this._anchorRight = null;
-            _this._anchorTop = null;
-            _this._anchorBottom = null;
-            _this._left = null;
-            _this._right = null;
-            _this._top = null;
-            _this._bottom = null;
             _this._paddingLeft = 0;
             _this._paddingTop = 0;
             _this._paddingRight = 0;
             _this._paddingBottom = 0;
+            _this.tint = 0;
+            _this.blendMode = PIXI$1.BLEND_MODES.NORMAL;
             _this._dragPosition = null; // used for overriding positions if tweens is playing
             return _this;
         }
-        /**
-         * Renders the object using the WebGL renderer
-         *
-         * @private
-         */
-        Widget.prototype.updatesettings = function (updateChildren, updateParent) {
-            if (!this.initialized) {
-                if (this.parent && this.parent.stage && this.parent.initialized) {
-                    this.initialize();
-                }
-                else {
-                    return;
-                }
-            }
-            if (updateParent) {
-                this.updateParent();
-            }
-            this.baseupdate();
-            this.update();
-            if (updateChildren) {
-                this.updateChildren();
-            }
-        };
-        /**
-         * Updates the parent
-         *
-         * @private
-         */
-        Widget.prototype.updateParent = function () {
-            if (this.parent) {
-                if (this.parent.updatesettings) {
-                    this.parent.updatesettings(false, true);
-                }
-            }
-        };
-        /**
-         * Updates the UIObject with all base settings
-         *
-         * @private
-         */
-        Widget.prototype.baseupdate = function () {
-            // return if parent size didnt change
-            if (this.parent) {
-                var parentHeight = void 0;
-                var parentWidth = void 0;
-                // transform convertion (% etc)
-                this.dirty = true;
-                this._width = this.actual_width;
-                this._height = this.actual_height;
-                this._minWidth = this.actual_minWidth;
-                this._minHeight = this.actual_minHeight;
-                this._maxWidth = this.actual_maxWidth;
-                this._maxHeight = this.actual_maxHeight;
-                this._anchorLeft = this.actual_anchorLeft;
-                this._anchorRight = this.actual_anchorRight;
-                this._anchorTop = this.actual_anchorTop;
-                this._anchorBottom = this.actual_anchorBottom;
-                this._left = this.actual_left;
-                this._right = this.actual_right;
-                this._top = this.actual_top;
-                this._bottom = this.actual_bottom;
-                this._parentWidth = parentWidth = this.parent._width;
-                this._parentHeight = parentHeight = this.parent._height;
-                this.dirty = false;
-                var pivotXOffset = this.pivotX * this._width;
-                var pivotYOffset = this.pivotY * this._height;
-                if (this.pixelPerfect) {
-                    pivotXOffset = Math.round(pivotXOffset);
-                    pivotYOffset = Math.round(pivotYOffset);
-                }
-                if (this.horizontalAlign === null) {
-                    // get anchors (use left right if conflict)
-                    if (this._anchorLeft !== null && this._anchorRight === null && this._right !== null) {
-                        this._anchorRight = this._right;
-                    }
-                    else if (this._anchorLeft === null && this._anchorRight !== null && this._left !== null) {
-                        this._anchorLeft = this._left;
-                    }
-                    else if (this._anchorLeft === null && this._anchorRight === null && this._left !== null && this._right !== null) {
-                        this._anchorLeft = this._left;
-                        this._anchorRight = this._right;
-                    }
-                    var useHorizontalAnchor = this._anchorLeft !== null || this._anchorRight !== null;
-                    var useLeftRight = !useHorizontalAnchor && (this._left !== null || this._right !== null);
-                    if (useLeftRight) {
-                        if (this._left !== null) {
-                            this.contentContainer.position.x = this._left;
-                        }
-                        else if (this._right !== null) {
-                            this.contentContainer.position.x = parentWidth - this._right;
-                        }
-                    }
-                    else if (useHorizontalAnchor) {
-                        if (this._anchorLeft !== null && this._anchorRight === null) {
-                            this.contentContainer.position.x = this._anchorLeft;
-                        }
-                        else if (this._anchorLeft === null && this._anchorRight !== null) {
-                            this.contentContainer.position.x = parentWidth - this._width - this._anchorRight;
-                        }
-                        else if (this._anchorLeft !== null && this._anchorRight !== null) {
-                            this.contentContainer.position.x = this._anchorLeft;
-                            this._width = parentWidth - this._anchorLeft - this._anchorRight;
-                        }
-                        this.contentContainer.position.x += pivotXOffset;
-                    }
-                    else {
-                        this.contentContainer.position.x = 0;
-                    }
-                }
-                if (this.verticalAlign === null) {
-                    // get anchors (use top bottom if conflict)
-                    if (this._anchorTop !== null && this._anchorBottom === null && this._bottom !== null) {
-                        this._anchorBottom = this._bottom;
-                    }
-                    if (this._anchorTop === null && this._anchorBottom !== null && this._top !== null) {
-                        this._anchorTop = this._top;
-                    }
-                    var useVerticalAnchor = this._anchorTop !== null || this._anchorBottom !== null;
-                    var useTopBottom = !useVerticalAnchor && (this._top !== null || this._bottom !== null);
-                    if (useTopBottom) {
-                        if (this._top !== null) {
-                            this.contentContainer.position.y = this._top;
-                        }
-                        else if (this._bottom !== null) {
-                            this.contentContainer.position.y = parentHeight - this._bottom;
-                        }
-                    }
-                    else if (useVerticalAnchor) {
-                        if (this._anchorTop !== null && this._anchorBottom === null) {
-                            this.contentContainer.position.y = this._anchorTop;
-                        }
-                        else if (this._anchorTop === null && this._anchorBottom !== null) {
-                            this.contentContainer.position.y = parentHeight - this._height - this._anchorBottom;
-                        }
-                        else if (this._anchorTop !== null && this._anchorBottom !== null) {
-                            this.contentContainer.position.y = this._anchorTop;
-                            this._height = parentHeight - this._anchorTop - this._anchorBottom;
-                        }
-                        this.contentContainer.position.y += pivotYOffset;
-                    }
-                    else {
-                        this.contentContainer.position.y = 0;
-                    }
-                }
-                // min/max sizes
-                if (this._maxWidth !== null && this._width > this._maxWidth)
-                    this._width = this._maxWidth;
-                if (this._width < this._minWidth)
-                    this._width = this._minWidth;
-                if (this._maxHeight !== null && this._height > this._maxHeight)
-                    this._height = this._maxHeight;
-                if (this._height < this._minHeight)
-                    this._height = this._minHeight;
-                // pure vertical/horizontal align
-                if (this.horizontalAlign !== null) {
-                    if (this.horizontalAlign == 'center') {
-                        this.contentContainer.position.x = parentWidth * 0.5 - this._width * 0.5;
-                    }
-                    else if (this.horizontalAlign == 'right') {
-                        this.contentContainer.position.x = parentWidth - this._width;
-                    }
-                    else {
-                        this.contentContainer.position.x = 0;
-                    }
-                    this.contentContainer.position.x += pivotXOffset;
-                }
-                if (this.verticalAlign !== null) {
-                    if (this.verticalAlign == 'middle') {
-                        this.contentContainer.position.y = parentHeight * 0.5 - this._height * 0.5;
-                    }
-                    else if (this.verticalAlign == 'bottom') {
-                        this.contentContainer.position.y = parentHeight - this._height;
-                    }
-                    else {
-                        this.contentContainer.position.y = 0;
-                    }
-                    this.contentContainer.position.y += pivotYOffset;
-                }
-                // Unrestricted dragging
-                if (this.dragging && !this.setting.dragRestricted) {
-                    this.contentContainer.position.x = this._dragPosition.x;
-                    this.contentContainer.position.y = this._dragPosition.y;
-                }
-                // scale
-                if (this.setting.scaleX !== null)
-                    this.contentContainer.scale.x = this.setting.scaleX;
-                if (this.setting.scaleY !== null)
-                    this.contentContainer.scale.y = this.setting.scaleY;
-                // pivot
-                if (this.setting.pivotX !== null)
-                    this.contentContainer.pivot.x = pivotXOffset;
-                if (this.setting.pivotY !== null)
-                    this.contentContainer.pivot.y = pivotYOffset;
-                if (this.setting.alpha !== null)
-                    this.contentContainer.alpha = this.setting.alpha;
-                if (this.setting.rotation !== null)
-                    this.contentContainer.rotation = this.setting.rotation;
-                // make pixel perfect
-                if (this.pixelPerfect) {
-                    this._width = Math.round(this._width);
-                    this._height = Math.round(this._height);
-                    this.contentContainer.position.x = Math.round(this.contentContainer.position.x);
-                    this.contentContainer.position.y = Math.round(this.contentContainer.position.y);
-                }
-            }
-        };
-        /**
-         * Updates all UI Children
-         *
-         * @private
-         */
-        Widget.prototype.updateChildren = function () {
-            for (var i = 0; i < this.widgetChildren.length; i++) {
-                this.widgetChildren[i].updatesettings(true);
-            }
-        };
         Widget.prototype.getBackground = function () {
             return this.background;
         };
@@ -1023,7 +722,6 @@
                 UIObject.parent = this;
                 this.contentContainer.addChild(UIObject.insetContainer);
                 this.widgetChildren.push(UIObject);
-                this.updatesettings(true, true);
             }
             return UIObject;
         };
@@ -1037,17 +735,12 @@
             else {
                 var index = this.widgetChildren.indexOf(UIObject);
                 if (index !== -1) {
-                    var oldUIParent_1 = UIObject.parent;
+                    var oldUIParent = UIObject.parent;
                     var oldParent = UIObject.container.parent;
                     UIObject.container.parent.removeChild(UIObject.insetContainer);
                     this.widgetChildren.splice(index, 1);
                     UIObject.parent = null;
                     // oldParent._recursivePostUpdateTransform();
-                    setTimeout(function () {
-                        if (oldUIParent_1.updatesettings) {
-                            oldUIParent_1.updatesettings(true, true);
-                        }
-                    }, 0);
                 }
             }
         };
@@ -1157,53 +850,8 @@
                 container.on('touchend', this.onDrop);
             }
         };
-        Object.defineProperty(Widget.prototype, "x", {
-            get: function () {
-                return this.setting.left;
-            },
-            set: function (val) {
-                this.left = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "y", {
-            get: function () {
-                return this.setting.top;
-            },
-            set: function (val) {
-                this.top = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Widget.prototype, "width", {
             get: function () {
-                return this._width;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.widthPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.widthPct = null;
-                }
-                this.setting.width = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_width", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.widthPct !== null) {
-                        this._width = this.parent._width * this.setting.widthPct;
-                    }
-                    else {
-                        this._width = this.setting.width;
-                    }
-                }
                 return this._width;
             },
             enumerable: true,
@@ -1213,737 +861,15 @@
             get: function () {
                 return this._height;
             },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.heightPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.heightPct = null;
-                }
-                this.setting.height = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_height", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.heightPct !== null) {
-                        this._height = this.parent._height * this.setting.heightPct;
-                    }
-                    else {
-                        this._height = this.setting.height;
-                    }
-                }
-                return this._height;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "minWidth", {
-            get: function () {
-                return this.setting.minWidth;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.minWidthPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.minWidthPct = null;
-                }
-                this.setting.minWidth = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_minWidth", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.minWidthPct !== null) {
-                        this._minWidth = this.parent._width * this.setting.minWidthPct;
-                    }
-                    else {
-                        this._minWidth = this.setting.minWidth;
-                    }
-                }
-                return this._minWidth;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "minHeight", {
-            get: function () {
-                return this.setting.minHeight;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.minHeightPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.minHeightPct = null;
-                }
-                this.setting.minHeight = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_minHeight", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.minHeightPct !== null) {
-                        this._minHeight = this.parent._height * this.setting.minHeightPct;
-                    }
-                    else {
-                        this._minHeight = this.setting.minHeight;
-                    }
-                }
-                return this._minHeight;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "maxWidth", {
-            get: function () {
-                return this.setting.maxWidth;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.maxWidthPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.maxWidthPct = null;
-                }
-                this.setting.maxWidth = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_maxWidth", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.maxWidthPct !== null) {
-                        this._maxWidth = this.parent._width * this.setting.maxWidthPct;
-                    }
-                    else {
-                        this._maxWidth = this.setting.maxWidth;
-                    }
-                }
-                return this._maxWidth;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "maxHeight", {
-            get: function () {
-                return this.setting.maxHeight;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.maxHeightPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.maxHeightPct = null;
-                }
-                this.setting.maxHeight = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_maxHeight", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.maxHeightPct !== null) {
-                        this._maxHeight = this.parent._height * this.setting.maxHeightPct;
-                    }
-                    else {
-                        this._maxHeight = this.setting.maxHeight;
-                    }
-                }
-                return this._maxHeight;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "anchorLeft", {
-            get: function () {
-                return this.setting.anchorLeft;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.anchorLeftPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.anchorLeftPct = null;
-                }
-                this.setting.anchorLeft = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_anchorLeft", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.anchorLeftPct !== null) {
-                        this._anchorLeft = this.parent._width * this.setting.anchorLeftPct;
-                    }
-                    else {
-                        this._anchorLeft = this.setting.anchorLeft;
-                    }
-                }
-                return this._anchorLeft;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "anchorRight", {
-            get: function () {
-                return this.setting.anchorRight;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.anchorRightPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.anchorRightPct = null;
-                }
-                this.setting.anchorRight = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_anchorRight", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.anchorRightPct !== null) {
-                        this._anchorRight = this.parent._width * this.setting.anchorRightPct;
-                    }
-                    else {
-                        this._anchorRight = this.setting.anchorRight;
-                    }
-                }
-                return this._anchorRight;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "anchorTop", {
-            get: function () {
-                return this.setting.anchorTop;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.anchorTopPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.anchorTopPct = null;
-                }
-                this.setting.anchorTop = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_anchorTop", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.anchorTopPct !== null) {
-                        this._anchorTop = this.parent._height * this.setting.anchorTopPct;
-                    }
-                    else {
-                        this._anchorTop = this.setting.anchorTop;
-                    }
-                }
-                return this._anchorTop;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "anchorBottom", {
-            get: function () {
-                return this.setting.anchorBottom;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.anchorBottomPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.anchorBottomPct = null;
-                }
-                this.setting.anchorBottom = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_anchorBottom", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.anchorBottomPct !== null) {
-                        this._anchorBottom = this.parent._height * this.setting.anchorBottomPct;
-                    }
-                    else {
-                        this._anchorBottom = this.setting.anchorBottom;
-                    }
-                }
-                return this._anchorBottom;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "left", {
-            get: function () {
-                return this.setting.left;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.leftPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.leftPct = null;
-                }
-                this.setting.left = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_left", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.leftPct !== null) {
-                        this._left = this.parent._width * this.setting.leftPct;
-                    }
-                    else {
-                        this._left = this.setting.left;
-                    }
-                }
-                return this._left;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "right", {
-            get: function () {
-                return this.setting.right;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.rightPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.rightPct = null;
-                }
-                this.setting.right = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_right", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.rightPct !== null) {
-                        this._right = this.parent._width * this.setting.rightPct;
-                    }
-                    else {
-                        this._right = this.setting.right;
-                    }
-                }
-                return this._right;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "top", {
-            get: function () {
-                return this.setting.top;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.topPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.topPct = null;
-                }
-                this.setting.top = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_top", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.topPct !== null) {
-                        this._top = this.parent._height * this.setting.topPct;
-                    }
-                    else {
-                        this._top = this.setting.top;
-                    }
-                }
-                return this._top;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "bottom", {
-            get: function () {
-                return this.setting.bottom;
-            },
-            set: function (val) {
-                if (isNaN(val) && val.indexOf('%') !== -1) {
-                    this.setting.bottomPct = parseFloat(val.replace('%', '')) * 0.01;
-                }
-                else {
-                    this.setting.bottomPct = null;
-                }
-                this.setting.bottom = val;
-                this.updatesettings(true);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "actual_bottom", {
-            get: function () {
-                if (this.dirty) {
-                    if (this.setting.bottomPct !== null) {
-                        this._bottom = this.parent._height * this.setting.bottomPct;
-                    }
-                    else {
-                        this._bottom = this.setting.bottom;
-                    }
-                }
-                return this._bottom;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "verticalAlign", {
-            get: function () {
-                return this.setting.verticalAlign;
-            },
-            set: function (val) {
-                this.setting.verticalAlign = val;
-                this.baseupdate();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "valign", {
-            get: function () {
-                return this.setting.verticalAlign;
-            },
-            set: function (val) {
-                this.setting.verticalAlign = val;
-                this.baseupdate();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "horizontalAlign", {
-            get: function () {
-                return this.setting.horizontalAlign;
-            },
-            set: function (val) {
-                this.setting.horizontalAlign = val;
-                this.baseupdate();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "align", {
-            get: function () {
-                return this.setting.horizontalAlign;
-            },
-            set: function (val) {
-                this.setting.horizontalAlign = val;
-                this.baseupdate();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "tint", {
-            get: function () {
-                return this.setting.tint;
-            },
-            set: function (val) {
-                this.setting.tint = val;
-                this.update();
-            },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "alpha", {
             get: function () {
-                return this.setting.alpha;
+                return this.insetContainer.alpha;
             },
             set: function (val) {
-                this.setting.alpha = val;
-                this.contentContainer.alpha = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "rotation", {
-            get: function () {
-                return this.setting.rotation;
-            },
-            set: function (val) {
-                this.setting.rotation = val;
-                this.contentContainer.rotation = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "blendMode", {
-            get: function () {
-                return this.setting.blendMode;
-            },
-            set: function (val) {
-                this.setting.blendMode = val;
-                this.update();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "pivotX", {
-            get: function () {
-                return this.setting.pivotX;
-            },
-            set: function (val) {
-                this.setting.pivotX = val;
-                this.baseupdate();
-                this.update();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "pivotY", {
-            get: function () {
-                return this.setting.pivotY;
-            },
-            set: function (val) {
-                this.setting.pivotY = val;
-                this.baseupdate();
-                this.update();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "pivot", {
-            set: function (val) {
-                this.setting.pivotX = val;
-                this.setting.pivotY = val;
-                this.baseupdate();
-                this.update();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "scaleX", {
-            get: function () {
-                return this.setting.scaleX;
-            },
-            set: function (val) {
-                this.setting.scaleX = val;
-                this.contentContainer.scale.x = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "scaleY", {
-            get: function () {
-                return this.setting.scaleY;
-            },
-            set: function (val) {
-                this.setting.scaleY = val;
-                this.contentContainer.scale.y = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "scale", {
-            get: function () {
-                return this.setting.scaleX;
-            },
-            set: function (val) {
-                this.setting.scaleX = val;
-                this.setting.scaleY = val;
-                this.contentContainer.scale.x = val;
-                this.contentContainer.scale.y = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "draggable", {
-            get: function () {
-                return this.setting.draggable;
-            },
-            set: function (val) {
-                this.setting.draggable = val;
-                if (this.initialized) {
-                    if (val) {
-                        this.initDraggable();
-                    }
-                    else {
-                        this.clearDraggable();
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "dragRestricted", {
-            get: function () {
-                return this.setting.dragRestricted;
-            },
-            set: function (val) {
-                this.setting.dragRestricted = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "dragRestrictAxis", {
-            get: function () {
-                return this.setting.dragRestrictAxis;
-            },
-            set: function (val) {
-                this.setting.dragRestrictAxis = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "dragThreshold", {
-            get: function () {
-                return this.setting.dragThreshold;
-            },
-            set: function (val) {
-                this.setting.dragThreshold = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "dragGroup", {
-            get: function () {
-                return this.setting.dragGroup;
-            },
-            set: function (val) {
-                this.setting.dragGroup = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "dragContainer", {
-            get: function () {
-                return this.setting.dragContainer;
-            },
-            set: function (val) {
-                this.setting.dragContainer = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "droppable", {
-            get: function () {
-                return this.setting.droppable;
-            },
-            set: function (val) {
-                this.setting.droppable = true;
-                if (this.initialized) {
-                    if (val) {
-                        this.initDroppable();
-                    }
-                    else {
-                        this.clearDroppable();
-                    }
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "droppableReparent", {
-            get: function () {
-                return this.setting.droppableReparent;
-            },
-            set: function (val) {
-                this.setting.droppableReparent = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "dropGroup", {
-            get: function () {
-                return this.setting.dropGroup;
-            },
-            set: function (val) {
-                this.setting.dropGroup = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "renderable", {
-            get: function () {
-                return this.contentContainer.renderable;
-            },
-            set: function (val) {
-                this.contentContainer.renderable = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "visible", {
-            get: function () {
-                return this.contentContainer.visible;
-            },
-            set: function (val) {
-                this.contentContainer.visible = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "cacheAsBitmap", {
-            get: function () {
-                return this.contentContainer.cacheAsBitmap;
-            },
-            set: function (val) {
-                this.contentContainer.cacheAsBitmap = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "onClick", {
-            get: function () {
-                return this.contentContainer.click;
-            },
-            set: function (val) {
-                this.contentContainer.click = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "interactiveChildren", {
-            get: function () {
-                return this.contentContainer.interactiveChildren;
-            },
-            set: function (val) {
-                this.contentContainer.interactiveChildren = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "parentLayer", {
-            get: function () {
-                return this.contentContainer.parentLayer;
-            },
-            set: function (val) {
-                this.contentContainer.parentLayer = val;
+                this.insetContainer.alpha = val;
             },
             enumerable: true,
             configurable: true
@@ -2379,8 +1305,9 @@
      */
     var InputBase = /** @class */ (function (_super) {
         __extends(InputBase, _super);
-        function InputBase(width, height, tabIndex, tabGroup) {
-            var _this = _super.call(this, width, height) || this;
+        function InputBase(options) {
+            if (options === void 0) { options = {}; }
+            var _this = _super.call(this) || this;
             _this.keyDownEvent = function (e) {
                 if (e.which === 9) {
                     if (_this._useTab) {
@@ -2400,6 +1327,7 @@
                         e.preventDefault();
                     }
                 }
+                _this.emit('keydown');
             };
             _this.documentMouseDown = function () {
                 if (!_this.__down) {
@@ -2409,20 +1337,24 @@
             _this._bindEvents = function () {
                 if (_this.stage !== null) {
                     _this.stage.on('pointerdown', _this.documentMouseDown);
-                    document.addEventListener('keydown', _this.keyDownEvent);
                 }
+                document.addEventListener('keydown', _this.keyDownEvent);
             };
             _this._clearEvents = function () {
                 if (_this.stage !== null) {
                     _this.stage.off('pointerdown', _this.documentMouseDown);
-                    document.removeEventListener('keydown', _this.keyDownEvent);
                 }
+                document.removeEventListener('keydown', _this.keyDownEvent);
             };
+            if (options.background) {
+                _super.prototype.setBackground.call(_this, options.background);
+            }
+            var tabIndex = options.tabIndex, tabGroup = options.tabGroup;
             _this._focused = false;
             _this._useTab = _this._usePrev = _this._useNext = true;
-            _this.contentContainer.interactive = true;
-            InputController.registrer(_this, tabIndex, tabGroup);
-            _this.contentContainer.on('pointerdown', function (e) {
+            _this.interactive = true;
+            InputController.registrer(_this, tabIndex || 0, tabGroup || 0);
+            _this.insetContainer.on('pointerdown', function (e) {
                 _this.focus();
                 _this.__down = true;
             });
@@ -2584,6 +1516,32 @@
      */
 
     /**
+     * An interactive container.
+     *
+     * @class
+     * @extends PIXI.UI.UIBase
+     * @memberof PIXI.UI
+     */
+    var InteractiveGroup = /** @class */ (function (_super) {
+        __extends(InteractiveGroup, _super);
+        function InteractiveGroup() {
+            var _this = _super.call(this) || this;
+            _this.hitArea = new PIXI$1.Rectangle();
+            _this.insetContainer.hitArea = _this.hitArea;
+            return _this;
+        }
+        InteractiveGroup.prototype.update = function () {
+            // TODO:
+        };
+        InteractiveGroup.prototype.layout = function (l, t, r, b, dirty) {
+            _super.prototype.layout.call(this, l, t, r, b, dirty);
+            this.hitArea.width = this.width;
+            this.hitArea.height = this.height;
+        };
+        return InteractiveGroup;
+    }(WidgetGroup));
+
+    /**
      * An UI button object
      *
      * @class
@@ -2600,23 +1558,14 @@
     var CheckBox = /** @class */ (function (_super) {
         __extends(CheckBox, _super);
         function CheckBox(options) {
-            var _this = _super.call(this, options.background.width, options.background.height, options.tabIndex || 0, options.tabGroup || 0) || this;
+            var _this = _super.call(this, options) || this;
             _this._checked = options.checked !== undefined ? options.checked : false;
             _this._value = options.value || '';
             _this.checkGroup = options.checkgroup || null;
-            _this.background = options.background;
-            _this.background.width = '100%';
-            _this.background.height = '100%';
-            _this.addChild(_this.background);
-            _this.checkmark = options.checkmark;
-            if (_this.checkmark) {
-                _this.checkmark.verticalAlign = 'middle';
-                _this.checkmark.horizontalAlign = 'center';
-                if (!_this._checked) {
-                    _this.checkmark.alpha = 0;
-                }
-                _this.addChild(_this.checkmark);
-            }
+            _this.checkmark = new InteractiveGroup();
+            _this.checkmark.contentContainer.addChild(options.checkmark);
+            _this.checkmark.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
+            _this.checkmark.alpha = _this._checked ? 1 : 0;
             _this.contentContainer.buttonMode = true;
             if (_this.checkGroup !== null) {
                 InputController.registrerCheckGroup(_this);
@@ -2738,31 +1687,6 @@
      * "change"         param: [bool]isChecked
      *
      */
-
-    /**
-     * An UI Container object
-     *
-     * @class
-     * @extends PIXI.UI.UIBase
-     * @memberof PIXI.UI
-     * @param width {Number} Width of the Container
-     * @param height {Number} Height of the Container
-     */
-    var Container = /** @class */ (function (_super) {
-        __extends(Container, _super);
-        function Container(width, height) {
-            var _this = _super.call(this, width, height) || this;
-            _this.contentContainer.hitArea = new PIXI$1.Rectangle(0, 0, 0, 0);
-            return _this;
-        }
-        Container.prototype.update = function () {
-            // if (this.container.interactive) {
-            this.contentContainer.hitArea.width = this._width;
-            this.contentContainer.hitArea.height = this._height;
-            // }
-        };
-        return Container;
-    }(Widget));
 
     function DynamicTextStyle(parent)
     {
@@ -5330,7 +4254,7 @@
         __extends(ScrollingContainer, _super);
         function ScrollingContainer(options) {
             if (options === void 0) { options = {}; }
-            var _this = _super.call(this, options.width, options.height) || this;
+            var _this = _super.call(this) || this;
             _this.mask = new PIXI$1.Graphics();
             _this.innerContainer = new PIXI$1.Container();
             _this.innerBounds = new PIXI$1.Rectangle();
@@ -5349,6 +4273,7 @@
             _this.scrolling = false;
             _this._scrollBars = [];
             _this.boundCached = performance.now() - 1000;
+            _this.initScrolling();
             return _this;
         }
         ScrollingContainer.prototype.initialize = function () {
@@ -5389,17 +4314,11 @@
             for (var _i = 0; _i < arguments.length; _i++) {
                 newChildren[_i] = arguments[_i];
             }
-            var argumentsLength = newChildren.length;
-            if (argumentsLength > 1) {
-                for (var i = 0; i < newChildren.length; i++) {
-                    this.addChild(newChildren[i]);
-                }
+            for (var i = 0; i < newChildren.length; i++) {
+                _super.prototype.addChild.call(this, newChildren[i]);
+                this.innerContainer.addChild(newChildren[i].contentContainer);
             }
-            else {
-                _super.prototype.addChild.call(this, newChildren[0]);
-                this.innerContainer.addChild(newChildren[0].contentContainer);
-                this.getInnerBounds(true); // make sure bounds is updated instantly when a child is added
-            }
+            this.getInnerBounds(true); // make sure bounds is updated instantly when a child is added
             return newChildren[0];
         };
         ScrollingContainer.prototype.updateScrollBars = function () {
@@ -5575,7 +4494,7 @@
             this.updateScrollBars();
         };
         return ScrollingContainer;
-    }(Container));
+    }(InteractiveGroup));
 
     /**
      * An UI Container object
@@ -5679,7 +4598,7 @@
             }
         };
         return SortableList;
-    }(Container));
+    }(InteractiveGroup));
 
     /**
      * A sliced sprite with dynamic width and height.
@@ -5854,22 +4773,18 @@
     var Sprite = /** @class */ (function (_super) {
         __extends(Sprite, _super);
         function Sprite(texture) {
-            var _this = this;
-            var sprite = new PIXI$1.Sprite(texture);
-            _this = _super.call(this, sprite.width, sprite.height) || this;
-            _this.sprite = sprite;
-            _this.contentContainer.addChild(_this.sprite);
+            var _this = _super.call(this) || this;
+            _this.spriteDisplay = new PIXI$1.Sprite(texture);
+            _this.contentContainer.addChild(_this.spriteDisplay);
             return _this;
         }
         Sprite.prototype.update = function () {
             if (this.tint !== null) {
-                this.sprite.tint = this.tint;
+                this.spriteDisplay.tint = this.tint;
             }
             if (this.blendMode !== null) {
-                this.sprite.blendMode = this.blendMode;
+                this.spriteDisplay.blendMode = this.blendMode;
             }
-            this.sprite.width = this._width;
-            this.sprite.height = this._height;
         };
         Sprite.fromImage = function (imageUrl) {
             return new Sprite(new PIXI$1.Texture(new PIXI$1.BaseTexture(imageUrl)));
@@ -5933,6 +4848,28 @@
                 var t = y - (anchor.y * widget.getMeasuredHeight());
                 widget.layout(l, t, l + widget.getMeasuredWidth(), t + widget.getMeasuredHeight(), true);
             }
+        };
+        Stage.prototype.getBackground = function () {
+            return this.background;
+        };
+        Stage.prototype.setBackground = function (bg) {
+            if (this.background) {
+                _super.prototype.removeChild.call(this, this.background);
+            }
+            this.background = bg;
+            if (bg) {
+                _super.prototype.addChildAt.call(this, bg, 0);
+            }
+        };
+        Stage.prototype.update = function (widgets) {
+            for (var i = 0, j = widgets.length; i < j; i++) {
+                this.update(widgets[i].widgetChildren);
+                widgets[i].update();
+            }
+        };
+        Stage.prototype.render = function (renderer) {
+            this.update(this.widgetChildren);
+            _super.prototype.render.call(this, renderer);
         };
         Stage.prototype.addChild = function (UIObject) {
             var argumentLenght = arguments.length;
@@ -6049,49 +4986,27 @@
          * @param {PIXI.TextStyle} textStyle - styled used for text
          */
         function Text(text, textStyle) {
-            var _this = this;
-            var textDisplay = new PIXI$1.Text(text, textStyle);
-            _this = _super.call(this, textDisplay.width, textDisplay.height) || this;
-            _this._text = textDisplay;
-            _this.contentContainer.addChild(_this._text);
+            var _this = _super.call(this) || this;
+            _this.textDisplay = new PIXI$1.Text(text, textStyle);
+            _this.contentContainer.addChild(_this.textDisplay);
             return _this;
         }
-        Text.prototype.baseupdate = function () {
-            // force original text width unless using anchors
-            if (this._anchorLeft === null || this._anchorRight === null) {
-                this.setting.width = this._text.width;
-                this.setting.widthPct = null;
-            }
-            else {
-                this._text.width = this._width;
-            }
-            // force original text height unless using anchors
-            if (this._anchorTop === null || this._anchorBottom === null) {
-                this.setting.height = this._text.height;
-                this.setting.heightPct = null;
-            }
-            else {
-                this._text.width = this._width;
-            }
-            _super.prototype.baseupdate.call(this);
-        };
         Text.prototype.update = function () {
             // set tint
             if (this.tint !== null) {
-                this._text.tint = this.tint;
+                this.textDisplay.tint = this.tint;
             }
             // set blendmode
             if (this.blendMode !== null) {
-                this._text.blendMode = this.blendMode;
+                this.textDisplay.blendMode = this.blendMode;
             }
         };
         Object.defineProperty(Text.prototype, "value", {
             get: function () {
-                return this._text.text;
+                return this.textDisplay.text;
             },
             set: function (val) {
-                this._text.text = val;
-                this.updatesettings(true);
+                this.textDisplay.text = val;
             },
             enumerable: true,
             configurable: true
@@ -6139,11 +5054,7 @@
     var TextInput = /** @class */ (function (_super) {
         __extends(TextInput, _super);
         function TextInput(options) {
-            var _this = _super.call(this, typeof options.width !== 'undefined' // eslint-disable-line no-nested-ternary
-                ? options.width
-                : (options.background ? options.background.width : 150), typeof options.height !== 'undefined' // eslint-disable-line no-nested-ternary
-                ? options.height
-                : (options.background ? options.background.height : 150), options.tabIndex || 0, options.tabGroup || 0) || this;
+            var _this = _super.call(this, options) || this;
             _this.keyDownEvent = function (e) {
                 if (e.which === _this.ctrlKey || e.which === _this.cmdKey) {
                     _this.ctrlDown = true;
@@ -6532,18 +5443,11 @@
             _this.caret.lineStyle(options.caretWidth || 1, '#ffffff', 1);
             _this.caret.moveTo(0, 0);
             _this.caret.lineTo(0, _this.textHeight);
-            // insert bg
-            if (options.background) {
-                _this.background = options.background;
-                _this.background.width = '100%';
-                _this.background.height = '100%';
-                _this.addChild(_this.background);
-            }
             // var padding
-            var paddingLeft = options.paddingLeft !== undefined ? options.paddingLeft : options.padding !== undefined ? options.padding : 3;
-            var paddingRight = options.paddingRight !== undefined ? options.paddingRight : options.padding !== undefined ? options.padding : 3;
-            var paddingBottom = options.paddingBottom !== undefined ? options.paddingBottom : options.padding !== undefined ? options.padding : 3;
-            var paddingTop = options.paddingTop !== undefined ? options.paddingTop : options.padding !== undefined ? options.padding : 3;
+            var paddingLeft = options.paddingLeft !== undefined ? options.paddingLeft : options.padding;
+            var paddingRight = options.paddingRight !== undefined ? options.paddingRight : options.padding;
+            var paddingBottom = options.paddingBottom !== undefined ? options.paddingBottom : options.padding;
+            var paddingTop = options.paddingTop !== undefined ? options.paddingTop : options.padding;
             // insert text container (scrolling container)
             _this.textContainer = new ScrollingContainer({
                 scrollX: !_this.multiLine,
@@ -6553,11 +5457,7 @@
                 softness: 0.2,
                 overflowX: 40,
                 overflowY: 40,
-            });
-            _this.textContainer.anchorTop = paddingTop;
-            _this.textContainer.anchorBottom = paddingBottom;
-            _this.textContainer.anchorLeft = paddingLeft;
-            _this.textContainer.anchorRight = paddingRight;
+            }).setPadding(paddingLeft || 3, paddingTop || 3, paddingRight || 3, paddingBottom || 3);
             _this.addChild(_this.textContainer);
             if (_this.multiLine) {
                 _this._useNext = _this._usePrev = false;
@@ -6663,7 +5563,7 @@
             configurable: true
         });
         TextInput.prototype.update = function () {
-            if (this._width !== this._lastWidth) {
+            if (this.width !== this._lastWidth) {
                 this._lastWidth = this._width;
                 if (this.multiLine) {
                     this.updateText();
@@ -7196,7 +6096,6 @@
     exports.AnchorLayoutOptions = AnchorLayoutOptions;
     exports.Button = Button;
     exports.CheckBox = CheckBox;
-    exports.Container = Container;
     exports.DynamicText = DynamicText;
     exports.DynamicTextStyle = DynamicTextStyle;
     exports.Ease = Ease;
@@ -7204,6 +6103,7 @@
     exports.Helpers = Helpers;
     exports.Insets = Insets;
     exports.Interaction = Interaction;
+    exports.InteractiveGroup = InteractiveGroup;
     exports.LayoutOptions = LayoutOptions;
     exports.ScrollBar = ScrollBar;
     exports.ScrollingContainer = ScrollingContainer;

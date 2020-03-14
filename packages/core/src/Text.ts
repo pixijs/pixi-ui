@@ -10,7 +10,7 @@ import * as PIXI from 'pixi.js';
  */
 export class Text extends Widget
 {
-    private _text: PIXI.Text;
+    private textDisplay: PIXI.Text;
 
     /**
      * @param {string} text - text content
@@ -18,63 +18,34 @@ export class Text extends Widget
      */
     constructor(text: string, textStyle: PIXI.TextStyle)
     {
-        const textDisplay = new PIXI.Text(text, textStyle);
+        super();
 
-        super(textDisplay.width, textDisplay.height);
-        this._text = textDisplay;
-        this.contentContainer.addChild(this._text);
+        this.textDisplay = new PIXI.Text(text, textStyle);
+        this.contentContainer.addChild(this.textDisplay);
     }
 
-    baseupdate(): void
-    {
-        // force original text width unless using anchors
-        if (this._anchorLeft === null || this._anchorRight === null)
-        {
-            this.setting.width = this._text.width;
-            this.setting.widthPct = null;
-        }
-        else
-        {
-            this._text.width = this._width;
-        }
-
-        // force original text height unless using anchors
-        if (this._anchorTop === null || this._anchorBottom === null)
-        {
-            this.setting.height = this._text.height;
-            this.setting.heightPct = null;
-        }
-        else
-        {
-            this._text.width = this._width;
-        }
-
-        super.baseupdate();
-    }
-
-    update()
+    update(): void
     {
         // set tint
         if (this.tint !== null)
         {
-            this._text.tint = this.tint;
+            this.textDisplay.tint = this.tint;
         }
 
         // set blendmode
         if (this.blendMode !== null)
         {
-            this._text.blendMode = this.blendMode;
+            this.textDisplay.blendMode = this.blendMode;
         }
     }
 
     get value(): string
     {
-        return this._text.text;
+        return this.textDisplay.text;
     }
     set value(val: string)
     {
-        this._text.text = val;
-        this.updatesettings(true);
+        this.textDisplay.text = val;
     }
 
     get text(): string

@@ -1,4 +1,4 @@
-import { Container } from './Container';
+import { InteractiveGroup } from './InteractiveGroup';
 import { Helpers }  from './Helpers';
 import { Ticker } from './Ticker';
 import { DragEvent } from './Interaction/DragEvent';
@@ -37,11 +37,11 @@ interface IScrollingContainerOptions
  * @param [options.overflowY=0] {Number} how much can be scrolled past content dimensions
  * @param [options.overflowX=0] {Number} how much can be scrolled past content dimensions
  */
-export class ScrollingContainer extends Container
+export class ScrollingContainer extends InteractiveGroup
 {
-    mask: PIXI.Graphics;
-    innerContainer: PIXI.Container;
-    innerBounds: PIXI.Rectangle;
+    private mask: PIXI.Graphics;
+    private innerContainer: PIXI.Container;
+    private innerBounds: PIXI.Rectangle;
 
     scrollX: boolean;
     scrollY: boolean;
@@ -68,7 +68,7 @@ export class ScrollingContainer extends Container
 
     constructor(options: IScrollingContainerOptions = {})
     {
-        super(options.width, options.height);
+        super();
 
         this.mask = new PIXI.Graphics();
         this.innerContainer = new PIXI.Container();
@@ -91,6 +91,7 @@ export class ScrollingContainer extends Container
         this._scrollBars = [];
 
         this.boundCached = performance.now() - 1000;
+        this.initScrolling();
     }
 
     initialize(): void
@@ -143,21 +144,13 @@ export class ScrollingContainer extends Container
 
     addChild(...newChildren: Widget[]): Widget
     {
-        const argumentsLength = newChildren.length;
+        for (let i = 0; i < newChildren.length; i++)
+        {
+            super.addChild(newChildren[i]);
+            this.innerContainer.addChild(newChildren[i].contentContainer);
+        }
 
-        if (argumentsLength > 1)
-        {
-            for (let i = 0; i < newChildren.length; i++)
-            {
-                this.addChild(newChildren[i]);
-            }
-        }
-        else
-        {
-            super.addChild(newChildren[0]);
-            this.innerContainer.addChild(newChildren[0].contentContainer);
-            this.getInnerBounds(true); // make sure bounds is updated instantly when a child is added
-        }
+        this.getInnerBounds(true); // make sure bounds is updated instantly when a child is added
 
         return newChildren[0];
     }

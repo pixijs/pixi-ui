@@ -1,13 +1,14 @@
-import { InputBase } from './InputBase';
+import { InputBase, IInputBaseOptions } from './InputBase';
 import { ClickEvent } from './Interaction/ClickEvent';
 import { InputController } from './Interaction/InputController';
-import { Sprite } from './Sprite';
+import { InteractiveGroup } from './InteractiveGroup';
+import { LayoutOptions, FastLayoutOptions } from './layout-options';
 
-interface ICheckBoxOptions
+interface ICheckBoxOptions extends IInputBaseOptions
 {
     checked?: boolean;
-    background: Sprite;
-    checkmark?: Sprite;
+    background: PIXI.Container;
+    checkmark?: PIXI.Container;
     checkgroup?: any;
     value?: string;
     tabIndex?: number;
@@ -34,44 +35,30 @@ export class CheckBox extends InputBase
     private _value: string;
     private checkGroup: any;
 
-    background: Sprite;
-    checkmark: Sprite;
+    private checkmark: InteractiveGroup;
 
     change: (val: boolean) => void;
     click: () => void;
 
     constructor(options: ICheckBoxOptions)
     {
-        super(
-            options.background.width,
-            options.background.height,
-            options.tabIndex || 0,
-            options.tabGroup || 0,
-        );
+        super(options);
 
         this._checked = options.checked !== undefined ? options.checked : false;
         this._value = options.value || '';
         this.checkGroup = options.checkgroup || null;
 
-        this.background = options.background;
-        this.background.width = '100%';
-        this.background.height = '100%';
-        this.addChild(this.background);
-
-        this.checkmark = options.checkmark;
-
-        if (this.checkmark)
-        {
-            this.checkmark.verticalAlign = 'middle';
-            this.checkmark.horizontalAlign = 'center';
-
-            if (!this._checked)
-            {
-                this.checkmark.alpha = 0;
-            }
-
-            this.addChild(this.checkmark);
-        }
+        this.checkmark = new InteractiveGroup();
+        this.checkmark.contentContainer.addChild(options.checkmark);
+        this.checkmark.setLayoutOptions(
+            new FastLayoutOptions(
+                LayoutOptions.WRAP_CONTENT,
+                LayoutOptions.WRAP_CONTENT,
+                0.5,
+                0.5,
+                FastLayoutOptions.CENTER_ANCHOR),
+        );
+        this.checkmark.alpha = this._checked ? 1 : 0;
 
         this.contentContainer.buttonMode = true;
 

@@ -1,6 +1,13 @@
 import { InputController } from './Interaction/InputController';
 import { WidgetGroup } from './WidgetGroup';
 
+export interface IInputBaseOptions
+{
+    background?: PIXI.Container;
+    tabIndex?: number;
+    tabGroup?: any;
+}
+
 /**
  * Represents a view that can accept any form of input. It can gain and loose focus.
  *
@@ -20,16 +27,23 @@ export abstract class InputBase extends WidgetGroup
 
     __down: boolean;
 
-    constructor(width: number, height: number, tabIndex: number, tabGroup: any)
+    constructor(options: IInputBaseOptions = {})
     {
-        super(width, height);
+        super();
+
+        if (options.background)
+        {
+            super.setBackground(options.background);
+        }
+
+        const { tabIndex, tabGroup } = options;
 
         this._focused = false;
         this._useTab = this._usePrev = this._useNext = true;
-        this.contentContainer.interactive = true;
-        InputController.registrer(this, tabIndex, tabGroup);
+        this.interactive = true;
+        InputController.registrer(this, tabIndex || 0, tabGroup || 0);
 
-        this.contentContainer.on('pointerdown', (e) =>
+        this.insetContainer.on('pointerdown', (e) =>
         {
             this.focus();
             this.__down = true;
@@ -96,6 +110,8 @@ export abstract class InputBase extends WidgetGroup
                 e.preventDefault();
             }
         }
+
+        this.emit('keydown');
     };
 
     private documentMouseDown = (): void =>
@@ -111,8 +127,9 @@ export abstract class InputBase extends WidgetGroup
         if (this.stage !== null)
         {
             this.stage.on('pointerdown', this.documentMouseDown);
-            document.addEventListener('keydown', this.keyDownEvent);
         }
+
+        document.addEventListener('keydown', this.keyDownEvent);
     };
 
     private _clearEvents = (): void =>
@@ -120,7 +137,8 @@ export abstract class InputBase extends WidgetGroup
         if (this.stage !== null)
         {
             this.stage.off('pointerdown', this.documentMouseDown);
-            document.removeEventListener('keydown', this.keyDownEvent);
         }
+
+        document.removeEventListener('keydown', this.keyDownEvent);
     };
 }

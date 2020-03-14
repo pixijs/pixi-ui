@@ -1,4 +1,4 @@
-import { Container } from './Container';
+import { InteractiveGroup } from './InteractiveGroup';
 import { Tween } from './Tween';
 import { EaseBase } from './Ease/EaseBase';
 import { Widget } from './Widget';
@@ -13,7 +13,7 @@ import { Widget } from './Widget';
  * @param tweenTime {Number} if above 0 the sort will be animated
  * @param tweenEase {PIXI.UI.Ease} ease method used for animation
  */
-export class SortableList extends Container
+export class SortableList extends InteractiveGroup
 {
     desc: boolean;
     tweenTime: number;

@@ -47,6 +47,8 @@ export class FastLayoutOptions extends LayoutOptions
          * top-left corner of the widget will be at (x,y); however, setting it to
          * (.5,.5) will make the _center of the widget_ be at (x,y) in the parent's
          * reference frame.
+         * @member {PIXI.Point}
+         * @default PUXI.FastLayoutOptions.DEFAULT_ANCHOR
          */
         this.anchor = anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
     }
