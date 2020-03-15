@@ -32,7 +32,7 @@ uxStage.addChild(new PUXI.Text({
      PUXI.LayoutOptions.WRAP_CONTENT, // width
      60, // height
      .5, 5., // x, y (center)
-     PUXI.LayoutOptions.CENTER_ANCHOR // properly center
+     PUXI.FastLayoutOptions.CENTER_ANCHOR // properly center
   )
 }).setPadding(4, 6) // horizontal/vertical padding
     .setBackground(0xffaabb) // background color (can use a PIXI.Graphics too)
