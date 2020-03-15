@@ -1,6 +1,6 @@
 import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
-import { ClickEvent } from './Interaction/ClickEvent';
-import { InputController } from './Interaction/InputController';
+import { ClickManager } from './event/ClickManager';
+import { InputController } from './event/InputController';
 import { InteractiveGroup } from './InteractiveGroup';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
 
@@ -73,7 +73,7 @@ export class CheckBox extends FocusableWidget
         //    }
         // };
 
-        const clickEvent = new ClickEvent(this);
+        const clickEvent = new ClickManager(this);
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         clickEvent.onHover = (e, over): void =>

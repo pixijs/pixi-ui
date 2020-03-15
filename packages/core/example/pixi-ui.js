@@ -14984,9 +14984,10 @@
                 var childWidth = widget.getMeasuredWidth();
                 var lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
                 var x = lopt.x ? lopt.x : 0;
+                var anchor = lopt.anchor ? lopt.anchor : FastLayoutOptions.DEFAULT_ANCHOR;
                 // If lopt.x is %, then (1 - lopt.x)% of parent width should be as large
-                // as child's width.
-                var minr = childWidth + (Math.abs(x) < 1 ? childWidth / (1 - x) : x);
+                // as (1 - anchor.x)% child's width.
+                var minr = (Math.abs(x) < 1 ? (1 - anchor.x) * childWidth / (1 - x) : x);
                 measuredWidth = Math.max(measuredWidth, minr);
             }
             if (widthMode === exports.MeasureMode.AT_MOST) {
@@ -15005,7 +15006,8 @@
                 var childHeight = widget.getMeasuredHeight();
                 var lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
                 var y = lopt.y ? lopt.y : 0;
-                var minb = childHeight + (Math.abs(y) < 1 ? childHeight / (1 - y) : y);
+                var anchor = lopt.anchor ? lopt.anchor : FastLayoutOptions.DEFAULT_ANCHOR;
+                var minb = (Math.abs(y) < 1 ? (1 - anchor.y) * childHeight / (1 - y) : y);
                 measuredHeight = Math.max(measuredHeight, minb);
             }
             if (heightMode === exports.MeasureMode.AT_MOST) {
@@ -15217,29 +15219,27 @@
      * @extends PUXI.Widget
      * @memberof PUXI
      */
-    var Text = /** @class */ (function (_super) {
-        __extends(Text, _super);
+    var TextWidget = /** @class */ (function (_super) {
+        __extends(TextWidget, _super);
         /**
          * @param {string} text - text content
          * @param {PIXI.TextStyle} textStyle - styled used for text
          */
-        function Text(text, textStyle) {
+        function TextWidget(text, textStyle) {
             var _this = _super.call(this) || this;
             _this.textDisplay = new PIXI$1.Text(text, textStyle);
             _this.contentContainer.addChild(_this.textDisplay);
             return _this;
         }
-        Text.prototype.update = function () {
-            // set tint
+        TextWidget.prototype.update = function () {
             if (this.tint !== null) {
                 this.textDisplay.tint = this.tint;
             }
-            // set blendmode
             if (this.blendMode !== null) {
                 this.textDisplay.blendMode = this.blendMode;
             }
         };
-        Object.defineProperty(Text.prototype, "value", {
+        Object.defineProperty(TextWidget.prototype, "value", {
             get: function () {
                 return this.textDisplay.text;
             },
@@ -15249,7 +15249,7 @@
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Text.prototype, "text", {
+        Object.defineProperty(TextWidget.prototype, "text", {
             get: function () {
                 return this.value;
             },
@@ -15259,35 +15259,38 @@
             enumerable: true,
             configurable: true
         });
-        return Text;
+        return TextWidget;
     }(Widget));
 
     /**
-     * An UI button object
+     * Button that can be clicked.
      *
-     * @class
-     * @extends PUXI.InputBase
      * @memberof PUXI
-     * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
-     * @param [options.text=null] {PIXI.UI.Text} optional text
-     * @param [options.tabIndex=0] {Number} input tab index
-     * @param [options.tabGroup=0] {Number|String} input tab group
-     * @param [options.width=options.background.width] {Number|String} width
-     * @param [options.height=options.background.height] {Number|String} height
+     * @class
+     * @extends PUXI.FocusableWidget
      */
     var Button = /** @class */ (function (_super) {
         __extends(Button, _super);
+        /**
+         * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
+         * @param [options.text=null] {PIXI.UI.Text} optional text
+         * @param [options.tabIndex=0] {Number} input tab index
+         * @param [options.tabGroup=0] {Number|String} input tab group
+         * @param [options.width=options.background.width] {Number|String} width
+         * @param [options.height=options.background.height] {Number|String} height
+         */
         function Button(options) {
             var _this = _super.call(this, options) || this;
             _this.isHover = false;
             if (typeof options.text === 'string') {
-                options.text = new Text(options.text, new PIXI$1.TextStyle());
+                options.text = new TextWidget(options.text, new PIXI$1.TextStyle());
             }
             _this.textWidget = options.text.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
             if (_this.textWidget) {
                 _this.addChild(_this.textWidget);
             }
             _this.contentContainer.buttonMode = true;
+            _this.setupClick();
             return _this;
         }
         Button.prototype.setupClick = function () {
@@ -19951,8 +19954,8 @@
     exports.SortableList = SortableList;
     exports.Sprite = Sprite;
     exports.Stage = Stage;
-    exports.Text = Text;
     exports.TextInput = TextInput;
+    exports.TextWidget = TextWidget;
     exports.Ticker = Ticker$1;
     exports.TilingSprite = TilingSprite;
     exports.Tween = Tween;

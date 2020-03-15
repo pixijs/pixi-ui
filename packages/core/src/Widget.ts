@@ -1,6 +1,6 @@
 import { UISettings } from './UISettings';
-import { DragEvent } from './Interaction/DragEvent';
-import { DragDropController } from './Interaction/DragDropController';
+import { DragEvent } from './event/DragEvent';
+import { DragDropController } from './event/DragDropController';
 import * as PIXI from 'pixi.js';
 import { Insets } from './layout-options/Insets';
 import { LayoutOptions } from './layout-options';
@@ -38,8 +38,8 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     _parentWidth: number;
     _parentHeight: number;
 
-    private tint: number;
-    private blendMode: PIXI.BLEND_MODES;
+    protected tint: number;
+    protected blendMode: PIXI.BLEND_MODES;
 
     protected _measuredWidth: number;
     protected _measuredHeight: number;

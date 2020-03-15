@@ -95,10 +95,11 @@ export class FastLayout implements ILayoutManager
             const childWidth = widget.getMeasuredWidth();
             const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
             const x = lopt.x ? lopt.x : 0;
+            const anchor = lopt.anchor ? lopt.anchor : FastLayoutOptions.DEFAULT_ANCHOR;
 
             // If lopt.x is %, then (1 - lopt.x)% of parent width should be as large
-            // as child's width.
-            const minr = childWidth + (Math.abs(x) < 1 ? childWidth / (1 - x) : x);
+            // as (1 - anchor.x)% child's width.
+            const minr = (Math.abs(x) < 1 ? (1 - anchor.x) * childWidth / (1 - x) : x);
 
             measuredWidth = Math.max(measuredWidth, minr);
         }
@@ -127,8 +128,9 @@ export class FastLayout implements ILayoutManager
             const childHeight = widget.getMeasuredHeight();
             const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
             const y = lopt.y ? lopt.y : 0;
+            const anchor = lopt.anchor ? lopt.anchor : FastLayoutOptions.DEFAULT_ANCHOR;
 
-            const minb = childHeight + (Math.abs(y) < 1 ? childHeight / (1 - y) : y);
+            const minb = (Math.abs(y) < 1 ? (1 - anchor.y) * childHeight / (1 - y) : y);
 
             measuredHeight = Math.max(measuredHeight, minb);
         }

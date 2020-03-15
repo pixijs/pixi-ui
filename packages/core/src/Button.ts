@@ -1,13 +1,17 @@
-import { ClickEvent } from './Interaction/ClickEvent';
+import { ClickManager } from './event/ClickManager';
 import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
-import { Text } from './Text';
+import { TextWidget } from './TextWidget';
 import * as PIXI from 'pixi.js';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
 
+/**
+ * @memberof PUXI
+ * @interface
+ */
 interface IButtonOptions extends IInputBaseOptions
 {
     background?: PIXI.Container;
-    text?: Text | string;
+    text?: TextWidget | string;
     tabIndex?: number;
     tabGroup?: any;
     width?: number;
@@ -15,27 +19,29 @@ interface IButtonOptions extends IInputBaseOptions
 }
 
 /**
- * An UI button object
+ * Button that can be clicked.
  *
- * @class
- * @extends PUXI.InputBase
  * @memberof PUXI
- * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
- * @param [options.text=null] {PIXI.UI.Text} optional text
- * @param [options.tabIndex=0] {Number} input tab index
- * @param [options.tabGroup=0] {Number|String} input tab group
- * @param [options.width=options.background.width] {Number|String} width
- * @param [options.height=options.background.height] {Number|String} height
+ * @class
+ * @extends PUXI.FocusableWidget
  */
 export class Button extends FocusableWidget
 {
     isHover: boolean;
 
-    protected textWidget: Text;
+    protected textWidget: TextWidget;
 
     click: () => void;
     initialize: () => void;
 
+    /**
+     * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
+     * @param [options.text=null] {PIXI.UI.Text} optional text
+     * @param [options.tabIndex=0] {Number} input tab index
+     * @param [options.tabGroup=0] {Number|String} input tab group
+     * @param [options.width=options.background.width] {Number|String} width
+     * @param [options.height=options.background.height] {Number|String} height
+     */
     constructor(options: IButtonOptions)
     {
         super(options);
@@ -44,7 +50,7 @@ export class Button extends FocusableWidget
 
         if (typeof options.text === 'string')
         {
-            options.text = new Text(options.text, new PIXI.TextStyle());
+            options.text = new TextWidget(options.text, new PIXI.TextStyle());
         }
 
         this.textWidget = options.text.setLayoutOptions(
@@ -54,7 +60,7 @@ export class Button extends FocusableWidget
                 0.5, 0.5,
                 FastLayoutOptions.CENTER_ANCHOR,
             ),
-        ) as Text;
+        ) as TextWidget;
 
         if (this.textWidget)
         {
@@ -62,11 +68,13 @@ export class Button extends FocusableWidget
         }
 
         this.contentContainer.buttonMode = true;
+
+        this.setupClick();
     }
 
     private setupClick(): void
     {
-        const clickEvent = new ClickEvent(this);
+        const clickEvent = new ClickManager(this);
 
         clickEvent.onHover = (e, over): void =>
         {

@@ -1,4 +1,4 @@
-import { InputController } from './Interaction/InputController';
+import { InputController } from './event/InputController';
 import { WidgetGroup } from './WidgetGroup';
 
 /**

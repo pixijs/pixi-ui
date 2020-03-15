@@ -8,7 +8,7 @@ import * as PIXI from 'pixi.js';
  * @extends PUXI.Widget
  * @memberof PUXI
  */
-export class Text extends Widget
+export class TextWidget extends Widget
 {
     private textDisplay: PIXI.Text;
 
@@ -26,13 +26,11 @@ export class Text extends Widget
 
     update(): void
     {
-        // set tint
         if (this.tint !== null)
         {
             this.textDisplay.tint = this.tint;
         }
 
-        // set blendmode
         if (this.blendMode !== null)
         {
             this.textDisplay.blendMode = this.blendMode;

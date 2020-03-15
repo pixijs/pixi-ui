@@ -1,5 +1,5 @@
 import { Widget } from './Widget';
-import { DragEvent } from './Interaction/DragEvent';
+import { DragEvent } from './event/DragEvent';
 import { Tween } from './Tween';
 import { Ease } from './Ease/Ease';
 import { Helpers } from './Helpers';

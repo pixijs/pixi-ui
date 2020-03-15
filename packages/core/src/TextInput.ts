@@ -1,6 +1,6 @@
 import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
 import { InteractiveGroup } from './InteractiveGroup';
-import { DragEvent } from './Interaction/DragEvent';
+import { DragEvent } from './event/DragEvent';
 import { ScrollWidget } from './ScrollWidget';
 import * as PIXI from 'pixi.js';
 import { LayoutOptions } from './layout-options';

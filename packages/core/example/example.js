@@ -28,7 +28,7 @@ window.onload = function onload()
     const uxStage = new PUXI.Stage(width, height);
 
     // Add title
-    const mockTitle = new PUXI.Text('PUXI Expo')
+    const mockTitle = new PUXI.TextWidget('PUXI Expo')
         .setBackground(new this.PIXI.Graphics()
             .beginFill(0xabcdef)
             .drawRect(0, 0, 20, 10)
@@ -37,7 +37,7 @@ window.onload = function onload()
 
     // Add rounded button in center
     const mockButton = new PUXI.Button({
-        text: new PUXI.Text('Hello world!'),
+        text: 'Hello world!',
         background: 0xffaabb,
     })
         .setLayoutOptions(new PUXI.FastLayoutOptions(

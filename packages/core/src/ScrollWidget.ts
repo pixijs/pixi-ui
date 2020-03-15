@@ -1,8 +1,8 @@
 import { InteractiveGroup } from './InteractiveGroup';
 import { Helpers }  from './Helpers';
 import { Ticker } from './Ticker';
-import { DragEvent } from './Interaction/DragEvent';
-import { MouseScrollEvent } from './Interaction/MouseScrollEvent';
+import { DragEvent } from './event/DragEvent';
+import { MouseScrollEvent } from './event/MouseScrollEvent';
 import * as PIXI from 'pixi.js';
 import { Widget } from './Widget';
 import { WidgetGroup } from './WidgetGroup';
