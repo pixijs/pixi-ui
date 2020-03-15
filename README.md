@@ -27,5 +27,16 @@ uxStage.addChild(new PUXI.Button({
 
 uxStage.addChild(new PUXI.Text({
   value: "Click me!"
-}));
+}).setLayoutOptions({
+  new PUXI.FastLayoutOptions(
+     PUXI.LayoutOptions.WRAP_CONTENT, // width
+     60, // height
+     .5, 5., // x, y (center)
+     PUXI.LayoutOptions.CENTER_ANCHOR // properly center
+  )
+}).setPadding(4, 6) // horizontal/vertical padding
+    .setBackground(0xffaabb) // background color (can use a PIXI.Graphics too)
+    .setBackgroundAlpha(.5) // alpha for background
+    .setElevation(2) // drop-shadow on background!
+);
 ```
