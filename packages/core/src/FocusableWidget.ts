@@ -1,6 +1,10 @@
 import { InputController } from './Interaction/InputController';
 import { WidgetGroup } from './WidgetGroup';
 
+/**
+ * @namespace PUXI
+ * @interface
+ */
 export interface IInputBaseOptions
 {
     background?: PIXI.Container;
@@ -9,16 +13,16 @@ export interface IInputBaseOptions
 }
 
 /**
- * Represents a view that can accept any form of input. It can gain and loose focus.
+ * Represents a view that can gain or loose focus. It is primarily subclassed by
+ * input/form widgets.
+ *
+ * Generally, it is a good idea not use layouts on these types of widgets.
  *
  * @class
- * @extends PUXI.WidgetGroup
+ * @extends PUXI.Widget
  * @memberof PUXI
- * @param width {number} passed to uibase
- * @param height {number} passed to uibase
- * @param tabIndex {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
  */
-export abstract class InputBase extends WidgetGroup
+export abstract class FocusableWidget extends WidgetGroup
 {
     _focused: boolean;
     _useTab: boolean;
@@ -27,6 +31,12 @@ export abstract class InputBase extends WidgetGroup
 
     __down: boolean;
 
+    /**
+     * @param {PUXI.IInputBaseOptions} options
+     * @param {PIXI.Container}[options.background]
+     * @param {number}[tabIndex]
+     * @param {any}[tabGroup]
+     */
     constructor(options: IInputBaseOptions = {})
     {
         super();
@@ -43,21 +53,13 @@ export abstract class InputBase extends WidgetGroup
         this.interactive = true;
         InputController.registrer(this, tabIndex || 0, tabGroup || 0);
 
-        this.insetContainer.on('pointerdown', (e) =>
+        this.insetContainer.on('pointerdown', () =>
         {
             this.focus();
             this.__down = true;
         });
-
-        this.contentContainer.on('pointerup', (e) =>
-        {
-            this.__down = false;
-        });
-
-        this.contentContainer.on('pointerupoutside', (e) =>
-        {
-            this.__down = false;
-        });
+        this.insetContainer.on('pointerup', () => { this.__down = false; });
+        this.insetContainer.on('pointerupoutside', () => { this.__down = false; });
     }
 
     blur(): void

@@ -6,6 +6,7 @@ import { Insets } from './layout-options/Insets';
 import { LayoutOptions } from './layout-options';
 import { MeasureMode, IMeasurable } from './IMeasurable';
 import { Stage } from './Stage';
+import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 
 /**
  * A widget is a user interface control that renders content inside its prescribed
@@ -53,6 +54,9 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     private _width: number;
     private _height: number;
 
+    private _elevation: number;
+    private _dropShadow: PIXI.filters.DropShadowFilter;
+
     constructor()
     {
         super();
@@ -76,6 +80,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         this._paddingTop = 0;
         this._paddingRight = 0;
         this._paddingBottom = 0;
+        this._elevation = 0;
 
         this.tint = 0;
         this.blendMode = PIXI.BLEND_MODES.NORMAL;
@@ -95,11 +100,23 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         return this.background;
     }
 
-    setBackground(bg: PIXI.Container): Widget
+    setBackground(bg: PIXI.Container | number | string): Widget
     {
         if (!this.background)
         {
             this.insetContainer.removeChild(this.background);
+        }
+
+        if (typeof bg === 'string')
+        {
+            bg = PIXI.utils.string2hex(bg);
+        }
+        if (typeof bg === 'number')
+        {
+            bg = new PIXI.Graphics()
+                .beginFill(bg)
+                .drawRect(0, 0, 1, 1)
+                .endFill();
         }
 
         this.background = bg;
@@ -108,6 +125,23 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         {
             this.insetContainer.addChildAt(bg, 0);
         }
+
+        return this;
+    }
+
+    getBackgroundAlpha(): number
+    {
+        return this.background ? this.background.alpha : 1;
+    }
+
+    setBackgroundAlpha(val: number): Widget
+    {
+        if (!this.background)
+        {
+            this.setBackground(0xffffff);
+        }
+
+        this.background.alpha = val;
 
         return this;
     }
@@ -167,24 +201,6 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     measure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
         this.onMeasure(width, height, widthMode, heightMode);
-
-        for (let i = 0; i < this.widgetChildren.length; i++)
-        {
-            const child = this.widgetChildren[i];
-            const childOptions = child.layoutOptions || LayoutOptions.DEFAULT;
-
-            const maxWidth = (childOptions.width === LayoutOptions.FILL_PARENT || childOptions.width === LayoutOptions.WRAP_CONTENT)
-                ? this.measuredWidth : 0;
-            const maxHeight = (childOptions.height === LayoutOptions.FILL_PARENT || childOptions.height === LayoutOptions.WRAP_CONTENT)
-                ? this.measuredHeight : 0;
-
-            child.measure(
-                maxWidth,
-                maxHeight,
-                maxWidth ? MeasureMode.AT_MOST : MeasureMode.UNBOUNDED,
-                maxHeight ? MeasureMode.AT_MOST : MeasureMode.UNBOUNDED,
-            );
-        }
     }
 
     /**
@@ -303,7 +319,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         return this;
     }
 
-    addChild(UIObject): any
+    addChild(UIObject): Widget
     {
         const argumentsLength = arguments.length;
 
@@ -326,7 +342,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
             this.widgetChildren.push(UIObject);
         }
 
-        return UIObject;
+        return this;
     }
 
     removeChild(UIObject): void
@@ -349,7 +365,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                 const oldUIParent = UIObject.parent;
                 const oldParent = UIObject.container.parent;
 
-                UIObject.container.parent.removeChild(UIObject.insetContainer);
+                UIObject.insetContainer.parent.removeChild(UIObject.insetContainer);
                 this.widgetChildren.splice(index, 1);
                 UIObject.parent = null;
 
@@ -522,5 +538,42 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     set alpha(val: number)
     {
         this.insetContainer.alpha = val;
+    }
+
+    getElevation(): number
+    {
+        return this._elevation;
+    }
+
+    setElevation(val: number): Widget
+    {
+        this._elevation = val;
+
+        if (val === 0 && this._dropShadow)
+        {
+            const i = this.insetContainer.filters.indexOf(this._dropShadow);
+
+            if (i > 0)
+            {
+                this.insetContainer.filters.splice(i, 1);
+            }
+        }
+        else if (val > 0)
+        {
+            if (!this._dropShadow)
+            {
+                if (!this.insetContainer.filters)
+                {
+                    this.insetContainer.filters = [];
+                }
+
+                this._dropShadow = new DropShadowFilter({ distance: val });
+                this.insetContainer.filters.push(this._dropShadow);
+            }
+
+            this._dropShadow.distance = val;
+        }
+
+        return this;
     }
 }

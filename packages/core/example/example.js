@@ -11,16 +11,21 @@ function generateBackgroundGraphics(width = 300, height = 50, color = 0xffff)
     return mockBg;
 }
 
-window.onload = function ()
+window.onload = function onload()
 {
+    const width  = window.innerWidth || document.documentElement.clientWidth
+    || document.body.clientWidth;
+    const height = window.innerHeight || document.documentElement.clientHeight
+    || document.body.clientHeight;
+
     const app = new PIXI.Application({
         view: document.getElementById('app-cvs'),
         backgroundColor: 0xff00ff,
-        width: 512,
-        height: 512,
+        width,
+        height,
     });
 
-    const uxStage = new PUXI.Stage(512, 512);
+    const uxStage = new PUXI.Stage(width, height);
 
     // Add title
     const mockTitle = new PUXI.Text('PUXI Expo')
@@ -33,6 +38,7 @@ window.onload = function ()
     // Add rounded button in center
     const mockButton = new PUXI.Button({
         text: new PUXI.Text('Hello world!'),
+        background: 0xffaabb,
     })
         .setLayoutOptions(new PUXI.FastLayoutOptions(
             PUXI.LayoutOptions.WRAP_CONTENT,
@@ -41,21 +47,19 @@ window.onload = function ()
             0.5,
             PUXI.FastLayoutOptions.CENTER_ANCHOR,
         ))
-        .setBackground(new PIXI.Graphics()
-            .beginFill(0xffaabb, 0.5)
-            .drawRoundedRect(0, 0, 300, 100, 16)
-            .endFill());
+        .setElevation(2);
 
     // Text input at bottom
     const mockInput = new PUXI.TextInput({
         multiLine: false,
-        background: new PIXI.Graphics().beginFill(0xffffff).drawRect(0, 0, 20, 10).endFill(),
+        background: 0xfabcdf,
+        style: new PIXI.TextStyle({ height: 12, lineHeight: 20 }),
     }).setLayoutOptions(
         new PUXI.FastLayoutOptions(
-            512,
-            PUXI.LayoutOptions.WRAP_CONTENT,
+            0.999999, // FILL_PARENT :(, 0.999999 :>
+            0.05,
             0,
-            0.9,
+            0.95,
         ),
     );
 
@@ -63,23 +67,24 @@ window.onload = function ()
     mockInput.on('blur', () => { console.log('TextInput blur'); }); // eslint-disable-line no-console
     mockInput.on('keydown', () => { console.log('TextInput keydowned!'); }); // eslint-disable-line no-console
 
-    const mockScroll = new PUXI.ScrollingContainer({
-        width: 300,
-        height: 60,
+    // Showcase scrolling widget
+    const mockScroll = new PUXI.ScrollWidget({
         scrollY: true,
-    });
+    }).setLayoutOptions(
+        new PUXI.FastLayoutOptions(
+            0.5,
+            0.25,
+            0.5,
+            0.7,
+            PUXI.FastLayoutOptions.CENTER_ANCHOR,
+        ),
+    ).setBackground(0xffaabb)
+        .setBackgroundAlpha(0.5)
+        .addChild(new PUXI.Button({ text: 'Button 1' }))
+        .addChild(new PUXI.Button({ text: 'Button 2' }).setLayoutOptions(new PUXI.FastLayoutOptions(undefined, undefined, 0, 50)))
+        .setElevation(4);
 
-    const mockBg2 = generateBackgroundGraphics(300, 50, 0xfff000);
-    const mockBg3 = generateBackgroundGraphics(300, 50);
-
-    mockBg3.y = 50;
-    const scrollCont = new PUXI.WidgetGroup(300, 100);
-
-    scrollCont.contentContainer.addChild(mockBg2);
-    scrollCont.contentContainer.addChild(mockBg3);
-    mockScroll.addChild(scrollCont);
-    mockScroll.horizontalAlign = 'center';
-
+    // Add a checkbox top-right corner
     const mockCheckbox = new PUXI.CheckBox({
         checked: true,
         background: generateBackgroundGraphics(30, 30),
@@ -94,11 +99,15 @@ window.onload = function ()
     uxStage.addChild(mockButton);
     uxStage.addChild(mockInput);
     uxStage.addChild(mockCheckbox);
-    // uxStage.addChild(mockInput);
-    // uxStage.addChild(mockScroll);
-    // uxStage.addChild(mockCheckbox);
+    uxStage.addChild(mockScroll);
 
-    uxStage.setBackground(new PIXI.Sprite.from('./bg.png'));
+    const stageBackground = new PIXI.Sprite.from('./bg.png');
+
+    stageBackground.filters = [
+        new PIXI.filters.BlurFilter(11),
+    ];
+
+    uxStage.setBackground(stageBackground);
 
     app.stage.addChild(uxStage);
 
@@ -109,4 +118,5 @@ window.onload = function ()
     window.mockButton = mockButton;
     window.mockTextInput = mockInput;
     window.mockCheckbox = mockCheckbox;
+    window.mockScroll = mockScroll;
 };

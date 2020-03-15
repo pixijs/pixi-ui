@@ -1,13 +1,13 @@
 import { Slider } from './Slider';
 import { Tween } from './Tween';
 import { Sprite } from './Sprite';
-import { ScrollingContainer } from './ScrollingContainer';
+import { ScrollWidget } from './ScrollWidget';
 
 interface IScrollBarOptions
 {
     track: Sprite;
     handle: Sprite;
-    scrollingContainer: ScrollingContainer;
+    scrollingContainer: ScrollWidget;
     vertical?: boolean;
     autohide?: boolean;
 }
@@ -27,7 +27,7 @@ interface IScrollBarOptions
  */
 export class ScrollBar extends Slider
 {
-    scrollingContainer: ScrollingContainer;
+    scrollingContainer: ScrollWidget;
     autohide: boolean;
     _hidden: boolean;
 

@@ -1,4 +1,4 @@
-import { InputBase, IInputBaseOptions } from './InputBase';
+import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
 import { ClickEvent } from './Interaction/ClickEvent';
 import { InputController } from './Interaction/InputController';
 import { InteractiveGroup } from './InteractiveGroup';
@@ -29,7 +29,7 @@ interface ICheckBoxOptions extends IInputBaseOptions
  * @param [options.tabIndex=0] {Number} input tab index
  * @param [options.tabGroup=0] {Number|String} input tab group
  */
-export class CheckBox extends InputBase
+export class CheckBox extends FocusableWidget
 {
     private _checked: boolean;
     private _value: string;

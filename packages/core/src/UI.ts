@@ -8,7 +8,7 @@ export * from './Ease/Ease';
 export * from './Interaction/Interaction';
 export * from './Helpers';
 export * from './ScrollBar';
-export * from './ScrollingContainer';
+export * from './ScrollWidget';
 export * from './SortableList';
 export * from './Slider';
 export * from './SliceSprite';

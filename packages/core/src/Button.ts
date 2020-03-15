@@ -1,14 +1,13 @@
 import { ClickEvent } from './Interaction/ClickEvent';
-import { InputBase } from './InputBase';
-import { Sprite } from './Sprite';
+import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
 import { Text } from './Text';
 import * as PIXI from 'pixi.js';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
 
-interface IButtonOptions
+interface IButtonOptions extends IInputBaseOptions
 {
-    background?: Sprite;
-    text?: Text;
+    background?: PIXI.Container;
+    text?: Text | string;
     tabIndex?: number;
     tabGroup?: any;
     width?: number;
@@ -28,9 +27,8 @@ interface IButtonOptions
  * @param [options.width=options.background.width] {Number|String} width
  * @param [options.height=options.background.height] {Number|String} height
  */
-export class Button extends InputBase
+export class Button extends FocusableWidget
 {
-    background: Sprite;
     isHover: boolean;
 
     protected textWidget: Text;
@@ -40,26 +38,15 @@ export class Button extends InputBase
 
     constructor(options: IButtonOptions)
     {
-        super(
-            options.width || (options.background ? options.background.width : 100),
-            options.height || (options.background ? options.background.height : 100),
-            options.tabIndex || 0,
-            options.tabGroup || 0,
-        );
-
-        this.background = options.background;
-
-        if (this.background)
-        {
-            this.background.width = '100%';
-            this.background.height = '100%';
-            this.background.pivot = 0.5;
-            this.background.verticalAlign = 'middle';
-            this.background.horizontalAlign = 'center';
-            this.addChild(this.background);
-        }
+        super(options);
 
         this.isHover = false;
+
+        if (typeof options.text === 'string')
+        {
+            options.text = new Text(options.text, new PIXI.TextStyle());
+        }
+
         this.textWidget = options.text.setLayoutOptions(
             new FastLayoutOptions(
                 LayoutOptions.WRAP_CONTENT,
@@ -112,7 +99,7 @@ export class Button extends InputBase
         {
             if (!this._focused)
             {
-                InputBase.prototype.focus.call(this);
+                FocusableWidget.prototype.focus.call(this);
                 // document.addEventListener("keydown", keyDownEvent, false);
             }
         };
@@ -121,7 +108,7 @@ export class Button extends InputBase
         {
             if (this._focused)
             {
-                InputBase.prototype.blur.call(this);
+                FocusableWidget.prototype.blur.call(this);
                 // document.removeEventListener("keydown", keyDownEvent);
             }
         };

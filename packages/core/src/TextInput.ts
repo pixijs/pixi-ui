@@ -1,9 +1,14 @@
-import { InputBase, IInputBaseOptions } from './InputBase';
+import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
 import { InteractiveGroup } from './InteractiveGroup';
 import { DragEvent } from './Interaction/DragEvent';
-import { ScrollingContainer } from './ScrollingContainer';
+import { ScrollWidget } from './ScrollWidget';
 import * as PIXI from 'pixi.js';
+import { LayoutOptions } from './layout-options';
 
+/**
+ * @namespace PUXI
+ * @interface
+ */
 interface ITextInputOptions extends IInputBaseOptions
 {
     multiLine?: boolean;
@@ -29,32 +34,27 @@ interface ITextInputOptions extends IInputBaseOptions
 // Dummy <input> element created for mobile keyboards
 let mockDOMInput: any;
 
+function initMockDOMInput(): void
+{
+    // create temp input (for mobile keyboard)
+    if (typeof mockDOMInput === 'undefined')
+    {
+        mockDOMInput = document.createElement('INPUT');
+        mockDOMInput.setAttribute('type', 'text');
+        mockDOMInput.setAttribute('id', '_pui_tempInput');
+        mockDOMInput.setAttribute('style', 'position:fixed; left:-10px; top:-10px; width:0px; height: 0px;');
+        document.body.appendChild(mockDOMInput);
+    }
+}
+
 /**
  * An UI text object
  *
  * @class
  * @extends PIXI.UI.InputBase
  * @memberof PIXI.UI
- * @param options.value {String} Text content
- * @param [options.multiLine=false] {Boolean} Multiline input
- * @param options.style {PIXI.TextStyle} Style used for the Text
- * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
- * @param [options.selectedColor='#ffffff'] {String|Array} Fill color of selected text
- * @param [options.selectedBackgroundColor='#318cfa'] {String} BackgroundColor of selected text
- * @param [options.width=150] {Number} width of input
- * @param [options.height=20] {Number} height of input
- * @param [options.padding=3] {Number} input padding
- * @param [options.paddingTop=0] {Number} input padding
- * @param [options.paddingBottom=0] {Number} input padding
- * @param [options.paddingLeft=0] {Number} input padding
- * @param [options.paddingRight=0] {Number} input padding
- * @param [options.tabIndex=0] {Number} input tab index
- * @param [options.tabGroup=0] {Number|String} input tab group
- * @param [options.maxLength=0] {Number} 0 = unlimited
- * @param [options.caretWidth=1] {Number} width of the caret
- * @param [options.lineHeight=0] {Number} 0 = inherit from text
  */
-export class TextInput extends InputBase
+export class TextInput extends FocusableWidget
 {
     private options: ITextInputOptions;
 
@@ -66,7 +66,7 @@ export class TextInput extends InputBase
     private _lastHeight: number;
 
     private selection: PIXI.Graphics;
-    private textContainer: ScrollingContainer;
+    private textContainer: ScrollWidget;
 
     public maxLength: number;
 
@@ -108,19 +108,31 @@ export class TextInput extends InputBase
 
     private _sp: PIXI.Point;
 
+    /**
+     * @param {PUXI.ITextInputOptions} options
+     * @param {string} options.value Text content
+     * @param {boolean} [options.multiLine=false] Multiline input
+     * @param options.style {PIXI.TextStyle} Style used for the Text
+     * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for input
+     * @param [options.selectedColor='#ffffff'] {String|Array} Fill color of selected text
+     * @param [options.selectedBackgroundColor='#318cfa'] {String} BackgroundColor of selected text
+     * @param [options.width=150] {Number} width of input
+     * @param [options.height=20] {Number} height of input
+     * @param [options.padding=3] {Number} input padding
+     * @param [options.paddingTop=0] {Number} input padding
+     * @param [options.paddingBottom=0] {Number} input padding
+     * @param [options.paddingLeft=0] {Number} input padding
+     * @param [options.paddingRight=0] {Number} input padding
+     * @param [options.tabIndex=0] {Number} input tab index
+     * @param [options.tabGroup=0] {Number|String} input tab group
+     * @param [options.maxLength=0] {Number} 0 = unlimited
+     * @param [options.caretWidth=1] {Number} width of the caret
+     * @param [options.lineHeight=0] {Number} 0 = inherit from text
+     */
     constructor(options: ITextInputOptions)
     {
         super(options);
-
-        // create temp input (for mobile keyboard)
-        if (typeof mockDOMInput === 'undefined')
-        {
-            mockDOMInput = document.createElement('INPUT');
-            mockDOMInput.setAttribute('type', 'text');
-            mockDOMInput.setAttribute('id', '_pui_tempInput');
-            mockDOMInput.setAttribute('style', 'position:fixed; left:-10px; top:-10px; width:0px; height: 0px;');
-            document.body.appendChild(mockDOMInput);
-        }
+        initMockDOMInput();
 
         this.options = options;
 
@@ -168,7 +180,7 @@ export class TextInput extends InputBase
         const paddingTop = options.paddingTop !== undefined ? options.paddingTop : options.padding;
 
         // insert text container (scrolling container)
-        this.textContainer = new ScrollingContainer({
+        this.textContainer = new ScrollWidget({
             scrollX: !this.multiLine,
             scrollY: this.multiLine,
             dragScrolling: this.multiLine,
@@ -181,7 +193,12 @@ export class TextInput extends InputBase
             paddingTop || 3,
             paddingRight || 3,
             paddingBottom || 3,
-        ) as ScrollingContainer;
+        ).setLayoutOptions(
+            new LayoutOptions(
+                LayoutOptions.FILL_PARENT,
+                LayoutOptions.FILL_PARENT,
+            ),
+        ) as ScrollWidget;
 
         this.addChild(this.textContainer);
 
@@ -312,7 +329,7 @@ export class TextInput extends InputBase
 
     private get innerContainer(): PIXI.Container
     {
-        return this.textContainer.innerContainer;
+        return this.textContainer.innerContainer.insetContainer;
     }
 
     update(): void

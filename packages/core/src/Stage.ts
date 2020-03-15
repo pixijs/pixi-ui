@@ -49,6 +49,12 @@ export class Stage extends PIXI.Container
 
     protected measureAndLayout(): void
     {
+        if (this.background)
+        {
+            this.background.width = this.width;
+            this.background.height = this.height;
+        }
+
         for (let i = 0, j = this.widgetChildren.length; i < j; i++)
         {
             const widget = this.widgetChildren[i];
@@ -60,12 +66,12 @@ export class Stage extends PIXI.Container
             const heightMeasureMode = lopt.height < LayoutOptions.MAX_DIMEN
                 ? MeasureMode.EXACTLY
                 : MeasureMode.AT_MOST;
-            const loptWidth = (Math.abs(lopt.width) < 1) ? lopt.width * this._width : lopt.width;
-            const loptHeight = (Math.abs(lopt.height) < 1) ? lopt.height * this._height : lopt.height;
+            const loptWidth = (Math.abs(lopt.width) < 1) ? lopt.width * this.width : lopt.width;
+            const loptHeight = (Math.abs(lopt.height) < 1) ? lopt.height * this.height : lopt.height;
 
             widget.measure(
-                widthMeasureMode === MeasureMode.EXACTLY ? loptWidth : this._width,
-                heightMeasureMode === MeasureMode.EXACTLY ? loptHeight : this._height,
+                widthMeasureMode === MeasureMode.EXACTLY ? loptWidth : this.width,
+                heightMeasureMode === MeasureMode.EXACTLY ? loptHeight : this.height,
                 widthMeasureMode,
                 heightMeasureMode);
 
@@ -74,11 +80,11 @@ export class Stage extends PIXI.Container
 
             if (Math.abs(x) < 1)
             {
-                x *= this._width;
+                x *= this.width;
             }
             if (Math.abs(y) < 1)
             {
-                y *= this._height;
+                y *= this.height;
             }
 
             const anchor = lopt.anchor || FastLayoutOptions.DEFAULT_ANCHOR;
@@ -109,6 +115,9 @@ export class Stage extends PIXI.Container
         if (bg)
         {
             super.addChildAt(bg, 0);
+
+            this.background.width = this.width;
+            this.background.height = this.height;
         }
     }
 
@@ -117,6 +126,7 @@ export class Stage extends PIXI.Container
         for (let i = 0, j = widgets.length; i < j; i++)
         {
             this.update(widgets[i].widgetChildren);
+            widgets[i].stage = this;
             widgets[i].update();
         }
     }
@@ -233,11 +243,11 @@ export class Stage extends PIXI.Container
         this.measureAndLayout();
     }
 
-    get _width(): number
+    get width(): number
     {
         return this.__width;
     }
-    set _width(val: number)
+    set width(val: number)
     {
         if (!isNaN(val))
         {
@@ -246,11 +256,11 @@ export class Stage extends PIXI.Container
         }
     }
 
-    get _height(): number
+    get height(): number
     {
         return this.__height;
     }
-    set _height(val: number)
+    set height(val: number)
     {
         if (!isNaN(val))
         {

@@ -33,6 +33,9 @@ export class FastLayout implements ILayoutManager
 
     onMeasure(maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
+        // TODO: Passthrough optimization pass, if there is only one child with FILL_PARENT width or height
+        // then don't measure twice.
+
         this._measuredWidth = maxWidth;
         this._measuredHeight = maxHeight;
 
@@ -56,50 +59,10 @@ export class FastLayout implements ILayoutManager
                 heightMeasureMode);
         }
 
-        if (widthMode === MeasureMode.UNBOUNDED || widthMode === MeasureMode.AT_MOST)
-        {
-            this._measuredWidth = 0;
+        this._measuredWidth = this.measureWidthReach(maxWidth, widthMode);
+        this._measuredHeight = this.measureHeightReach(maxHeight, heightMode);
 
-            for (let i = 0, j = children.length; i < j; i++)
-            {
-                const widget = children[i];
-                const childWidth = widget.getMeasuredWidth();
-                const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
-                const x = lopt.x ? lopt.x : 0;
-
-                // If lopt.x is %, then (1 - lopt.x)% of parent width should be as large
-                // as child's width.
-                const minr = childWidth + (Math.abs(x) < 1 ? childWidth / (1 - x) : x);
-
-                this._measuredWidth = Math.max(this._measuredWidth, minr);
-            }
-
-            if (widthMode === MeasureMode.AT_MOST)
-            {
-                this._measuredWidth = Math.min(maxWidth, this._measuredWidth);
-            }
-        }
-        if (heightMode === MeasureMode.UNBOUNDED || heightMode === MeasureMode.AT_MOST)
-        {
-            this._measuredHeight = 0;
-
-            for (let i = 0, j = children.length; i < j; i++)
-            {
-                const widget = children[i];
-                const childHeight = widget.getMeasuredHeight();
-                const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
-                const y = lopt.y ? lopt.y : 0;
-
-                const minb = childHeight + (Math.abs(y) < 1 ? childHeight / (1 - y) : y);
-
-                this._measuredHeight = Math.max(this._measuredHeight, minb);
-            }
-
-            if (heightMode === MeasureMode.AT_MOST)
-            {
-                this._measuredHeight = Math.min(maxHeight, this._measuredHeight);
-            }
-        }
+        this.measureChildFillers();
     }
 
     private getChildMeasureMode(dimen: number, parentMeasureMode: MeasureMode): MeasureMode
@@ -114,6 +77,92 @@ export class FastLayout implements ILayoutManager
         }
 
         return MeasureMode.EXACTLY;
+    }
+
+    private measureWidthReach(parentWidthLimit: number, widthMode: MeasureMode): number
+    {
+        if (widthMode === MeasureMode.EXACTLY)
+        {
+            return parentWidthLimit;
+        }
+
+        const children = this.host.widgetChildren;
+        let measuredWidth = 0;
+
+        for (let i = 0, j = children.length; i < j; i++)
+        {
+            const widget = children[i];
+            const childWidth = widget.getMeasuredWidth();
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
+            const x = lopt.x ? lopt.x : 0;
+
+            // If lopt.x is %, then (1 - lopt.x)% of parent width should be as large
+            // as child's width.
+            const minr = childWidth + (Math.abs(x) < 1 ? childWidth / (1 - x) : x);
+
+            measuredWidth = Math.max(measuredWidth, minr);
+        }
+
+        if (widthMode === MeasureMode.AT_MOST)
+        {
+            measuredWidth = Math.min(parentWidthLimit, measuredWidth);
+        }
+
+        return measuredWidth;
+    }
+
+    private measureHeightReach(parentHeightLimit: number, heightMode: MeasureMode): number
+    {
+        if (heightMode === MeasureMode.EXACTLY)
+        {
+            return parentHeightLimit;
+        }
+
+        const children = this.host.widgetChildren;
+        let measuredHeight = 0;
+
+        for (let i = 0, j = children.length; i < j; i++)
+        {
+            const widget = children[i];
+            const childHeight = widget.getMeasuredHeight();
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
+            const y = lopt.y ? lopt.y : 0;
+
+            const minb = childHeight + (Math.abs(y) < 1 ? childHeight / (1 - y) : y);
+
+            measuredHeight = Math.max(measuredHeight, minb);
+        }
+
+        if (heightMode === MeasureMode.AT_MOST)
+        {
+            measuredHeight = Math.min(parentHeightLimit, measuredHeight);
+        }
+
+        return measuredHeight;
+    }
+
+    private measureChildFillers(): void
+    {
+        const children = this.host.widgetChildren;
+
+        for (let i = 0, j = children.length; i < j; i++)
+        {
+            const widget = children[i];
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
+
+            if (lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT)
+            {
+                const widthMode = lopt.width === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST;
+                const heightMode = lopt.height === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST;
+
+                widget.measure(
+                    this._measuredWidth,
+                    this._measuredHeight,
+                    widthMode,
+                    heightMode,
+                );
+            }
+        }
     }
 
     onLayout(): void
