@@ -1,5 +1,5 @@
 /**
- * @namespace PUXI
+ * @memberof PUXI
  * @class
  */
 export class Insets

@@ -27,7 +27,7 @@ interface IScrollingContainerOptions
  * `ScrollWidget` masks its contents to its layout bounds and translates
  * its children when scrolling.
  *
- * @namespace PUXI
+ * @memberof PUXI
  * @class
  * @extends PUXI.InteractiveGroup
  */

@@ -8,7 +8,7 @@ import * as PIXI from 'pixi.js';
  * If x or y is between -1 and 1, then that dimension will be interpreted as a
  * percentage of the parent's width or height.
  *
- * @namespace PUXI
+ * @memberof PUXI
  * @extends PUXI.LayoutOptions
  * @class
  */

@@ -1,7 +1,7 @@
 /**
  * Alignments supported by layout managers in PuxiJS core.
  *
- * @namespace PUXI
+ * @memberof PUXI
  * @enum
  */
 export enum ALIGN

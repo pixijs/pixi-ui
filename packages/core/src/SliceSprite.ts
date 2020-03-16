@@ -5,7 +5,7 @@ import * as PIXI from 'pixi.js';
  * A sliced sprite with dynamic width and height.
  *
  * @class
- * @memberof PIXI.UI
+ * @memberof PUXI
  * @param Texture {PIXI.Texture} the texture for this SliceSprite
  * @param BorderWidth {Number} Width of the sprite borders
  * @param horizontalSlice {Boolean} Slice the sprite horizontically

@@ -21,7 +21,7 @@
     "watch": "pixify -o pixi-ui -w",
     "watch:lint": "watch \"jshint --reporter=scripts/reporter.js scripts src test || exit 0\" src",
     "lint": "eslint ./src",
-    "docs": "jsdoc -c scripts/jsdoc.conf.json -R README.md"
+    "docs": "rm -rf ./dist/*; tsc; jsdoc -c jsdoc.conf.json -R README.md; rm -rf ./dist/compiled;"
   },
   "files": [
     "bin/",
@@ -35,6 +35,7 @@
     "glslify": "^5.0.2"
   },
   "devDependencies": {
+    "@pixi/jsdoc-template": "^2.5.1",
     "@rollup/plugin-commonjs": "^11.0.2",
     "browserify-versionify": "^1.0.6",
     "del": "^2.2.0",

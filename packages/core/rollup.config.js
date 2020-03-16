@@ -14,9 +14,10 @@ export default [
             sourcemap: true,
             globals: {
                 'pixi.js': 'PIXI',
+                '@pixi/filter-drop-shadow': 'PIXI.filters',
             },
         },
-        external: ['pixi.js'],
+        external: ['pixi.js', '@pixi/filter-drop-shadow'],
         plugins: [
             ts(),
             commonjs(),
@@ -33,9 +34,10 @@ export default [
             sourcemap: true,
             globals: {
                 'pixi.js': 'PIXI',
+                '@pixi/filter-drop-shadow': 'PIXI.filters',
             },
         },
-        external: ['pixi.js'],
+        external: ['pixi.js', '@pixi/filter-drop-shadow'],
         plugins: [
             terser(),
             ts(),

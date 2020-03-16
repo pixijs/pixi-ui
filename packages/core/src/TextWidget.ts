@@ -4,9 +4,9 @@ import * as PIXI from 'pixi.js';
 /**
  * A static text widget. It cannot retain children.
  *
+ * @memberof PUXI
  * @class
  * @extends PUXI.Widget
- * @memberof PUXI
  */
 export class TextWidget extends Widget
 {

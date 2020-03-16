@@ -36,3 +36,6 @@ docs/
 
 lerna-debug.log
 npm-debug.log
+
+/dist/compiled.map
+/dist/compiled

@@ -23,9 +23,9 @@ interface ISliderOptions
 /**
 * An UI Slider, the default width/height is 90%
 *
+* @memberof PUXI
 * @class
 * @extends Widget
-* @memberof PIXI.UI
 * @param options {Object} Slider settings
 * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
 * @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as slider handle

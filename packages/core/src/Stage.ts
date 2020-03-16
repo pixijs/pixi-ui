@@ -10,8 +10,9 @@ import { LayoutOptions, FastLayoutOptions } from './layout-options';
  *
  * The stage is not a `PUXI.Widget` and its dimensions are always fixed.
  *
- * @class
  * @memberof PUXI
+ * @class
+ * @extends PIXI.Container
  */
 export class Stage extends PIXI.Container
 {

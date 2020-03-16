@@ -7,7 +7,7 @@ import { FastLayout } from './layout-manager/FastLayout';
  * A widget group is a layout owner that can position its children according
  * to the layout given to it.
  *
- * @namespace PUXI
+ * @memberof PUXI
  * @class
  * @extends PUXI.Widget
  */

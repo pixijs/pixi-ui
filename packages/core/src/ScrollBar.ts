@@ -16,8 +16,8 @@ interface IScrollBarOptions
  * An UI scrollbar to control a ScrollingContainer
  *
  * @class
- * @extends PIXI.UI.Slider
- * @memberof PIXI.UI
+ * @extends PUXI.Slider
+ * @memberof PUXI
  * @param options {Object} ScrollBar settings
  * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the scrollbar track
  * @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as scrollbar handle

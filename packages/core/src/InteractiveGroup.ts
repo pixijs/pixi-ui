@@ -5,8 +5,8 @@ import * as PIXI from 'pixi.js';
  * An interactive container.
  *
  * @class
- * @extends PIXI.UI.UIBase
- * @memberof PIXI.UI
+ * @extends PUXI.WidgetGroup
+ * @memberof PUXI
  */
 export class InteractiveGroup extends WidgetGroup
 {

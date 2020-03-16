@@ -6,7 +6,7 @@ import * as PIXI from 'pixi.js';
 import { LayoutOptions } from './layout-options';
 
 /**
- * @namespace PUXI
+ * @memberof PUXI
  * @interface
  */
 interface ITextInputOptions extends IInputBaseOptions

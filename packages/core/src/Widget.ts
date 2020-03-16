@@ -12,7 +12,7 @@ import { EventBroker } from './event';
  * A widget is a user interface control that renders content inside its prescribed
  * rectangle on the screen.
  *
- * @namespace PUXI
+ * @memberof PUXI
  * @class
  * @extends PIXI.utils.EventEmitter
  * @implements PUXI.IMeasurable
@@ -60,7 +60,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     private _width: number;
     private _height: number;
     private _elevation: number;
-    private _dropShadow: PIXI.filters.DropShadowFilter;
+    private _dropShadow: DropShadowFilter;
 
     constructor()
     {
@@ -99,7 +99,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
      *
      * @private
      */
-    abstract update ();
+    abstract update();
 
     get measuredWidth(): number
     {
@@ -692,8 +692,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                     const parent = this.droppableReparent !== null ? this.droppableReparent : self;
 
                     parent.container.toLocal(item.container.position, item.container.parent, item);
-                    if (parent.container != item.container.parent)
-                    { parent.addChild(item); }
+                    if (parent.container != item.container.parent) { parent.addChild(item); }
                 }
             };
 

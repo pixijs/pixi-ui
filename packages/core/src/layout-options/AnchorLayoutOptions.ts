@@ -31,6 +31,7 @@ import { LayoutOptions } from './LayoutOptions';
  * child is set to 0, then that child will be scaled to fit in the entire region
  * in that dimension.
  *
+ * @memberof PUXI
  * @extends PUXI.LayoutOptions
  * @class
  */

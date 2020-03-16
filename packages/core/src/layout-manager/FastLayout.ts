@@ -7,9 +7,9 @@ import { WidgetGroup } from '../WidgetGroup';
  * `PUXI.FastLayout` is used in conjunction with `PUXI.FastLayoutOptions`. It is the
  * default layout for most widget groups.
  *
- * @namespace PUXI
- * @extends PUXI.ILayoutManager
+ * @memberof PUXI
  * @class
+ * @extends PUXI.ILayoutManager
  * @example
  * ```
  * parent.useLayout(new PUXI.FastLayout())

@@ -6,9 +6,9 @@ import { Widget } from './Widget';
 /**
  * An UI Container object
  *
+ * @memberof PUXI
  * @class
- * @extends PIXI.UI.UIBase
- * @memberof PIXI.UI
+ * @extends PUXI.Widget
  * @param desc {Boolean} Sort the list descending
  * @param tweenTime {Number} if above 0 the sort will be animated
  * @param tweenEase {PIXI.UI.Ease} ease method used for animation

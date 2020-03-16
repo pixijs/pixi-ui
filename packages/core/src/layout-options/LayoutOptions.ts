@@ -18,7 +18,7 @@
  * parent.addChild(widget);
  * ```
  *
- * @namespace PUXI
+ * @memberof PUXI
  * @class
  */
 export class LayoutOptions

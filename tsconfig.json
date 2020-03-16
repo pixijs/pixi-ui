@@ -1,17 +1,18 @@
 {
   "compilerOptions": {
-    "allowJs": true, // These settings apply to .js files as well as .ts files
-    "noEmit": true, // Do not compile the JS (or TS) files in this project on build
+    "allowJs": true,
     "sourceMap": true,
     "esModuleInterop": true,
-    "target": "ES5",
-    "declaration": false
+    "target": "ES6",
+    "declaration": false,
+    "outDir": "dist/compiled",
+    "removeComments": false
   },
   "exclude": [
-    "node_modules" // Don't include any JavaScript found under "node_modules"
+    "node_modules"
   ],
   "typeAcquisition": {
-    "enable": true, // Enable automatic fetching of type definitions for .js libraries
+    "enable": true,
     "include": []
   }
 }

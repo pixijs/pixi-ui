@@ -4,9 +4,9 @@ import * as PIXI from 'pixi.js';
 /**
  * An UI sprite object
  *
+ * @memberof PUXI
  * @class
- * @extends PIXI.UI.UIBase
- * @memberof PIXI.UI
+ * @extends PUXI.Widget
  * @param Texture {PIXI.Texture} The texture for the sprite
  */
 export class Sprite extends Widget

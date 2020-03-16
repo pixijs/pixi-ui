@@ -7,7 +7,7 @@ import { WidgetGroup } from '../WidgetGroup';
 /**
  * `AnchorLayout` is used in conjunction with `AnchorLayoutOptions`.
  *
- * @namespace PUXI
+ * @memberof PUXI
  * @class
  * @example
  * ```
