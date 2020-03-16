@@ -5,6 +5,10 @@ import { Widget } from '../Widget';
  * widget interaction. For example, the click manager will hide clicks when
  * the object is dragging.
  *
+ * Event managers are lifecycle objects - they can start/stop. Their constructor
+ * will always accept one argument - the widget. Other settings can be applied before
+ * `startEvent`.
+ *
  * @memberof PUXI
  * @class
  * @abstract
@@ -12,6 +16,7 @@ import { Widget } from '../Widget';
 export abstract class EventManager
 {
     protected target: Widget;
+    protected isEnabled: boolean;
 
     /**
      * @param {Widget} target
@@ -19,6 +24,7 @@ export abstract class EventManager
     constructor(target: Widget)
     {
         this.target = target;
+        this.isEnabled = false;// use to track start/stopEvent
     }
 
     /**

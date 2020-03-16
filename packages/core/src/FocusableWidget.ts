@@ -68,7 +68,7 @@ export abstract class FocusableWidget extends WidgetGroup
         {
             InputController.clear();
             this._focused = false;
-            this._clearEvents();
+            this.clearEvents();
             this.emit('focusChanged', false);
             this.emit('blur');
         }
@@ -79,7 +79,7 @@ export abstract class FocusableWidget extends WidgetGroup
         if (!this._focused)
         {
             this._focused = true;
-            this._bindEvents();
+            this.bindEvents();
             InputController.set(this);
             this.emit('focusChanged', true);
             this.emit('focus');
@@ -124,7 +124,7 @@ export abstract class FocusableWidget extends WidgetGroup
         }
     };
 
-    private _bindEvents = (): void =>
+    private bindEvents = (): void =>
     {
         if (this.stage !== null)
         {
@@ -134,7 +134,7 @@ export abstract class FocusableWidget extends WidgetGroup
         document.addEventListener('keydown', this.keyDownEvent);
     };
 
-    private _clearEvents = (): void =>
+    private clearEvents = (): void =>
     {
         if (this.stage !== null)
         {

@@ -125,9 +125,16 @@ export class Stage extends PIXI.Container
     {
         for (let i = 0, j = widgets.length; i < j; i++)
         {
-            this.update(widgets[i].widgetChildren);
-            widgets[i].stage = this;
-            widgets[i].update();
+            const widget = widgets[i];
+
+            if (!widget.initialized)
+            {
+                widget.initialize();
+            }
+
+            this.update(widget.widgetChildren);
+            widget.stage = this;
+            widget.update();
         }
     }
 

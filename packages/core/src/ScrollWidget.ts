@@ -1,7 +1,7 @@
 import { InteractiveGroup } from './InteractiveGroup';
 import { Helpers }  from './Helpers';
 import { Ticker } from './Ticker';
-import { DragEvent } from './event/DragEvent';
+import { DragManager } from './event/DragManager';
 import { MouseScrollEvent } from './event/MouseScrollEvent';
 import * as PIXI from 'pixi.js';
 import { Widget } from './Widget';
@@ -193,7 +193,7 @@ export class ScrollWidget extends InteractiveGroup
         // Drag scroll
         if (this.dragScrolling)
         {
-            const drag = new DragEvent(this);
+            const drag = new DragManager(this);
 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             drag.onDragStart = (e): void =>

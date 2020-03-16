@@ -33,128 +33,6 @@
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
-    var DragEvent = /** @class */ (function () {
-        function DragEvent(obj) {
-            var _this = this;
-            this._onDragStart = function (e) {
-                var _a = _this, obj = _a.obj, start = _a.start, _onDragMove = _a._onDragMove, _onDragEnd = _a._onDragEnd;
-                _this.id = e.data.identifier;
-                _this.onPress.call(obj, e, true);
-                if (!_this.bound) {
-                    start.copyFrom(e.data.global);
-                    obj.stage.on('mousemove', _onDragMove);
-                    obj.stage.on('touchmove', _onDragMove);
-                    obj.stage.on('mouseup', _onDragEnd);
-                    obj.stage.on('mouseupoutside', _onDragEnd);
-                    obj.stage.on('touchend', _onDragEnd);
-                    obj.stage.on('touchendoutside', _onDragEnd);
-                    obj.stage.on('touchcancel', _onDragEnd);
-                    _this.bound = true;
-                }
-                e.data.originalEvent.preventDefault();
-            };
-            this._onDragMove = function (e) {
-                if (e.data.identifier !== _this.id) {
-                    return;
-                }
-                var _a = _this, mouse = _a.mouse, offset = _a.offset, start = _a.start, obj = _a.obj;
-                mouse.copyFrom(e.data.global);
-                offset.set(mouse.x - start.x, mouse.y - start.y);
-                if (!_this.dragging) {
-                    _this.movementX = Math.abs(offset.x);
-                    _this.movementY = Math.abs(offset.y);
-                    if ((_this.movementX === 0 && _this.movementY === 0)
-                        || Math.max(_this.movementX, _this.movementY) < obj.dragThreshold) {
-                        return; // thresshold
-                    }
-                    if (obj.dragRestrictAxis !== null) {
-                        _this.cancel = false;
-                        if (obj.dragRestrictAxis === 'x' && _this.movementY > _this.movementX) {
-                            _this.cancel = true;
-                        }
-                        else if (obj.dragRestrictAxis === 'y' && _this.movementY <= _this.movementX) {
-                            _this.cancel = true;
-                        }
-                        if (_this.cancel) {
-                            _this._onDragEnd(e);
-                            return;
-                        }
-                    }
-                    _this.onDragStart.call(obj, e);
-                    _this.dragging = true;
-                }
-                _this.onDragMove.call(obj, e, offset);
-            };
-            this._onDragEnd = function (e) {
-                if (e.data.identifier !== _this.id) {
-                    return;
-                }
-                var _a = _this, obj = _a.obj, _onDragMove = _a._onDragMove, _onDragEnd = _a._onDragEnd;
-                if (_this.bound) {
-                    obj.stage.removeListener('mousemove', _onDragMove);
-                    obj.stage.removeListener('touchmove', _onDragMove);
-                    obj.stage.removeListener('mouseup', _onDragEnd);
-                    obj.stage.removeListener('mouseupoutside', _onDragEnd);
-                    obj.stage.removeListener('touchend', _onDragEnd);
-                    obj.stage.removeListener('touchendoutside', _onDragEnd);
-                    obj.stage.removeListener('touchcancel', _onDragEnd);
-                    _this.dragging = false;
-                    _this.bound = false;
-                    _this.onDragEnd.call(obj, e);
-                    _this.onPress.call(obj, e, false);
-                }
-            };
-            this.bound = false;
-            this.start = new PIXI$1.Point();
-            this.offset = new PIXI$1.Point();
-            this.mouse = new PIXI$1.Point();
-            this.movementX = 0;
-            this.movementY = 0;
-            this.cancel = false;
-            this.dragging = false;
-            this.id = 0;
-            this.obj = obj;
-            this.obj.interactive = true;
-            this.startEvent();
-        }
-        DragEvent.prototype.stopEvent = function () {
-            var _a = this, obj = _a.obj, _onDragStart = _a._onDragStart, _onDragMove = _a._onDragMove, _onDragEnd = _a._onDragEnd;
-            if (this.bound) {
-                obj.stage.removeListener('mousemove', _onDragMove);
-                obj.stage.removeListener('touchmove', _onDragMove);
-                obj.stage.removeListener('mouseup', _onDragEnd);
-                obj.stage.removeListener('mouseupoutside', _onDragEnd);
-                obj.stage.removeListener('touchend', _onDragEnd);
-                obj.stage.removeListener('touchendoutside', _onDragEnd);
-                this.bound = false;
-            }
-            obj.contentContainer.removeListener('mousedown', _onDragStart);
-            obj.contentContainer.removeListener('touchstart', _onDragStart);
-        };
-        DragEvent.prototype.startEvent = function () {
-            var _a = this, obj = _a.obj, _onDragStart = _a._onDragStart;
-            obj.contentContainer.on('mousedown', _onDragStart);
-            obj.contentContainer.on('touchstart', _onDragStart);
-        };
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        DragEvent.prototype.onPress = function (e, isPressed) {
-            // Default onPress
-        };
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        DragEvent.prototype.onDragStart = function (e) {
-            // Default onDragStart
-        };
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        DragEvent.prototype.onDragMove = function (e, offset) {
-            // Default onDragMove
-        };
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        DragEvent.prototype.onDragEnd = function (e) {
-            // Default onDragEnd
-        };
-        return DragEvent;
-    }());
-
     const _items = [];
     const DragDropController = {
         add(item, event)
@@ -14014,6 +13892,403 @@
     }(Filter));
 
     /**
+     * An event manager handles the states related to certain events and can augment
+     * widget interaction. For example, the click manager will hide clicks when
+     * the object is dragging.
+     *
+     * Event managers are lifecycle objects - they can start/stop. Their constructor
+     * will always accept one argument - the widget. Other settings can be applied before
+     * `startEvent`.
+     *
+     * @memberof PUXI
+     * @class
+     * @abstract
+     */
+    var EventManager = /** @class */ (function () {
+        /**
+         * @param {Widget} target
+         */
+        function EventManager(target) {
+            this.target = target;
+            this.isEnabled = false; // use to track start/stopEvent
+        }
+        /**
+         * @returns {Widget}
+         */
+        EventManager.prototype.getTarget = function () {
+            return this.target;
+        };
+        return EventManager;
+    }());
+
+    /**
+     * `ClickManager` handles hover and click events. It registers listeners
+     * for `mousedown`, `mouseup`, `mousemove`, `mouseout`, `mouseover`, `touchstart`,
+     * `touchend`, `touchendoutside`, `touchmove`, `rightup`, `rightdown`, `rightupoutside`
+     * events.
+     *
+     * @memberof PUXI
+     * @class
+     * @extends PUXI.EventManager
+     */
+    var ClickManager = /** @class */ (function (_super) {
+        __extends(ClickManager, _super);
+        /**
+         * @param {PUXI.Widget | PUXI.Button} target
+         * @param {boolean}[includeHover=false] - enable hover (`mouseover`, `mouseout`) listeners
+         * @param {boolean}[rightMouseButton=false] - use right mouse clicks
+         * @param {boolean}[doubleClick=false] - fire double clicks
+         */
+        function ClickManager(target, includeHover, rightMouseButton, doubleClick) {
+            var _this = _super.call(this, target) || this;
+            /**
+             * @param {boolean}[includeHover]
+             * @param {boolean}[rightMouseButton]
+             * @param {boolean}[doubleClick]
+             * @override
+             */
+            _this.startEvent = function (includeHover, rightMouseButton, doubleClick) {
+                if (includeHover === void 0) { includeHover = _this._includeHover; }
+                if (rightMouseButton === void 0) { rightMouseButton = _this._rightMouseButton; }
+                if (doubleClick === void 0) { doubleClick = _this._doubleClick; }
+                if (_this.isEnabled) {
+                    return;
+                }
+                _this._includeHover = includeHover;
+                _this.rightMouseButton = rightMouseButton;
+                _this._doubleClick = doubleClick;
+                var target = _this.target;
+                target.insetContainer.on(_this.evMouseDown, _this.onMouseDownImpl);
+                if (!_this._rightMouseButton) {
+                    target.insetContainer.on('touchstart', _this.onMouseDownImpl);
+                }
+                if (_this._includeHover) {
+                    target.insetContainer.on('mouseover', _this.onMouseOverImpl);
+                    target.insetContainer.on('mouseout', _this.onMouseOutImpl);
+                }
+                _this.isEnabled = true;
+            };
+            /**
+             * @override
+             */
+            _this.stopEvent = function () {
+                if (!_this.isEnabled) {
+                    return;
+                }
+                var target = _this.target;
+                if (_this.bound) {
+                    target.insetContainer.removeListener(_this.evMouseUp, _this.onMouseUpImpl);
+                    target.insetContainer.removeListener(_this.evMouseUpOutside, _this.onMouseUpOutsideImpl);
+                    if (!_this._rightMouseButton) {
+                        target.insetContainer.removeListener('touchend', _this.onMouseUpImpl);
+                        target.insetContainer.removeListener('touchendoutside', _this.onMouseUpOutsideImpl);
+                    }
+                    _this.bound = false;
+                }
+                target.insetContainer.removeListener(_this.evMouseDown, _this.onMouseDownImpl);
+                if (!_this._rightMouseButton) {
+                    target.insetContainer.removeListener('touchstart', _this.onMouseDownImpl);
+                }
+                if (_this._includeHover) {
+                    target.insetContainer.removeListener('mouseover', _this.onMouseOverImpl);
+                    target.insetContainer.removeListener('mouseout', _this.onMouseOutImpl);
+                    target.insetContainer.removeListener('mousemove', _this.onMouseMoveImpl);
+                    target.insetContainer.removeListener('touchmove', _this.onMouseMoveImpl);
+                }
+                _this.isEnabled = false;
+            };
+            _this.onMouseDownImpl = function (event) {
+                var _a = _this, obj = _a.target, evMouseUp = _a.evMouseUp, _onMouseUp = _a.onMouseUpImpl, evMouseUpOutside = _a.evMouseUpOutside, _onMouseUpOutside = _a.onMouseUpOutsideImpl, right = _a._rightMouseButton;
+                _this.mouse.copyFrom(event.data.global);
+                _this.id = event.data.identifier;
+                _this.onPress.call(_this.target, event, true);
+                if (!_this.bound) {
+                    obj.insetContainer.on(evMouseUp, _onMouseUp);
+                    obj.insetContainer.on(evMouseUpOutside, _onMouseUpOutside);
+                    if (!right) {
+                        obj.insetContainer.on('touchend', _onMouseUp);
+                        obj.insetContainer.on('touchendoutside', _onMouseUpOutside);
+                    }
+                    _this.bound = true;
+                }
+                if (_this._doubleClick) {
+                    var now = performance.now();
+                    if (now - _this.time < 210) {
+                        _this.onClick.call(obj, event);
+                    }
+                    else {
+                        _this.time = now;
+                    }
+                }
+                event.data.originalEvent.preventDefault();
+            };
+            _this.onMouseUpCommonImpl = function (event) {
+                var _a = _this, obj = _a.target, evMouseUp = _a.evMouseUp, _onMouseUp = _a.onMouseUpImpl, evMouseUpOutside = _a.evMouseUpOutside, _onMouseUpOutside = _a.onMouseUpOutsideImpl;
+                if (event.data.identifier !== _this.id) {
+                    return;
+                }
+                _this.offset.set(event.data.global.x - _this.mouse.x, event.data.global.y - _this.mouse.y);
+                if (_this.bound) {
+                    obj.insetContainer.removeListener(evMouseUp, _onMouseUp);
+                    obj.insetContainer.removeListener(evMouseUpOutside, _onMouseUpOutside);
+                    if (!_this._rightMouseButton) {
+                        obj.insetContainer.removeListener('touchend', _onMouseUp);
+                        obj.insetContainer.removeListener('touchendoutside', _onMouseUpOutside);
+                    }
+                    _this.bound = false;
+                }
+                _this.onPress.call(obj, event, false);
+            };
+            _this.onMouseUpImpl = function (event) {
+                if (event.data.identifier !== _this.id) {
+                    return;
+                }
+                _this.onMouseUpCommonImpl(event);
+                // prevent clicks with scrolling/dragging objects
+                if (_this.target.dragThreshold) {
+                    _this.movementX = Math.abs(_this.offset.x);
+                    _this.movementY = Math.abs(_this.offset.y);
+                    if (Math.max(_this.movementX, _this.movementY) > _this.target.dragThreshold) {
+                        return;
+                    }
+                }
+                if (!_this._doubleClick) {
+                    _this.onClick.call(_this.target, event);
+                }
+            };
+            _this.onMouseUpOutsideImpl = function (event) {
+                if (event.data.identifier !== _this.id) {
+                    return;
+                }
+                _this.onMouseUpCommonImpl(event);
+            };
+            _this.onMouseOverImpl = function (event) {
+                if (!_this.ishover) {
+                    _this.ishover = true;
+                    _this.target.insetContainer.on('mousemove', _this.onMouseMoveImpl);
+                    _this.target.insetContainer.on('touchmove', _this.onMouseMoveImpl);
+                    _this.onHover.call(_this.target, event, true);
+                }
+            };
+            _this.onMouseOutImpl = function (event) {
+                if (_this.ishover) {
+                    _this.ishover = false;
+                    _this.target.insetContainer.removeListener('mousemove', _this.onMouseMoveImpl);
+                    _this.target.insetContainer.removeListener('touchmove', _this.onMouseMoveImpl);
+                    _this.onHover.call(_this.target, event, false);
+                }
+            };
+            _this.onMouseMoveImpl = function (event) {
+                _this.onMove.call(_this.target, event);
+            };
+            _this.bound = false;
+            _this.id = 0;
+            _this.ishover = false;
+            _this.mouse = new PIXI$1.Point();
+            _this.offset = new PIXI$1.Point();
+            _this.movementX = 0;
+            _this.movementY = 0;
+            _this._includeHover = typeof includeHover === 'undefined' ? true : includeHover;
+            _this.rightMouseButton = typeof rightMouseButton === 'undefined' ? false : rightMouseButton;
+            _this._doubleClick = typeof doubleClick === 'undefined' ? false : doubleClick;
+            target.interactive = true;
+            _this.time = 0;
+            _this.startEvent();
+            _this.onHover = function () { return null; };
+            _this.onPress = function () { return null; };
+            _this.onClick = function () { return null; };
+            _this.onMove = function () { return null; };
+            return _this;
+        }
+        Object.defineProperty(ClickManager.prototype, "rightMouseButton", {
+            /**
+             * Whether right mice are used for clicks rather than left mice.
+             * @member boolean
+             */
+            get: function () {
+                return this._rightMouseButton;
+            },
+            set: function (val) {
+                this._rightMouseButton = val;
+                this.evMouseDown = this._rightMouseButton ? 'rightdown' : 'mousedown';
+                this.evMouseUp = this._rightMouseButton ? 'rightup' : 'mouseup';
+                this.evMouseUpOutside = this._rightMouseButton ? 'rightupoutside' : 'mouseupoutside';
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return ClickManager;
+    }(EventManager));
+
+    /**
+     * `DragManager` handles drag & drop events. It registers listeners for `mousedown`,
+     * `touchstart` on the target and `mousemove`, `touchmove`, `mouseup`, `mouseupoutside`,
+     * `touchend`, `touchendoutside` on the stage.
+     *
+     * By default, `draggable` widgets will internally handle drag-n-drop and reassigning
+     * the callbacks on their `DragManager` will break their behaviour. You can prevent
+     * this by using `eventBroker.dnd` directly without setting `widget.draggable` to
+     * `true` (or using `widget.makeDraggable()`).
+     *
+     * @memberof PUXI
+     * @class
+     * @extends PUXI.EventManager
+     */
+    var DragManager = /** @class */ (function (_super) {
+        __extends(DragManager, _super);
+        function DragManager(target) {
+            var _this = _super.call(this, target) || this;
+            _this.onDragStartImpl = function (e) {
+                var target = _this.target;
+                _this.id = e.data.identifier;
+                _this.onPress(e, true);
+                if (!_this.isBound) {
+                    _this.dragStart.copyFrom(e.data.global);
+                    target.stage.on('mousemove', _this.onDragMoveImpl);
+                    target.stage.on('touchmove', _this.onDragMoveImpl);
+                    target.stage.on('mouseup', _this.onDragEndImpl);
+                    target.stage.on('mouseupoutside', _this.onDragEndImpl);
+                    target.stage.on('touchend', _this.onDragEndImpl);
+                    target.stage.on('touchendoutside', _this.onDragEndImpl);
+                    target.stage.on('touchcancel', _this.onDragEndImpl);
+                    _this.isBound = true;
+                }
+                e.data.originalEvent.preventDefault();
+            };
+            _this.onDragMoveImpl = function (e) {
+                if (e.data.identifier !== _this.id) {
+                    return;
+                }
+                var _a = _this, lastCursor = _a.lastCursor, dragOffset = _a.dragOffset, dragStart = _a.dragStart, target = _a.target;
+                _this.lastCursor.copyFrom(e.data.global);
+                _this.dragOffset.set(lastCursor.x - dragStart.x, lastCursor.y - dragStart.y);
+                if (!_this.isDragging) {
+                    _this.movementX = Math.abs(dragOffset.x);
+                    _this.movementY = Math.abs(dragOffset.y);
+                    if ((_this.movementX === 0 && _this.movementY === 0)
+                        || Math.max(_this.movementX, _this.movementY) < target.dragThreshold) {
+                        return; // threshold
+                    }
+                    if (target.dragRestrictAxis !== null) {
+                        _this.cancel = false;
+                        if (target.dragRestrictAxis === 'x' && _this.movementY > _this.movementX) {
+                            _this.cancel = true;
+                        }
+                        else if (target.dragRestrictAxis === 'y' && _this.movementY <= _this.movementX) {
+                            _this.cancel = true;
+                        }
+                        if (_this.cancel) {
+                            _this.onDragEndImpl(e);
+                            return;
+                        }
+                    }
+                    _this.onDragStart(e);
+                    _this.isDragging = true;
+                }
+                _this.onDragMove(e, dragOffset);
+            };
+            _this.onDragEndImpl = function (e) {
+                if (e.data.identifier !== _this.id) {
+                    return;
+                }
+                var target = _this.target;
+                if (_this.isBound) {
+                    target.stage.removeListener('mousemove', _this.onDragMoveImpl);
+                    target.stage.removeListener('touchmove', _this.onDragMoveImpl);
+                    target.stage.removeListener('mouseup', _this.onDragEndImpl);
+                    target.stage.removeListener('mouseupoutside', _this.onDragEndImpl);
+                    target.stage.removeListener('touchend', _this.onDragEndImpl);
+                    target.stage.removeListener('touchendoutside', _this.onDragEndImpl);
+                    target.stage.removeListener('touchcancel', _this.onDragEndImpl);
+                    _this.isDragging = false;
+                    _this.isBound = false;
+                    _this.onDragEnd(e);
+                    _this.onPress(e, false);
+                }
+            };
+            _this.isBound = false;
+            _this.isDragging = false;
+            _this.id = 0;
+            _this.dragStart = new PIXI$1.Point();
+            _this.dragOffset = new PIXI$1.Point();
+            _this.lastCursor = new PIXI$1.Point();
+            _this.movementX = 0;
+            _this.movementY = 0;
+            _this.cancel = false;
+            _this.target.interactive = true;
+            _this.onPress = function () { return null; };
+            _this.onDragStart = function () { return null; };
+            _this.onDragMove = function () { return null; };
+            _this.onDragEnd = function () { return null; };
+            _this.startEvent();
+            return _this;
+        }
+        DragManager.prototype.startEvent = function () {
+            if (this.isEnabled) {
+                return;
+            }
+            var target = this.target;
+            target.insetContainer.on('mousedown', this.onDragStartImpl);
+            target.insetContainer.on('touchstart', this.onDragStartImpl);
+            this.isEnabled = true;
+        };
+        DragManager.prototype.stopEvent = function () {
+            if (!this.isEnabled) {
+                return;
+            }
+            var target = this.target;
+            if (this.isBound) {
+                target.stage.removeListener('mousemove', this.onDragMoveImpl);
+                target.stage.removeListener('touchmove', this.onDragMoveImpl);
+                target.stage.removeListener('mouseup', this.onDragEndImpl);
+                target.stage.removeListener('mouseupoutside', this.onDragEndImpl);
+                target.stage.removeListener('touchend', this.onDragEndImpl);
+                target.stage.removeListener('touchendoutside', this.onDragEndImpl);
+                this.isBound = false;
+            }
+            target.insetContainer.removeListener('mousedown', this.onDragStartImpl);
+            target.insetContainer.removeListener('touchstart', this.onDragStartImpl);
+            this.isEnabled = false;
+        };
+        return DragManager;
+    }(EventManager));
+
+    /**
+     * The event brokers allows you to access event managers without manually assigning
+     * them to a widget. By default, the click (`PUXI.ClickManager`), dnd (`PUXI.DragManager`)
+     * are defined. You can add event managers for all (new) widgets by adding an entry to
+     * `EventBroker.MANAGER_MAP`.
+     *
+     * @memberof PUXI
+     * @class
+     */
+    var EventBroker = /** @class */ (function () {
+        function EventBroker(target) {
+            this.target = target;
+            var _loop_1 = function (mgr) {
+                Object.defineProperty(this_1, mgr, {
+                    get: function () {
+                        if (!this["_" + mgr]) {
+                            this["_" + mgr] = new EventBroker.MANAGER_MAP[mgr](this.target);
+                        }
+                        return this["_" + mgr];
+                    },
+                });
+            };
+            var this_1 = this;
+            for (var _i = 0, _a = Object.keys(EventBroker.MANAGER_MAP); _i < _a.length; _i++) {
+                var mgr = _a[_i];
+                _loop_1(mgr);
+            }
+        }
+        EventBroker.MANAGER_MAP = {
+            click: ClickManager,
+            dnd: DragManager,
+        };
+        return EventBroker;
+    }());
+
+    /**
      * A widget is a user interface control that renders content inside its prescribed
      * rectangle on the screen.
      *
@@ -14045,41 +14320,10 @@
             _this._elevation = 0;
             _this.tint = 0;
             _this.blendMode = PIXI$1.BLEND_MODES.NORMAL;
-            _this._dragPosition = null; // used for overriding positions if tweens is playing
+            _this.draggable = false;
+            _this.droppable = false;
             return _this;
         }
-        Widget.prototype.getBackground = function () {
-            return this.background;
-        };
-        Widget.prototype.setBackground = function (bg) {
-            if (!this.background) {
-                this.insetContainer.removeChild(this.background);
-            }
-            if (typeof bg === 'string') {
-                bg = PIXI$1.utils.string2hex(bg);
-            }
-            if (typeof bg === 'number') {
-                bg = new PIXI$1.Graphics()
-                    .beginFill(bg)
-                    .drawRect(0, 0, 1, 1)
-                    .endFill();
-            }
-            this.background = bg;
-            if (bg) {
-                this.insetContainer.addChildAt(bg, 0);
-            }
-            return this;
-        };
-        Widget.prototype.getBackgroundAlpha = function () {
-            return this.background ? this.background.alpha : 1;
-        };
-        Widget.prototype.setBackgroundAlpha = function (val) {
-            if (!this.background) {
-                this.setBackground(0xffffff);
-            }
-            this.background.alpha = val;
-            return this;
-        };
         Object.defineProperty(Widget.prototype, "measuredWidth", {
             get: function () {
                 return this._measuredWidth;
@@ -14168,6 +14412,22 @@
             this.layoutOptions = lopt;
             return this;
         };
+        Object.defineProperty(Widget.prototype, "eventBroker", {
+            /**
+             * The event broker for this widget that holds all the event managers. This can
+             * be used to start/stop clicks, drags, scrolls and configure how those events
+             * are handled/interpreted.
+             * @member PUXI.EventBroker
+             */
+            get: function () {
+                if (!this._eventBroker) {
+                    this._eventBroker = new EventBroker(this);
+                }
+                return this._eventBroker;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Widget.prototype, "paddingLeft", {
             get: function () {
                 return this._paddingLeft;
@@ -14213,6 +14473,10 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "paddingHorizontal", {
+            /**
+             * Sum of left & right padding.
+             * @member {number}
+             */
             get: function () {
                 return this._paddingLeft + this._paddingRight;
             },
@@ -14220,6 +14484,10 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "paddingVertical", {
+            /**
+             * Sum of top & bottom padding.
+             * @member {number}
+             */
             get: function () {
                 return this._paddingTop + this._paddingBottom;
             },
@@ -14227,6 +14495,10 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "interactive", {
+            /**
+             * Whether this widget is interactive in the PixiJS scene graph.
+             * @member {boolean}
+             */
             get: function () {
                 return this.insetContainer.interactive;
             },
@@ -14237,12 +14509,153 @@
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Widget.prototype, "width", {
+            /**
+             * Layout width of this widget.
+             * @member {number}
+             */
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "height", {
+            /**
+             * Layout height of this widget.
+             * @member {number}
+             */
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Widget.prototype, "alpha", {
+            /**
+             * Alpha of this widget & its contents.
+             * @member {number}
+             */
+            get: function () {
+                return this.insetContainer.alpha;
+            },
+            set: function (val) {
+                this.insetContainer.alpha = val;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * Sets the padding values.
+         *
+         * To set all paddings to one value:
+         * ```
+         * widget.setPadding(8);
+         * ```
+         *
+         * To set horizontal & vertical padding separately:
+         * ```
+         * widget.setPadding(4, 12);
+         * ```
+         *
+         * @param {number}[l=0] - left padding
+         * @param {number}[t=l] - top padding (default is equal to left padding)
+         * @param {number}[r=l] - right padding (default is equal to right padding)
+         * @param {number}[b=t] - bottom padding (default is equal to top padding)
+         */
         Widget.prototype.setPadding = function (l, t, r, b) {
+            if (t === void 0) { t = l; }
+            if (r === void 0) { r = l; }
+            if (b === void 0) { b = t; }
             this._paddingLeft = l;
             this._paddingTop = t;
             this._paddingRight = r;
             this._paddingBottom = b;
             this.dirty = true;
+            return this;
+        };
+        /**
+         * @returns {PIXI.Container} - the background display-object
+         */
+        Widget.prototype.getBackground = function () {
+            return this.background;
+        };
+        /**
+         * The background of a widget is a `PIXI.DisplayObject` that is rendered before
+         * all of its children.
+         *
+         * @param {PIXI.Container | number | string} bg - the background display-object or
+         *     a color that will be used to generate a `PIXI.Graphics` as the background.
+         */
+        Widget.prototype.setBackground = function (bg) {
+            if (!this.background) {
+                this.insetContainer.removeChild(this.background);
+            }
+            if (typeof bg === 'string') {
+                bg = PIXI$1.utils.string2hex(bg);
+            }
+            if (typeof bg === 'number') {
+                bg = new PIXI$1.Graphics()
+                    .beginFill(bg)
+                    .drawRect(0, 0, 1, 1)
+                    .endFill();
+            }
+            this.background = bg;
+            if (bg) {
+                this.insetContainer.addChildAt(bg, 0);
+            }
+            return this;
+        };
+        /**
+         * @returns {number} the alpha on the background display-object.
+         */
+        Widget.prototype.getBackgroundAlpha = function () {
+            return this.background ? this.background.alpha : 1;
+        };
+        /**
+         * This can be used to set the alpha on the _background_ of this widget. This
+         * does not affect the widget's contents nor individual components of the
+         * background display-object.
+         *
+         * @param {number} val - background alpha
+         */
+        Widget.prototype.setBackgroundAlpha = function (val) {
+            if (!this.background) {
+                this.setBackground(0xffffff);
+            }
+            this.background.alpha = val;
+            return this;
+        };
+        /**
+         * @return {number} the elevation set on this widget
+         */
+        Widget.prototype.getElevation = function () {
+            return this._elevation;
+        };
+        /**
+         * This can be used add a drop-shadow that will appear to raise this widget by
+         * the given elevation against its parent.
+         *
+         * @param {number} val - elevation to use. 2px is good for most widgets.
+         */
+        Widget.prototype.setElevation = function (val) {
+            this._elevation = val;
+            if (val === 0 && this._dropShadow) {
+                var i = this.insetContainer.filters.indexOf(this._dropShadow);
+                if (i > 0) {
+                    this.insetContainer.filters.splice(i, 1);
+                }
+            }
+            else if (val > 0) {
+                if (!this._dropShadow) {
+                    if (!this.insetContainer.filters) {
+                        this.insetContainer.filters = [];
+                    }
+                    this._dropShadow = new DropShadowFilter({ distance: val });
+                    this.insetContainer.filters.push(this._dropShadow);
+                }
+                this._dropShadow.distance = val;
+            }
             return this;
         };
         Widget.prototype.addChild = function (UIObject) {
@@ -14282,82 +14695,101 @@
             }
         };
         /**
-         * Initializes the object when its added to an UIStage
+         * Makes this widget `draggable`.
+         */
+        Widget.prototype.makeDraggable = function () {
+            this.draggable = true;
+            if (this.initialized) {
+                this.initDraggable();
+            }
+            return this;
+        };
+        /**
+         * Makes this widget not `draggable`.
+         */
+        Widget.prototype.clearDraggable = function () {
+            if (this.dragInitialized) {
+                this.dragInitialized = false;
+                this.eventBroker.dnd.stopEvent();
+            }
+        };
+        /**
+         * Widget initialization related to the stage. This method should always call
+         * `super.initialize()`.
          *
-         * @private
+         * This method expects `stage` to be set before calling it. This is handled
+         * by the `Stage` itself.
+         *
+         * This will set `initialized` to true. If it was already set to true, it _should
+         * do nothing_.
+         *
+         * @protected
          */
         Widget.prototype.initialize = function () {
-            this.initialized = true;
-            this.stage = this.parent.stage;
+            if (this.initialized) {
+                return;
+            }
             if (this.draggable) {
                 this.initDraggable();
             }
             if (this.droppable) {
                 this.initDroppable();
             }
-        };
-        Widget.prototype.clearDraggable = function () {
-            if (this.dragInitialized) {
-                this.dragInitialized = false;
-                this.drag.stopEvent();
-            }
+            this.initialized = true;
         };
         Widget.prototype.initDraggable = function () {
-            if (!this.dragInitialized) {
-                this.dragInitialized = true;
-                var containerStart_1 = new PIXI$1.Point();
-                var stageOffset_1 = new PIXI$1.Point();
-                var self_1 = this;
-                this._dragPosition = new PIXI$1.Point();
-                this.drag = new DragEvent(this);
-                this.drag.onDragStart = function (e) {
-                    var added = DragDropController.add(this, e);
-                    if (!this.dragging && added) {
-                        this.dragging = true;
-                        this.container.interactive = false;
-                        containerStart_1.copy(this.container.position);
-                        if (this.dragContainer) {
-                            var c = this.dragContainer.container ? this.dragContainer.container : this.dragContainer;
-                            if (c) {
-                                // _this.container._recursivePostUpdateTransform();
-                                stageOffset_1.set(c.worldTransform.tx - this.parent.container.worldTransform.tx, c.worldTransform.ty - this.parent.container.worldTransform.ty);
-                                c.addChild(this.container);
-                            }
-                        }
-                        else {
-                            stageOffset_1.set(0);
-                        }
-                        this.emit('draggablestart', e);
-                    }
-                };
-                this.drag.onDragMove = function (e, offset) {
-                    if (this.dragging) {
-                        this._dragPosition.set(containerStart_1.x + offset.x - stageOffset_1.x, containerStart_1.y + offset.y - stageOffset_1.y);
-                        this.x = this._dragPosition.x;
-                        this.y = this._dragPosition.y;
-                        this.emit('draggablemove', e);
-                    }
-                };
-                this.drag.onDragEnd = function (e) {
-                    if (this.dragging) {
-                        this.dragging = false;
-                        // Return to container after 0ms if not picked up by a droppable
-                        setTimeout(function () {
-                            self_1.contentContainer.interactive = true;
-                            var item = DragDropController.getItem(self_1);
-                            if (item) {
-                                var container = self_1.parent === self_1.stage ? self_1.stage : self_1.parent.contentContainer;
-                                container.toLocal(self_1.contentContainer.position, self_1.contentContainer.parent, self_1);
-                                if (container != self_1.contentContainer) {
-                                    self_1.parent.addChild(self_1);
-                                }
-                            }
-                            self_1.emit('draggableend', e);
-                        }, 0);
-                    }
-                };
+            var _this = this;
+            if (this.dragInitialized) {
+                return;
             }
+            this.dragInitialized = true;
+            var realPosition = new PIXI$1.Point();
+            var dragPosition = new PIXI$1.Point();
+            var dnd = this.eventBroker.dnd;
+            var insetContainer = this.insetContainer;
+            dnd.onDragStart = function (e) {
+                var added = DragDropController.add(_this, e);
+                if (!_this.isDragging && added) {
+                    _this.isDragging = true;
+                    insetContainer.interactive = false;
+                    realPosition.copyFrom(insetContainer.position);
+                    _this.emit('draggablestart', e);
+                }
+            };
+            dnd.onDragMove = function (e, offset) {
+                if (_this.isDragging) {
+                    dragPosition.set(realPosition.x + offset.x, realPosition.y + offset.y);
+                    insetContainer.x = dragPosition.x;
+                    insetContainer.y = dragPosition.y;
+                    _this.emit('draggablemove', e);
+                }
+            };
+            dnd.onDragEnd = function (e) {
+                if (_this.isDragging) {
+                    _this.isDragging = false;
+                    DragDropController.getItem(_this);
+                    // Return to container after 0ms if not picked up by a droppable
+                    setTimeout(function () {
+                        _this.insetContainer.interactive = true;
+                        _this.insetContainer.position.copyFrom(realPosition);
+                        _this.emit('draggableend', e);
+                    }, 0);
+                }
+            };
         };
+        /**
+         * Makes this widget `droppable`.
+         */
+        Widget.prototype.makeDroppable = function () {
+            this.droppable = true;
+            if (this.initialized) {
+                this.initDroppable();
+            }
+            return this;
+        };
+        /**
+         * Makes this widget not `droppable`.
+         */
         Widget.prototype.clearDroppable = function () {
             if (this.dropInitialized) {
                 this.dropInitialized = false;
@@ -14366,17 +14798,17 @@
             }
         };
         Widget.prototype.initDroppable = function () {
+            var _this = this;
             if (!this.dropInitialized) {
                 this.dropInitialized = true;
                 var container = this.contentContainer;
-                var self_2 = this;
                 this.contentContainer.interactive = true;
                 this.onDrop = function (event) {
-                    var item = DragDropController.getEventItem(event, self_2.dropGroup);
-                    if (item && item.dragging) {
-                        item.dragging = false;
-                        item.container.interactive = true;
-                        var parent = self_2.droppableReparent !== null ? self_2.droppableReparent : self_2;
+                    var item = DragDropController.getEventItem(event, _this.dropGroup);
+                    if (item && item.isDragging) {
+                        item.isDragging = false;
+                        item.insetContainer.interactive = true;
+                        var parent = _this.droppableReparent !== null ? _this.droppableReparent : self;
                         parent.container.toLocal(item.container.position, item.container.parent, item);
                         if (parent.container != item.container.parent) {
                             parent.addChild(item);
@@ -14387,204 +14819,8 @@
                 container.on('touchend', this.onDrop);
             }
         };
-        Object.defineProperty(Widget.prototype, "width", {
-            get: function () {
-                return this._width;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "height", {
-            get: function () {
-                return this._height;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Widget.prototype, "alpha", {
-            get: function () {
-                return this.insetContainer.alpha;
-            },
-            set: function (val) {
-                this.insetContainer.alpha = val;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Widget.prototype.getElevation = function () {
-            return this._elevation;
-        };
-        Widget.prototype.setElevation = function (val) {
-            this._elevation = val;
-            if (val === 0 && this._dropShadow) {
-                var i = this.insetContainer.filters.indexOf(this._dropShadow);
-                if (i > 0) {
-                    this.insetContainer.filters.splice(i, 1);
-                }
-            }
-            else if (val > 0) {
-                if (!this._dropShadow) {
-                    if (!this.insetContainer.filters) {
-                        this.insetContainer.filters = [];
-                    }
-                    this._dropShadow = new DropShadowFilter({ distance: val });
-                    this.insetContainer.filters.push(this._dropShadow);
-                }
-                this._dropShadow.distance = val;
-            }
-            return this;
-        };
         return Widget;
     }(PIXI$1.utils.EventEmitter));
-
-    var ClickEvent = /** @class */ (function () {
-        function ClickEvent(obj, includeHover, rightMouseButton, doubleClick) {
-            var _this = this;
-            this._onMouseDown = function (event) {
-                var _a = _this, obj = _a.obj, eventname_mouseup = _a.eventname_mouseup, _onMouseUp = _a._onMouseUp, eventname_mouseupoutside = _a.eventname_mouseupoutside, _onMouseUpOutside = _a._onMouseUpOutside, right = _a.right;
-                _this.mouse.copyFrom(event.data.global);
-                _this.id = event.data.identifier;
-                _this.onPress.call(_this.obj, event, true);
-                if (!_this.bound) {
-                    obj.contentContainer.on(eventname_mouseup, _onMouseUp);
-                    obj.contentContainer.on(eventname_mouseupoutside, _onMouseUpOutside);
-                    if (!right) {
-                        obj.contentContainer.on('touchend', _onMouseUp);
-                        obj.contentContainer.on('touchendoutside', _onMouseUpOutside);
-                    }
-                    _this.bound = true;
-                }
-                if (_this.double) {
-                    var now = performance.now();
-                    if (now - _this.time < 210) {
-                        _this.onClick.call(obj, event);
-                    }
-                    else {
-                        _this.time = now;
-                    }
-                }
-                event.data.originalEvent.preventDefault();
-            };
-            this._mouseUpAll = function (event) {
-                var _a = _this, obj = _a.obj, eventname_mouseup = _a.eventname_mouseup, _onMouseUp = _a._onMouseUp, eventname_mouseupoutside = _a.eventname_mouseupoutside, _onMouseUpOutside = _a._onMouseUpOutside;
-                if (event.data.identifier !== _this.id) {
-                    return;
-                }
-                _this.offset.set(event.data.global.x - _this.mouse.x, event.data.global.y - _this.mouse.y);
-                if (_this.bound) {
-                    obj.contentContainer.removeListener(eventname_mouseup, _onMouseUp);
-                    obj.contentContainer.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
-                    if (!_this.right) {
-                        obj.contentContainer.removeListener('touchend', _onMouseUp);
-                        obj.contentContainer.removeListener('touchendoutside', _onMouseUpOutside);
-                    }
-                    _this.bound = false;
-                }
-                _this.onPress.call(obj, event, false);
-            };
-            this._onMouseUp = function (event) {
-                if (event.data.identifier !== _this.id) {
-                    return;
-                }
-                _this._mouseUpAll(event);
-                // prevent clicks with scrolling/dragging objects
-                if (_this.obj.dragThreshold) {
-                    _this.movementX = Math.abs(_this.offset.x);
-                    _this.movementY = Math.abs(_this.offset.y);
-                    if (Math.max(_this.movementX, _this.movementY) > _this.obj.dragThreshold) {
-                        return;
-                    }
-                }
-                if (!_this.double) {
-                    _this.onClick.call(_this.obj, event);
-                }
-            };
-            this._onMouseUpOutside = function (event) {
-                if (event.data.identifier !== _this.id) {
-                    return;
-                }
-                _this._mouseUpAll(event);
-            };
-            this._onMouseOver = function (event) {
-                if (!_this.ishover) {
-                    _this.ishover = true;
-                    _this.obj.contentContainer.on('mousemove', _this._onMouseMove);
-                    _this.obj.contentContainer.on('touchmove', _this._onMouseMove);
-                    _this.onHover.call(_this.obj, event, true);
-                }
-            };
-            this._onMouseOut = function (event) {
-                if (_this.ishover) {
-                    _this.ishover = false;
-                    _this.obj.contentContainer.removeListener('mousemove', _this._onMouseMove);
-                    _this.obj.contentContainer.removeListener('touchmove', _this._onMouseMove);
-                    _this.onHover.call(_this.obj, event, false);
-                }
-            };
-            this._onMouseMove = function (event) {
-                _this.onMove.call(_this.obj, event);
-            };
-            this.stopEvent = function () {
-                var _a = _this, obj = _a.obj, eventname_mouseup = _a.eventname_mouseup, _onMouseUp = _a._onMouseUp, eventname_mouseupoutside = _a.eventname_mouseupoutside, _onMouseUpOutside = _a._onMouseUpOutside, _onMouseDown = _a._onMouseDown, _onMouseOver = _a._onMouseOver, _onMouseOut = _a._onMouseOut, _onMouseMove = _a._onMouseMove;
-                if (_this.bound) {
-                    obj.contentContainer.removeListener(eventname_mouseup, _onMouseUp);
-                    obj.contentContainer.removeListener(eventname_mouseupoutside, _onMouseUpOutside);
-                    if (!_this.right) {
-                        obj.contentContainer.removeListener('touchend', _onMouseUp);
-                        obj.contentContainer.removeListener('touchendoutside', _onMouseUpOutside);
-                    }
-                    _this.bound = false;
-                }
-                obj.contentContainer.removeListener(eventname_mousedown, _onMouseDown);
-                if (!_this.right) {
-                    obj.contentContainer.removeListener('touchstart', _onMouseDown);
-                }
-                if (_this.hover) {
-                    obj.contentContainer.removeListener('mouseover', _onMouseOver);
-                    obj.contentContainer.removeListener('mouseout', _onMouseOut);
-                    obj.contentContainer.removeListener('mousemove', _onMouseMove);
-                    obj.contentContainer.removeListener('touchmove', _onMouseMove);
-                }
-            };
-            this.startEvent = function () {
-                var _a = _this, obj = _a.obj, eventname_mousedown = _a.eventname_mousedown, _onMouseDown = _a._onMouseDown, _onMouseOver = _a._onMouseOver, _onMouseOut = _a._onMouseOut;
-                obj.contentContainer.on(eventname_mousedown, _onMouseDown);
-                if (!_this.right) {
-                    obj.contentContainer.on('touchstart', _onMouseDown);
-                }
-                if (_this.hover) {
-                    obj.contentContainer.on('mouseover', _onMouseOver);
-                    obj.contentContainer.on('mouseout', _onMouseOut);
-                }
-            };
-            this.obj = obj;
-            this.bound = false;
-            this.id = 0;
-            this.ishover = false;
-            this.mouse = new PIXI$1.Point();
-            this.offset = new PIXI$1.Point();
-            this.movementX = 0;
-            this.movementY = 0;
-            this.right = typeof rightMouseButton === 'undefined' ? false : rightMouseButton;
-            this.hover = typeof includeHover === 'undefined' ? true : includeHover;
-            this.double = typeof doubleClick === 'undefined' ? false : doubleClick;
-            this.eventname_mousedown = this.right ? 'rightdown' : 'mousedown';
-            this.eventname_mouseup = this.right ? 'rightup' : 'mouseup';
-            this.eventname_mouseupoutside = this.right ? 'rightupoutside' : 'mouseupoutside';
-            obj.interactive = true;
-            this.time = 0;
-            this.startEvent();
-        }
-        ClickEvent.prototype.onHover = function (event, over) {
-        };
-        ClickEvent.prototype.onPress = function (event, isPressed) {
-        };
-        ClickEvent.prototype.onClick = function (event) {
-        };
-        ClickEvent.prototype.onMove = function (event) {
-        };
-        return ClickEvent;
-    }());
 
     var _currentItem;
     var tabGroups = {};
@@ -15163,13 +15399,13 @@
                     _this.blur();
                 }
             };
-            _this._bindEvents = function () {
+            _this.bindEvents = function () {
                 if (_this.stage !== null) {
                     _this.stage.on('pointerdown', _this.documentMouseDown);
                 }
                 document.addEventListener('keydown', _this.keyDownEvent);
             };
-            _this._clearEvents = function () {
+            _this.clearEvents = function () {
                 if (_this.stage !== null) {
                     _this.stage.off('pointerdown', _this.documentMouseDown);
                 }
@@ -15195,7 +15431,7 @@
             if (this._focused) {
                 InputController.clear();
                 this._focused = false;
-                this._clearEvents();
+                this.clearEvents();
                 this.emit('focusChanged', false);
                 this.emit('blur');
             }
@@ -15203,7 +15439,7 @@
         FocusableWidget.prototype.focus = function () {
             if (!this._focused) {
                 this._focused = true;
-                this._bindEvents();
+                this.bindEvents();
                 InputController.set(this);
                 this.emit('focusChanged', true);
                 this.emit('focus');
@@ -15295,7 +15531,7 @@
         }
         Button.prototype.setupClick = function () {
             var _this = this;
-            var clickEvent = new ClickEvent(this);
+            var clickEvent = new ClickManager(this);
             clickEvent.onHover = function (e, over) {
                 _this.isHover = over;
                 _this.emit('hover', over);
@@ -15414,56 +15650,30 @@
     }(WidgetGroup));
 
     /**
-     * An UI button object
+     * A checkbox is a button can be selected (checked). It has a on/off state that
+     * can be controlled by the user.
      *
+     * When used in a checkbox group, the group will control whether the checkbox can
+     * be selected or not.
+     *
+     * @memberof PUXI
      * @class
-     * @extends PIXI.UI.InputBase
-     * @memberof PIXI.UI
-     * @param [options.checked=false] {bool} is checked
-     * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for CheckBox
-     * @param options.checkmark {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as checkmark for CheckBox
-     * @param [options.checkgroup=null] {String} CheckGroup name
-     * @param options.value {String} mostly used along with checkgroup
-     * @param [options.tabIndex=0] {Number} input tab index
-     * @param [options.tabGroup=0] {Number|String} input tab group
+     * @extends PUXI.FocusableWidget
      */
     var CheckBox = /** @class */ (function (_super) {
         __extends(CheckBox, _super);
+        /**
+         * @param {PUXI.ICheckBoxOptions} options
+         * @param [options.checked=false] {bool} is checked
+         * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for CheckBox
+         * @param options.checkmark {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as checkmark for CheckBox
+         * @param [options.checkgroup=null] {String} CheckGroup name
+         * @param options.value {String} mostly used along with checkgroup
+         * @param [options.tabIndex=0] {Number} input tab index
+         * @param [options.tabGroup=0] {Number|String} input tab group
+         */
         function CheckBox(options) {
             var _this = _super.call(this, options) || this;
-            _this._checked = options.checked !== undefined ? options.checked : false;
-            _this._value = options.value || '';
-            _this.checkGroup = options.checkgroup || null;
-            _this.checkmark = new InteractiveGroup();
-            _this.checkmark.contentContainer.addChild(options.checkmark);
-            _this.checkmark.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
-            _this.checkmark.alpha = _this._checked ? 1 : 0;
-            _this.contentContainer.buttonMode = true;
-            if (_this.checkGroup !== null) {
-                InputController.registrerCheckGroup(_this);
-            }
-            // var keyDownEvent = function (e) {
-            //    if (e.which === 32) { //space
-            //        self.click();
-            //    }
-            // };
-            var clickEvent = new ClickEvent(_this);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            clickEvent.onHover = function (e, over) {
-                _this.emit('hover', over);
-            };
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            clickEvent.onPress = function (e, isPressed) {
-                if (isPressed) {
-                    _this.focus();
-                    e.data.originalEvent.preventDefault();
-                }
-                _this.emit('press', isPressed);
-            };
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            clickEvent.onClick = function (e) {
-                _this.click();
-            };
             _this.change = function (val) {
                 if (_this.checkmark) {
                     _this.checkmark.alpha = val ? 1 : 0;
@@ -15475,7 +15685,7 @@
                     return;
                 }
                 _this.checked = !_this.checked;
-                _this.emit('change', _this.checked);
+                _this.emit('changed', _this.checked);
             };
             _this.focus = function () {
                 if (!_this._focused) {
@@ -15489,6 +15699,18 @@
                     // document.removeEventListener("keydown", keyDownEvent);
                 }
             };
+            _this._checked = options.checked !== undefined ? options.checked : false;
+            _this._value = options.value || '';
+            _this.checkGroup = options.checkgroup || null;
+            _this.checkmark = new InteractiveGroup();
+            _this.checkmark.contentContainer.addChild(options.checkmark);
+            _this.checkmark.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
+            _this.checkmark.alpha = _this._checked ? 1 : 0;
+            _this.addChild(_this.checkmark);
+            _this.contentContainer.buttonMode = true;
+            if (_this.checkGroup !== null) {
+                InputController.registrerCheckGroup(_this);
+            }
             return _this;
         }
         CheckBox.prototype.update = function () {
@@ -15533,6 +15755,24 @@
             enumerable: true,
             configurable: true
         });
+        CheckBox.prototype.initialize = function () {
+            var _this = this;
+            _super.prototype.initialize.call(this);
+            var clickMgr = this.eventBroker.click;
+            clickMgr.onHover = function (_, over) {
+                _this.emit('hover', over);
+            };
+            clickMgr.onPress = function (e, isPressed) {
+                if (isPressed) {
+                    _this.focus();
+                    e.data.originalEvent.preventDefault();
+                }
+                _this.emit('press', isPressed);
+            };
+            clickMgr.onClick = function () {
+                _this.click();
+            };
+        };
         return CheckBox;
     }(FocusableWidget));
     /*
@@ -17338,8 +17578,8 @@
     }());
 
     const Interaction = {
-        ClickEvent,
-        DragEvent,
+        ClickManager,
+        DragManager,
         InputController,
         MouseScrollEvent,
     };
@@ -17861,7 +18101,7 @@
                 triggerValueChanging();
             };
             // //Handle dragging
-            var handleDrag = new DragEvent(this.handle);
+            var handleDrag = new DragManager(this.handle);
             handleDrag.onPress = function (event, isPressed) {
                 event.stopPropagation();
             };
@@ -17879,7 +18119,7 @@
                 this.update();
             };
             // Bar pressing/dragging
-            var trackDrag = new DragEvent(this.track);
+            var trackDrag = new DragManager(this.track);
             trackDrag.onPress = function (event, isPressed) {
                 if (isPressed) {
                     updatePositionToMouse(event.data.global, true);
@@ -18337,7 +18577,7 @@
             var _a = this, scrollPosition = _a.scrollPosition, targetPosition = _a.targetPosition;
             // Drag scroll
             if (this.dragScrolling) {
-                var drag = new DragEvent(this);
+                var drag = new DragManager(this);
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 drag.onDragStart = function (e) {
                     if (!_this.scrolling) {
@@ -18750,9 +18990,13 @@
         };
         Stage.prototype.update = function (widgets) {
             for (var i = 0, j = widgets.length; i < j; i++) {
-                this.update(widgets[i].widgetChildren);
-                widgets[i].stage = this;
-                widgets[i].update();
+                var widget = widgets[i];
+                if (!widget.initialized) {
+                    widget.initialize();
+                }
+                this.update(widget.widgetChildren);
+                widget.stage = this;
+                widget.update();
             }
         };
         Stage.prototype.render = function (renderer) {
@@ -19333,7 +19577,7 @@
         }
         TextInput.prototype.setupDrag = function () {
             var _this = this;
-            var event = new DragEvent(this);
+            var event = new DragManager(this);
             event.onPress = function (e, mouseDown) {
                 if (mouseDown) {
                     var timeSinceLast = performance.now() - _this.t;

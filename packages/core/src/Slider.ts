@@ -1,5 +1,5 @@
 import { Widget } from './Widget';
-import { DragEvent } from './event/DragEvent';
+import { DragManager } from './event/DragManager';
 import { Tween } from './Tween';
 import { Ease } from './Ease/Ease';
 import { Helpers } from './Helpers';
@@ -200,7 +200,7 @@ export class Slider extends Widget
         };
 
         // //Handle dragging
-        const handleDrag = new DragEvent(this.handle);
+        const handleDrag = new DragManager(this.handle);
 
         handleDrag.onPress = (event, isPressed: boolean): void =>
         {
@@ -228,7 +228,7 @@ export class Slider extends Widget
         };
 
         // Bar pressing/dragging
-        const trackDrag = new DragEvent(this.track);
+        const trackDrag = new DragManager(this.track);
 
         trackDrag.onPress = (event, isPressed): void =>
         {

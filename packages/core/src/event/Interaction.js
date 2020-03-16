@@ -1,11 +1,11 @@
 import { ClickManager } from './ClickManager';
-import { DragEvent } from './DragEvent';
+import { DragManager } from './DragManager';
 import { InputController } from './InputController';
 import { MouseScrollEvent } from './MouseScrollEvent';
 
 export const Interaction = {
-    ClickManager: ClickEvent,
-    DragEvent,
+    ClickManager,
+    DragManager,
     InputController,
     MouseScrollEvent,
 };

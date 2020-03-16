@@ -3,7 +3,7 @@ import { Widget } from '../Widget';
 import { EventManager } from './EventManager';
 
 /**
- * `ClickManager` handles hover, click, and drag & drop events. It registers listeners
+ * `ClickManager` handles hover and click events. It registers listeners
  * for `mousedown`, `mouseup`, `mousemove`, `mouseout`, `mouseover`, `touchstart`,
  * `touchend`, `touchendoutside`, `touchmove`, `rightup`, `rightdown`, `rightupoutside`
  * events.
@@ -19,9 +19,9 @@ export class ClickManager extends EventManager
     onClick: (event: PIXI.interaction.InteractionMouseEvents) => void;
     onMove: (event: PIXI.interaction.InteractionEvent) => void;
 
-    protected rightMouseButton: boolean;
-    protected includeHover: boolean;
-    protected doubleClick: boolean;
+    protected _rightMouseButton: boolean;
+    protected _includeHover: boolean;
+    protected _doubleClick: boolean;
 
     private bound: boolean;
     private id: number;
@@ -57,13 +57,9 @@ export class ClickManager extends EventManager
         this.movementX = 0;
         this.movementY = 0;
 
-        this.includeHover = typeof includeHover === 'undefined' ? true : includeHover;
+        this._includeHover = typeof includeHover === 'undefined' ? true : includeHover;
         this.rightMouseButton = typeof rightMouseButton === 'undefined' ? false : rightMouseButton;
-        this.doubleClick = typeof doubleClick === 'undefined' ? false : doubleClick;
-
-        this.evMouseDown = this.rightMouseButton ? 'rightdown' : 'mousedown';
-        this.evMouseUp = this.rightMouseButton ? 'rightup' : 'mouseup';
-        this.evMouseUpOutside = this.rightMouseButton ? 'rightupoutside' : 'mouseupoutside';
+        this._doubleClick = typeof doubleClick === 'undefined' ? false : doubleClick;
 
         target.interactive = true;
 
@@ -77,24 +73,59 @@ export class ClickManager extends EventManager
     }
 
     /**
+     * Whether right mice are used for clicks rather than left mice.
+     * @member boolean
+     */
+    get rightMouseButton(): boolean
+    {
+        return this._rightMouseButton;
+    }
+    set rightMouseButton(val: boolean)
+    {
+        this._rightMouseButton = val;
+
+        this.evMouseDown = this._rightMouseButton ? 'rightdown' : 'mousedown';
+        this.evMouseUp = this._rightMouseButton ? 'rightup' : 'mouseup';
+        this.evMouseUpOutside = this._rightMouseButton ? 'rightupoutside' : 'mouseupoutside';
+    }
+
+    /**
+     * @param {boolean}[includeHover]
+     * @param {boolean}[rightMouseButton]
+     * @param {boolean}[doubleClick]
      * @override
      */
-    startEvent = (): void =>
+    startEvent = (
+        includeHover = this._includeHover,
+        rightMouseButton = this._rightMouseButton,
+        doubleClick = this._doubleClick,
+    ): void =>
     {
+        if (this.isEnabled)
+        {
+            return;
+        }
+
+        this._includeHover = includeHover;
+        this.rightMouseButton = rightMouseButton;
+        this._doubleClick = doubleClick;
+
         const { target } = this;
 
-        target.contentContainer.on(this.evMouseDown, this.onMouseDownImpl);
+        target.insetContainer.on(this.evMouseDown, this.onMouseDownImpl);
 
-        if (!this.rightMouseButton)
+        if (!this._rightMouseButton)
         {
-            target.contentContainer.on('touchstart', this.onMouseDownImpl);
+            target.insetContainer.on('touchstart', this.onMouseDownImpl);
         }
 
-        if (this.includeHover)
+        if (this._includeHover)
         {
-            target.contentContainer.on('mouseover', this.onMouseOverImpl);
-            target.contentContainer.on('mouseout', this.onMouseOutImpl);
+            target.insetContainer.on('mouseover', this.onMouseOverImpl);
+            target.insetContainer.on('mouseout', this.onMouseOutImpl);
         }
+
+        this.isEnabled = true;
     };
 
     /**
@@ -102,36 +133,43 @@ export class ClickManager extends EventManager
      */
     stopEvent = (): void =>
     {
+        if (!this.isEnabled)
+        {
+            return;
+        }
+
         const { target } = this;
 
         if (this.bound)
         {
-            target.contentContainer.removeListener(this.evMouseUp, this.onMouseUpImpl);
-            target.contentContainer.removeListener(this.evMouseUpOutside, this.onMouseUpOutsideImpl);
+            target.insetContainer.removeListener(this.evMouseUp, this.onMouseUpImpl);
+            target.insetContainer.removeListener(this.evMouseUpOutside, this.onMouseUpOutsideImpl);
 
-            if (!this.rightMouseButton)
+            if (!this._rightMouseButton)
             {
-                target.contentContainer.removeListener('touchend', this.onMouseUpImpl);
-                target.contentContainer.removeListener('touchendoutside', this.onMouseUpOutsideImpl);
+                target.insetContainer.removeListener('touchend', this.onMouseUpImpl);
+                target.insetContainer.removeListener('touchendoutside', this.onMouseUpOutsideImpl);
             }
 
             this.bound = false;
         }
 
-        target.contentContainer.removeListener(this.evMouseDown, this.onMouseDownImpl);
+        target.insetContainer.removeListener(this.evMouseDown, this.onMouseDownImpl);
 
-        if (!this.rightMouseButton)
+        if (!this._rightMouseButton)
         {
-            target.contentContainer.removeListener('touchstart', this.onMouseDownImpl);
+            target.insetContainer.removeListener('touchstart', this.onMouseDownImpl);
         }
 
-        if (this.includeHover)
+        if (this._includeHover)
         {
-            target.contentContainer.removeListener('mouseover', this.onMouseOverImpl);
-            target.contentContainer.removeListener('mouseout', this.onMouseOutImpl);
-            target.contentContainer.removeListener('mousemove', this.onMouseMoveImpl);
-            target.contentContainer.removeListener('touchmove', this.onMouseMoveImpl);
+            target.insetContainer.removeListener('mouseover', this.onMouseOverImpl);
+            target.insetContainer.removeListener('mouseout', this.onMouseOutImpl);
+            target.insetContainer.removeListener('mousemove', this.onMouseMoveImpl);
+            target.insetContainer.removeListener('touchmove', this.onMouseMoveImpl);
         }
+
+        this.isEnabled = false;
     };
 
     protected onMouseDownImpl = (event: PIXI.interaction.InteractionEvent): void =>
@@ -142,7 +180,7 @@ export class ClickManager extends EventManager
             onMouseUpImpl: _onMouseUp,
             evMouseUpOutside,
             onMouseUpOutsideImpl: _onMouseUpOutside,
-            rightMouseButton: right,
+            _rightMouseButton: right,
         } = this;
 
         this.mouse.copyFrom(event.data.global);
@@ -151,19 +189,19 @@ export class ClickManager extends EventManager
 
         if (!this.bound)
         {
-            obj.contentContainer.on(evMouseUp, _onMouseUp);
-            obj.contentContainer.on(evMouseUpOutside, _onMouseUpOutside);
+            obj.insetContainer.on(evMouseUp, _onMouseUp);
+            obj.insetContainer.on(evMouseUpOutside, _onMouseUpOutside);
 
             if (!right)
             {
-                obj.contentContainer.on('touchend', _onMouseUp);
-                obj.contentContainer.on('touchendoutside', _onMouseUpOutside);
+                obj.insetContainer.on('touchend', _onMouseUp);
+                obj.insetContainer.on('touchendoutside', _onMouseUpOutside);
             }
 
             this.bound = true;
         }
 
-        if (this.doubleClick)
+        if (this._doubleClick)
         {
             const now = performance.now();
 
@@ -199,13 +237,13 @@ export class ClickManager extends EventManager
 
         if (this.bound)
         {
-            obj.contentContainer.removeListener(evMouseUp, _onMouseUp);
-            obj.contentContainer.removeListener(evMouseUpOutside, _onMouseUpOutside);
+            obj.insetContainer.removeListener(evMouseUp, _onMouseUp);
+            obj.insetContainer.removeListener(evMouseUpOutside, _onMouseUpOutside);
 
-            if (!this.rightMouseButton)
+            if (!this._rightMouseButton)
             {
-                obj.contentContainer.removeListener('touchend', _onMouseUp);
-                obj.contentContainer.removeListener('touchendoutside', _onMouseUpOutside);
+                obj.insetContainer.removeListener('touchend', _onMouseUp);
+                obj.insetContainer.removeListener('touchendoutside', _onMouseUpOutside);
             }
 
             this.bound = false;
@@ -235,7 +273,7 @@ export class ClickManager extends EventManager
             }
         }
 
-        if (!this.doubleClick)
+        if (!this._doubleClick)
         {
             this.onClick.call(this.target, event);
         }
@@ -256,8 +294,8 @@ export class ClickManager extends EventManager
         if (!this.ishover)
         {
             this.ishover = true;
-            this.target.contentContainer.on('mousemove', this.onMouseMoveImpl);
-            this.target.contentContainer.on('touchmove', this.onMouseMoveImpl);
+            this.target.insetContainer.on('mousemove', this.onMouseMoveImpl);
+            this.target.insetContainer.on('touchmove', this.onMouseMoveImpl);
 
             this.onHover.call(this.target, event, true);
         }
@@ -268,8 +306,8 @@ export class ClickManager extends EventManager
         if (this.ishover)
         {
             this.ishover = false;
-            this.target.contentContainer.removeListener('mousemove', this.onMouseMoveImpl);
-            this.target.contentContainer.removeListener('touchmove', this.onMouseMoveImpl);
+            this.target.insetContainer.removeListener('mousemove', this.onMouseMoveImpl);
+            this.target.insetContainer.removeListener('touchmove', this.onMouseMoveImpl);
 
             this.onHover.call(this.target, event, false);
         }

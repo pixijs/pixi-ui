@@ -1,4 +1,5 @@
 /* global PIXI, PUXI */
+/* eslint-disable no-console */
 
 function generateBackgroundGraphics(width = 300, height = 50, color = 0xffff)
 {
@@ -47,7 +48,12 @@ window.onload = function onload()
             0.5,
             PUXI.FastLayoutOptions.CENTER_ANCHOR,
         ))
-        .setElevation(2);
+        .setElevation(2)
+        .makeDraggable();
+
+    mockButton.on('draggablestart', () => { console.log('Button drag started'); });
+    mockButton.on('draggablemove', () => { console.log('Button drag moved.'); });
+    mockButton.on('draggableend', () => { console.log('Button drag ended'); });
 
     // Text input at bottom
     const mockInput = new PUXI.TextInput({
@@ -63,9 +69,20 @@ window.onload = function onload()
         ),
     );
 
-    mockInput.on('focus', () => { console.log('TextInput focused!'); }); // eslint-disable-line no-console
-    mockInput.on('blur', () => { console.log('TextInput blur'); }); // eslint-disable-line no-console
-    mockInput.on('keydown', () => { console.log('TextInput keydowned!'); }); // eslint-disable-line no-console
+    mockInput.addChild(
+        new PUXI.TextWidget('Type something!').setLayoutOptions(
+            new PUXI.FastLayoutOptions(
+                0.1,
+                1,
+                0.5,
+                0,
+            ),
+        ),
+    );
+
+    mockInput.on('focus', () => { console.log('TextInput focused!'); });
+    mockInput.on('blur', () => { console.log('TextInput blur'); });
+    mockInput.on('keydown', () => { console.log('TextInput keydowned!'); });
 
     // Showcase scrolling widget
     const mockScroll = new PUXI.ScrollWidget({
@@ -91,9 +108,13 @@ window.onload = function onload()
         checkmark: generateBackgroundGraphics(10, 10, 0xff),
     }).setLayoutOptions(
         new PUXI.FastLayoutOptions(
-            0.1, 30, 0.9, 0,
+            0.1, 0.1, 0.9, 0,
         ),
     );
+
+    mockCheckbox.on('hover', () => { console.log('Checkbox hovered!'); });
+    mockCheckbox.on('click', () => { console.log('Checkbox clicked'); });
+    mockCheckbox.on('changed', (checked) => { console.log(`Checkbox checked?: ${checked}`); });
 
     uxStage.addChild(mockTitle);
     uxStage.addChild(mockButton);

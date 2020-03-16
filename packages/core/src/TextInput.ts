@@ -1,6 +1,6 @@
 import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
 import { InteractiveGroup } from './InteractiveGroup';
-import { DragEvent } from './event/DragEvent';
+import { DragManager } from './event/DragManager';
 import { ScrollWidget } from './ScrollWidget';
 import * as PIXI from 'pixi.js';
 import { LayoutOptions } from './layout-options';
@@ -237,7 +237,7 @@ export class TextInput extends FocusableWidget
 
     setupDrag(): void
     {
-        const event = new DragEvent(this);
+        const event = new DragManager(this);
 
         event.onPress = (e, mouseDown): void =>
         {

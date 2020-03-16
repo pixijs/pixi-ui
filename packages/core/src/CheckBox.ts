@@ -16,18 +16,15 @@ interface ICheckBoxOptions extends IInputBaseOptions
 }
 
 /**
- * An UI button object
+ * A checkbox is a button can be selected (checked). It has a on/off state that
+ * can be controlled by the user.
  *
+ * When used in a checkbox group, the group will control whether the checkbox can
+ * be selected or not.
+ *
+ * @memberof PUXI
  * @class
- * @extends PIXI.UI.InputBase
- * @memberof PIXI.UI
- * @param [options.checked=false] {bool} is checked
- * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for CheckBox
- * @param options.checkmark {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as checkmark for CheckBox
- * @param [options.checkgroup=null] {String} CheckGroup name
- * @param options.value {String} mostly used along with checkgroup
- * @param [options.tabIndex=0] {Number} input tab index
- * @param [options.tabGroup=0] {Number|String} input tab group
+ * @extends PUXI.FocusableWidget
  */
 export class CheckBox extends FocusableWidget
 {
@@ -37,9 +34,16 @@ export class CheckBox extends FocusableWidget
 
     private checkmark: InteractiveGroup;
 
-    change: (val: boolean) => void;
-    click: () => void;
-
+    /**
+     * @param {PUXI.ICheckBoxOptions} options
+     * @param [options.checked=false] {bool} is checked
+     * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for CheckBox
+     * @param options.checkmark {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as checkmark for CheckBox
+     * @param [options.checkgroup=null] {String} CheckGroup name
+     * @param options.value {String} mostly used along with checkgroup
+     * @param [options.tabIndex=0] {Number} input tab index
+     * @param [options.tabGroup=0] {Number|String} input tab group
+     */
     constructor(options: ICheckBoxOptions)
     {
         super(options);
@@ -59,6 +63,7 @@ export class CheckBox extends FocusableWidget
                 FastLayoutOptions.CENTER_ANCHOR),
         );
         this.checkmark.alpha = this._checked ? 1 : 0;
+        this.addChild(this.checkmark);
 
         this.contentContainer.buttonMode = true;
 
@@ -66,77 +71,6 @@ export class CheckBox extends FocusableWidget
         {
             InputController.registrerCheckGroup(this);
         }
-
-        // var keyDownEvent = function (e) {
-        //    if (e.which === 32) { //space
-        //        self.click();
-        //    }
-        // };
-
-        const clickEvent = new ClickManager(this);
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        clickEvent.onHover = (e, over): void =>
-        {
-            this.emit('hover', over);
-        };
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        clickEvent.onPress = (e, isPressed): void =>
-        {
-            if (isPressed)
-            {
-                this.focus();
-                e.data.originalEvent.preventDefault();
-            }
-
-            this.emit('press', isPressed);
-        };
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        clickEvent.onClick = (e): void =>
-        {
-            this.click();
-        };
-
-        this.change = (val): void =>
-        {
-            if (this.checkmark)
-            {
-                this.checkmark.alpha = val ? 1 : 0;
-            }
-        };
-
-        this.click = (): void =>
-        {
-            this.emit('click');
-
-            if (this.checkGroup !== null && this.checked)
-            {
-                return;
-            }
-
-            this.checked = !this.checked;
-            this.emit('change', this.checked);
-        };
-
-        this.focus = (): void =>
-        {
-            if (!this._focused)
-            {
-                super.focus();
-                // document.addEventListener("keydown", keyDownEvent, false);
-            }
-        };
-
-        this.blur = (): void =>
-        {
-            if (this._focused)
-            {
-                super.blur();
-                // document.removeEventListener("keydown", keyDownEvent);
-            }
-        };
     }
 
     update(): void
@@ -184,6 +118,92 @@ export class CheckBox extends FocusableWidget
     {
         InputController.setCheckGroupSelectedValue(this.checkGroup, val);
     }
+
+    initialize(): void
+    {
+        super.initialize();
+
+        const clickMgr = (this.eventBroker.click as ClickManager);
+
+        clickMgr.onHover = (_, over): void =>
+        {
+            this.emit('hover', over);
+        };
+
+        clickMgr.onPress = (e, isPressed): void =>
+        {
+            if (isPressed)
+            {
+                this.focus();
+                e.data.originalEvent.preventDefault();
+            }
+
+            this.emit('press', isPressed);
+        };
+
+        clickMgr.onClick = (): void =>
+        {
+            this.click();
+        };
+    }
+
+    protected change = (val: boolean): void =>
+    {
+        if (this.checkmark)
+        {
+            this.checkmark.alpha = val ? 1 : 0;
+        }
+    };
+
+    protected click = (): void =>
+    {
+        this.emit('click');
+
+        if (this.checkGroup !== null && this.checked)
+        {
+            return;
+        }
+
+        this.checked = !this.checked;
+        this.emit('changed', this.checked);
+    };
+
+    focus = (): void =>
+    {
+        if (!this._focused)
+        {
+            super.focus();
+            // document.addEventListener("keydown", keyDownEvent, false);
+        }
+    };
+
+    blur = (): void =>
+    {
+        if (this._focused)
+        {
+            super.blur();
+            // document.removeEventListener("keydown", keyDownEvent);
+        }
+    };
+
+    /**
+     * This event is fired when the user's cursor hovers over this checkbox.
+     * @event hover
+     */
+
+    /**
+     * This event is fired when the user clicks on the checkbox, regardless of whether
+     * the checkbox was selected or deselected.
+     * @event click
+     */
+
+    /**
+     * This event is fired when the user selects/deselects the checkbox, i.e. the "value"
+     * of the checkbox changes. This is also fired when setting the `checked` property
+     * directly.
+     * @event changed
+     * @param {boolean} checked - whether the checkbox is checked
+     */
 }
 
 /*
