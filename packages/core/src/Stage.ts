@@ -2,6 +2,7 @@ import { Widget } from './Widget';
 import * as PIXI from 'pixi.js';
 import { MeasureMode } from './IMeasurable';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
+import { FocusController, Controller, CheckBoxGroupController } from './ctl';
 
 /**
  * The stage is the root node in the PUXI scene graph. It does not provide a
@@ -25,6 +26,9 @@ export class Stage extends PIXI.Container
 
     stage: any;
 
+    private _checkBoxGroupCtl: CheckBoxGroupController;
+    private _focusCtl: FocusController;
+
     protected background: PIXI.Container;
 
     /**
@@ -46,6 +50,9 @@ export class Stage extends PIXI.Container
         this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
         this.initialized = true;
         this.resize(width, height);
+
+        this._checkBoxGroupCtl = new Stage.CHECK_BOX_GROUP_CONTROLLER(this);
+        this._focusCtl = new Stage.FOCUS_CONTROLLER(this);
     }
 
     protected measureAndLayout(): void
@@ -128,13 +135,14 @@ export class Stage extends PIXI.Container
         {
             const widget = widgets[i];
 
+            widget.stage = this;
+
             if (!widget.initialized)
             {
                 widget.initialize();
             }
 
             this.update(widget.widgetChildren);
-            widget.stage = this;
             widget.update();
         }
     }
@@ -276,4 +284,41 @@ export class Stage extends PIXI.Container
             this.resize();
         }
     }
+
+    /**
+     * The check box group controller for check boxes in this stage.
+     *
+     * @member {PUXI.CheckBoxGroupController}
+     */
+    get checkBoxGroupController(): CheckBoxGroupController
+    {
+        return this._checkBoxGroupCtl;
+    }
+
+    /**
+     * The focus controller for widgets in this stage. You can use this to bring a
+     * widget into focus.
+     *
+     * @member {PUXI.FocusController}
+     */
+    get focusController(): FocusController
+    {
+        return this._focusCtl;
+    }
+
+    /**
+     * Use this to override which class is used for the check box group controller. It
+     * should extend from `PUXI.CheckBoxGroupController`.
+     *
+     * @static
+     */
+    static CHECK_BOX_GROUP_CONTROLLER: typeof CheckBoxGroupController = CheckBoxGroupController;
+
+    /**
+     * Use this to override which class is used for the focus controller. It should
+     * extend from `PUXI.FocusController`.
+     *
+     * @static
+     */
+    static FOCUS_CONTROLLER: typeof FocusController = FocusController;
 }

@@ -2,7 +2,7 @@ import { InteractiveGroup } from './InteractiveGroup';
 import { Helpers }  from './Helpers';
 import { Ticker } from './Ticker';
 import { DragManager } from './event/DragManager';
-import { MouseScrollEvent } from './event/MouseScrollEvent';
+import { ScrollManager } from './event/ScrollManager';
 import * as PIXI from 'pixi.js';
 import { Widget } from './Widget';
 import { WidgetGroup } from './WidgetGroup';
@@ -93,8 +93,20 @@ export class ScrollWidget extends InteractiveGroup
         this.overflowY = options.overflowY || 0;
         this.overflowX = options.overflowX || 0;
 
-        this.scrollPosition = new PIXI.Point();
         this.scrollVelocity = new PIXI.Point();
+
+        /**
+         * Widget's position in a scroll.
+         * @member {PIXI.Point}
+         * @private
+         */
+        this.scrollPosition = new PIXI.Point();
+
+        /**
+         * Position that the cursor is at, i.e. our scroll "target".
+         * @member {PIXI.Point}
+         * @private
+         */
         this.targetPosition = new PIXI.Point();
         this.lastPosition = new PIXI.Point();
 
@@ -106,16 +118,11 @@ export class ScrollWidget extends InteractiveGroup
         this.initScrolling();
     }
 
-    initialize(): void
-    {
-        super.initialize();
-
-        if (this.scrollX || this.scrollY)
-        {
-            this.initScrolling();
-        }
-    }
-
+    /**
+     * Updates the mask and scroll position before rendering.
+     *
+     * @override
+     */
     update(): void
     {
         super.update();
@@ -146,6 +153,10 @@ export class ScrollWidget extends InteractiveGroup
         this.setScrollPosition();
     }
 
+    /**
+     * @param {PUXI.Widget[]} newChildren
+     * @returns {ScrollWidget} this widget
+     */
     addChild(...newChildren: Widget[]): Widget
     {
         for (let i = 0; i < newChildren.length; i++)
@@ -181,10 +192,23 @@ export class ScrollWidget extends InteractiveGroup
         return this.innerBounds;
     }
 
-    initScrolling(): void
+    /**
+     * @override
+     */
+    initialize(): void
+    {
+        super.initialize();
+
+        if (this.scrollX || this.scrollY)
+        {
+            this.initScrolling();
+        }
+    }
+
+    private initScrolling(): void
     {
         const container = this.innerContainer.insetContainer;
-        const containerStart = new PIXI.Point();
+        const realPosition = new PIXI.Point();
         const {
             scrollPosition,
             targetPosition,
@@ -193,31 +217,30 @@ export class ScrollWidget extends InteractiveGroup
         // Drag scroll
         if (this.dragScrolling)
         {
-            const drag = new DragManager(this);
+            const drag: DragManager = this.eventBroker.dnd as DragManager;
 
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             drag.onDragStart = (e): void =>
             {
                 if (!this.scrolling)
                 {
-                    containerStart.copyFrom(container.position);
+                    realPosition.copyFrom(container.position);
                     scrollPosition.copyFrom(container.position);
                     this.scrolling = true;
                     this.setScrollPosition();
-                    this.emit('dragStart', e);
+
+                    this.emit('scrollstart', e);
                 }
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            drag.onDragMove = (e, offset): void =>
+            drag.onDragMove = (_, offset): void =>
             {
                 if (this.scrollX)
                 {
-                    targetPosition.x = containerStart.x + offset.x;
+                    targetPosition.x = realPosition.x + offset.x;
                 }
                 if (this.scrollY)
                 {
-                    targetPosition.y = containerStart.y + offset.y;
+                    targetPosition.y = realPosition.y + offset.y;
                 }
             };
 
@@ -227,14 +250,14 @@ export class ScrollWidget extends InteractiveGroup
                 if (this.scrolling)
                 {
                     this.scrolling = false;
-                    this.emit('dragEnd', e);
+                    this.emit('scrollend', e);
                 }
             };
         }
 
         // Mouse scroll
         const scrollSpeed = new PIXI.Point();
-        const scroll = new MouseScrollEvent(this, true);
+        const scroll = new ScrollManager(this, true);
 
         scroll.onMouseScroll = (e, delta: PIXI.Point): void =>
         {
@@ -307,6 +330,9 @@ export class ScrollWidget extends InteractiveGroup
         this.updateScrollBars();
     };
 
+    /**
+     * @param {PIXI.Point}[velocity]
+     */
     setScrollPosition = (velocity?: PIXI.Point): void =>
     {
         if (velocity)
@@ -327,7 +353,11 @@ export class ScrollWidget extends InteractiveGroup
         }
     };
 
-    updateScrollPosition = (delta: number): void =>
+    /**
+     * @param {number} delta
+     * @protected
+     */
+    protected updateScrollPosition = (delta: number): void =>
     {
         this.stop = true;
 
@@ -347,7 +377,12 @@ export class ScrollWidget extends InteractiveGroup
         }
     };
 
-    updateDirection = (direction: string, delta: number): void =>
+    /**
+     * @param {'x' | 'y'} direction
+     * @param {number} delta
+     * @protected
+     */
+    protected updateDirection = (direction: string, delta: number): void =>
     {
         const bounds = this.getInnerBounds();
         const {
@@ -428,4 +463,14 @@ export class ScrollWidget extends InteractiveGroup
         container.position[direction] = Math.round(scrollPosition[direction]);
         this.updateScrollBars();
     };
+
+    /**
+     * This is fired when the user starts scrolling.
+     * @event scrollstart
+     */
+
+    /**
+     * This is fired when the user stops scrolling.
+     * @event scrollend
+     */
 }

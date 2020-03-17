@@ -1,11 +1,15 @@
-import { InputController } from './event/InputController';
-import { WidgetGroup } from './WidgetGroup';
+import * as PIXI from 'pixi.js';
+import { TabGroup } from './ctl/FocusController';
+import { InteractiveGroup } from './InteractiveGroup';
 
 /**
  * @namespace PUXI
  * @interface
+ * @property {PIXI.Container}[background]
+ * @property {number}[tabIndex]
+ * @property {PUXI.TabGroup}[tabGroup]
  */
-export interface IInputBaseOptions
+export interface IFocusableOptions
 {
     background?: PIXI.Container;
     tabIndex?: number;
@@ -22,22 +26,21 @@ export interface IInputBaseOptions
  * @extends PUXI.Widget
  * @memberof PUXI
  */
-export abstract class FocusableWidget extends WidgetGroup
+export abstract class FocusableWidget extends InteractiveGroup
 {
-    _focused: boolean;
-    _useTab: boolean;
-    _usePrev: boolean;
-    _useNext: boolean;
+    _isFocused: boolean;
+    _isMousePressed: boolean;
 
-    __down: boolean;
+    tabIndex: number;
+    tabGroup: TabGroup;
 
     /**
      * @param {PUXI.IInputBaseOptions} options
      * @param {PIXI.Container}[options.background]
-     * @param {number}[tabIndex]
-     * @param {any}[tabGroup]
+     * @param {number}[options.tabIndex]
+     * @param {any}[options.tabGroup]
      */
-    constructor(options: IInputBaseOptions = {})
+    constructor(options: IFocusableOptions = {})
     {
         super();
 
@@ -46,101 +49,148 @@ export abstract class FocusableWidget extends WidgetGroup
             super.setBackground(options.background);
         }
 
-        const { tabIndex, tabGroup } = options;
+        // Prevents double focusing/blurring.
+        this._isFocused = false;
 
-        this._focused = false;
-        this._useTab = this._usePrev = this._useNext = true;
+        // Used to lose focus when mouse-down outside widget.
+        this._isMousePressed = false;
+
         this.interactive = true;
-        InputController.registrer(this, tabIndex || 0, tabGroup || 0);
+
+        /**
+         * @member {number}
+         * @readonly
+         */
+        this.tabIndex = options.tabIndex;
+
+        /**
+         * The name of the tab group in which this widget's focus will move on
+         * pressing tab.
+         * @member {PUXI.TabGroup}
+         * @readonly
+         */
+        this.tabGroup = options.tabGroup;
 
         this.insetContainer.on('pointerdown', () =>
         {
             this.focus();
-            this.__down = true;
+            this._isMousePressed = true;
         });
-        this.insetContainer.on('pointerup', () => { this.__down = false; });
-        this.insetContainer.on('pointerupoutside', () => { this.__down = false; });
+
+        this.insetContainer.on('pointerup', () => { this._isMousePressed = false; });
+        this.insetContainer.on('pointerupoutside', () => { this._isMousePressed = false; });
     }
 
-    blur(): void
-    {
-        if (this._focused)
-        {
-            InputController.clear();
-            this._focused = false;
-            this.clearEvents();
-            this.emit('focusChanged', false);
-            this.emit('blur');
-        }
-    }
-
+    /**
+     * Brings this widget into focus.
+     */
     focus(): void
     {
-        if (!this._focused)
+        if (this.isFocused)
         {
-            this._focused = true;
-            this.bindEvents();
-            InputController.set(this);
-            this.emit('focusChanged', true);
-            this.emit('focus');
+            return;
         }
+
+        this.stage.focusController.notifyFocus(this);
+
+        this._isFocused = true;
+        this.bindEvents();
+
+        this.emit('focusChanged', true);
+        this.emit('focus');
     }
 
-    protected keyDownEvent = (e: any): void =>
+    /**
+     * Brings this widget out of focus.
+     */
+    blur(): void
     {
-        if (e.which === 9)
+        if (!this._isFocused)
         {
-            if (this._useTab)
-            {
-                InputController.fireTab();
-                e.preventDefault();
-            }
+            return;
         }
-        else if (e.which === 38)
+
+        this.stage.focusController.notifyBlur();
+
+        this._isFocused = false;
+        this.clearEvents();
+
+        this.emit('focusChanged', false);
+        this.emit('blur');
+    }
+
+    /**
+     * Whether this widget is in focus.
+     * @member {boolean}
+     * @readonly
+     */
+    get isFocused(): boolean
+    {
+        return this._isFocused;
+    }
+
+    private bindEvents = (): void =>
+    {
+        this.stage.on('pointerdown', this.onDocumentPointerDownImpl);
+        document.addEventListener('keydown', this.onKeyDownImpl);
+    };
+
+    private clearEvents = (): void =>
+    {
+        this.stage.off('pointerdown', this.onDocumentPointerDownImpl);
+        document.removeEventListener('keydown', this.onKeyDownImpl);
+    };
+
+    protected onKeyDownImpl = (e: any): void =>
+    {
+        const focusCtl = this.stage.focusController;
+
+        if (e.which === 9 && focusCtl.useTab)
         {
-            if (this._usePrev)
-            {
-                InputController.firePrev();
-                e.preventDefault();
-            }
+            focusCtl.onTab();
+            e.preventDefault();
         }
-        else if (e.which === 40)
+        else if (e.which === 38 && focusCtl.useBack)
         {
-            if (this._useNext)
-            {
-                InputController.fireNext();
-                e.preventDefault();
-            }
+            focusCtl.onBack();
+            e.preventDefault();
+        }
+        else if (e.which === 40 && focusCtl.useForward)
+        {
+            focusCtl.onForward();
+            e.preventDefault();
         }
 
         this.emit('keydown');
     };
 
-    private documentMouseDown = (): void =>
+    private onDocumentPointerDownImpl = (): void =>
     {
-        if (!this.__down)
+        if (!this._isMousePressed)
         {
             this.blur();
         }
     };
 
-    private bindEvents = (): void =>
+    initialize(): void
     {
-        if (this.stage !== null)
-        {
-            this.stage.on('pointerdown', this.documentMouseDown);
-        }
+        super.initialize();
+        this.stage.focusController.in(this, this.tabIndex, this.tabGroup);
+    }
 
-        document.addEventListener('keydown', this.keyDownEvent);
-    };
+    /**
+     * Fired when the widget comes into focus.
+     * @event focus
+     */
 
-    private clearEvents = (): void =>
-    {
-        if (this.stage !== null)
-        {
-            this.stage.off('pointerdown', this.documentMouseDown);
-        }
+    /**
+     * Fired when the widget goes out of focus.
+     * @event blur
+     */
 
-        document.removeEventListener('keydown', this.keyDownEvent);
-    };
+    /**
+     * Fired when the widgets comes into or goes out of focus.
+     * @event focusChanged
+     * @param {boolean} isFocused - whether the widget is in focus.
+     */
 }

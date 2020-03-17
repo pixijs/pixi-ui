@@ -38,7 +38,7 @@ window.onload = function onload()
 
     // Add rounded button in center
     const mockButton = new PUXI.Button({
-        text: 'Hello world!',
+        text: 'Drag me!',
         background: 0xffaabb,
     })
         .setLayoutOptions(new PUXI.FastLayoutOptions(
@@ -97,18 +97,43 @@ window.onload = function onload()
         ),
     ).setBackground(0xffaabb)
         .setBackgroundAlpha(0.5)
-        .addChild(new PUXI.Button({ text: 'Button 1' }))
-        .addChild(new PUXI.Button({ text: 'Button 2' }).setLayoutOptions(new PUXI.FastLayoutOptions(undefined, undefined, 0, 50)))
+        .addChild(new PUXI.Button({ text: 'Button 1' }).setBackground(0xff))
+        .addChild(new PUXI.Button({ text: 'Button 2' })
+            .setLayoutOptions(new PUXI.FastLayoutOptions(undefined, undefined, 0, 50))
+            .setBackground(0xff))
         .setElevation(4);
 
     // Add a checkbox top-right corner
     const mockCheckbox = new PUXI.CheckBox({
         checked: true,
+        checkGroup: 'demogroup',
         background: generateBackgroundGraphics(30, 30),
         checkmark: generateBackgroundGraphics(10, 10, 0xff),
     }).setLayoutOptions(
         new PUXI.FastLayoutOptions(
             0.1, 0.1, 0.9, 0,
+        ),
+    );
+
+    const mockCheckbox2 = new PUXI.CheckBox({
+        checked: false,
+        checkGroup: 'demogroup',
+        background: generateBackgroundGraphics(30, 30),
+        checkmark: generateBackgroundGraphics(10, 10, 0xff),
+    }).setLayoutOptions(
+        new PUXI.FastLayoutOptions(
+            0.1, 0.1, 0.8, 0,
+        ),
+    );
+
+    const mockCheckbox3 = new PUXI.CheckBox({
+        checked: false,
+        checkGroup: 'demogroup',
+        background: generateBackgroundGraphics(30, 30),
+        checkmark: generateBackgroundGraphics(10, 10, 0xff),
+    }).setLayoutOptions(
+        new PUXI.FastLayoutOptions(
+            0.1, 0.1, 0.7, 0,
         ),
     );
 
@@ -120,7 +145,22 @@ window.onload = function onload()
     uxStage.addChild(mockButton);
     uxStage.addChild(mockInput);
     uxStage.addChild(mockCheckbox);
+    uxStage.addChild(mockCheckbox2);
+    uxStage.addChild(mockCheckbox3);
     uxStage.addChild(mockScroll);
+
+    uxStage.focusController.on('focusChanged', (next, prev) =>
+    {
+        if (next)
+        {
+            next.setBackground(0xddeeff);
+        }
+
+        if (prev)
+        {
+            prev.setBackground(0xfabcdf);
+        }
+    });
 
     const stageBackground = new PIXI.Sprite.from('./bg.png');
 

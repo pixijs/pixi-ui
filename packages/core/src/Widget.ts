@@ -95,32 +95,63 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     }
 
     /**
-     * Update method (override from other UIObjects)
+     * Update method that is to be overriden. This is called before a `render()`
+     * pass on widgets that are dirty.
      *
      * @private
      */
-    abstract update();
+    abstract update(): any;
 
+    /**
+     * The measured width that is used by the parent's layout manager to place this
+     * widget.
+     * @member {number}
+     */
     get measuredWidth(): number
     {
         return this._measuredWidth;
     }
 
+    /**
+     * The measured height that is used by the parent's layout manager to place this
+     * widget.
+     * @member {number}
+     */
     get measuredHeight(): number
     {
         return this._measuredHeight;
     }
 
+    /**
+     * Alias for `Widget.measuredWidth`.
+     *
+     * @returns {number} the measured width
+     */
     getMeasuredWidth(): number
     {
         return this._measuredWidth;
     }
 
+    /**
+     * Alias for `Widget.measuredHeight`.
+     *
+     * @returns {number} the measured height
+     */
     getMeasuredHeight(): number
     {
         return this._measuredHeight;
     }
 
+    /**
+     * Override this method to measure the dimensions for your widget. By default, it
+     * will use the natural width/height of this widget's content (`contentContainer`)
+     * plus any padding.
+     *
+     * @param {number} width - width of region provided by parent
+     * @param {number} height - height of region provided by parent
+     * @param {PUXI.MeasureMode} widthMode - mode in which provided width is to be used
+     * @param {PUXI.MeasureMode} heightMode - mode in which provided height is to be used
+     */
     onMeasure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
         const naturalWidth = this.contentContainer.width + this.paddingHorizontal;
@@ -153,6 +184,15 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         }
     }
 
+    /**
+     * This method calls `Widget.onMeasure` and should not be overriden. It does internal
+     * bookkeeping.
+     *
+     * @param {number} width
+     * @param {number} height
+     * @param {PUXI.MeasureMode} widthMode
+     * @param {PUXI.MeasureMode} heightMode
+     */
     measure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
         this.onMeasure(width, height, widthMode, heightMode);
@@ -196,6 +236,14 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         // this.container.height = b - t;
     }
 
+    /**
+     * Use this to specify how you want to layout this widget w.r.t its parent.
+     * The specific layout options class depends on which layout you are
+     * using in the parent widget.
+     *
+     * @param {PUXI.LayoutOptions} lopt
+     * @returns {Widget} this
+     */
     setLayoutOptions(lopt: LayoutOptions): Widget
     {
         this.layoutOptions = lopt;
@@ -219,6 +267,10 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         return this._eventBroker;
     }
 
+    /**
+     * Padding on left side.
+     * @member {number}
+     */
     get paddingLeft(): number
     {
         return this._paddingLeft;
@@ -229,6 +281,10 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         this.dirty = true;
     }
 
+    /**
+     * Padding on top side.
+     * @member {number}
+     */
     get paddingTop(): number
     {
         return this._paddingTop;
@@ -239,6 +295,10 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         this.dirty = true;
     }
 
+    /**
+     * Padding on right side.
+     * @member {number}
+     */
     get paddingRight(): number
     {
         return this._paddingRight;
@@ -249,6 +309,10 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         this.dirty = true;
     }
 
+    /**
+     * Padding on bottom side.
+     * @member {number}
+     */
     get paddingBottom(): number
     {
         return this._paddingBottom;
@@ -262,6 +326,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     /**
      * Sum of left & right padding.
      * @member {number}
+     * @readonly
      */
     get paddingHorizontal(): number
     {
@@ -271,6 +336,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     /**
      * Sum of top & bottom padding.
      * @member {number}
+     * @readonly
      */
     get paddingVertical(): number
     {
@@ -368,7 +434,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
      */
     setBackground(bg: PIXI.Container | number | string): Widget
     {
-        if (!this.background)
+        if (this.background)
         {
             this.insetContainer.removeChild(this.background);
         }
@@ -383,6 +449,8 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                 .beginFill(bg)
                 .drawRect(0, 0, 1, 1)
                 .endFill();
+            bg.width = this.width;
+            bg.height = this.height;
         }
 
         this.background = bg;
@@ -468,59 +536,53 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         return this;
     }
 
-    addChild(UIObject): Widget
+    /**
+     * Adds the widgets as children of this one.
+     *
+     * @param {PUXI.Widget[]} widgets
+     * @returns {Widget} - this widget
+     */
+    addChild(...widgets: Widget[]): Widget
     {
-        const argumentsLength = arguments.length;
+        for (let i = 0; i < widgets.length; i++)
+        {
+            const widget = widgets[i];
 
-        if (argumentsLength > 1)
-        {
-            for (let i = 0; i < argumentsLength; i++)
+            if (widget.parent)
             {
-                this.addChild(arguments[i]);
-            }
-        }
-        else
-        {
-            if (UIObject.parent)
-            {
-                UIObject.parent.removeChild(UIObject);
+                widget.parent.removeChild(widget);
             }
 
-            UIObject.parent = this;
-            this.contentContainer.addChild(UIObject.insetContainer);
-            this.widgetChildren.push(UIObject);
+            widget.parent = this;
+            this.contentContainer.addChild(widget.insetContainer);
+            this.widgetChildren.push(widget);
         }
 
         return this;
     }
 
-    removeChild(UIObject): void
+    /**
+     * Orphans the widgets that are children of this one.
+     *
+     * @param {PUXI.Widget[]} widgets
+     * @returns {Widget} - this widget
+     */
+    removeChild(...widgets: Widget[]): Widget
     {
-        const argumentLenght = arguments.length;
-
-        if (argumentLenght > 1)
+        for (let i = 0; i < widgets.length; i++)
         {
-            for (let i = 0; i < argumentLenght; i++)
-            {
-                this.removeChild(arguments[i]);
-            }
-        }
-        else
-        {
-            const index = this.widgetChildren.indexOf(UIObject);
+            const widget = widgets[i];
+            const index = this.widgetChildren.indexOf(widget);
 
             if (index !== -1)
             {
-                const oldUIParent = UIObject.parent;
-                const oldParent = UIObject.container.parent;
-
-                UIObject.insetContainer.parent.removeChild(UIObject.insetContainer);
+                widget.insetContainer.parent.removeChild(widget.insetContainer);
                 this.widgetChildren.splice(index, 1);
-                UIObject.parent = null;
-
-                // oldParent._recursivePostUpdateTransform();
+                widget.parent = null;
             }
         }
+
+        return this;
     }
 
     /**

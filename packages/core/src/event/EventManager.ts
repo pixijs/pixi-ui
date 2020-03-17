@@ -9,6 +9,9 @@ import { Widget } from '../Widget';
  * will always accept one argument - the widget. Other settings can be applied before
  * `startEvent`.
  *
+ * Ideally, you should access event managers _after_ your widget has initialized. This is
+ * because it may depend on the widget's stage being assigned.
+ *
  * @memberof PUXI
  * @class
  * @abstract

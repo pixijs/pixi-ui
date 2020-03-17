@@ -1,5 +1,5 @@
 import { ClickManager } from './event/ClickManager';
-import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
+import { FocusableWidget, IFocusableOptions } from './FocusableWidget';
 import { TextWidget } from './TextWidget';
 import * as PIXI from 'pixi.js';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
@@ -7,15 +7,15 @@ import { LayoutOptions, FastLayoutOptions } from './layout-options';
 /**
  * @memberof PUXI
  * @interface
+ * @extends PUXI.IFocusableOptions
+ * @property {PUXI.TextWidget | string} text
  */
-interface IButtonOptions extends IInputBaseOptions
+interface IButtonOptions extends IFocusableOptions
 {
     background?: PIXI.Container;
     text?: TextWidget | string;
     tabIndex?: number;
     tabGroup?: any;
-    width?: number;
-    height?: number;
 }
 
 /**
@@ -32,8 +32,6 @@ export class Button extends FocusableWidget
     protected textWidget: TextWidget;
 
     click: () => void;
-    initialize: () => void;
-
     /**
      * @param [options.background}] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for Button
      * @param [options.text=null] {PIXI.UI.Text} optional text
@@ -74,7 +72,7 @@ export class Button extends FocusableWidget
 
     private setupClick(): void
     {
-        const clickEvent = new ClickManager(this);
+        const clickEvent: ClickManager = this.eventBroker.click as ClickManager;
 
         clickEvent.onHover = (e, over): void =>
         {
@@ -102,43 +100,6 @@ export class Button extends FocusableWidget
         {
             this.emit('click');
         };
-
-        this.focus = (): void =>
-        {
-            if (!this._focused)
-            {
-                FocusableWidget.prototype.focus.call(this);
-                // document.addEventListener("keydown", keyDownEvent, false);
-            }
-        };
-
-        this.blur = (): void =>
-        {
-            if (this._focused)
-            {
-                FocusableWidget.prototype.blur.call(this);
-                // document.removeEventListener("keydown", keyDownEvent);
-            }
-        };
-
-        this.initialize = (): void =>
-        {
-            super.initialize();
-            this.contentContainer.interactiveChildren = false;
-            // lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
-
-            setTimeout(() =>
-            {
-                const bounds = this.contentContainer.getLocalBounds();
-
-                this.contentContainer.hitArea = new PIXI.Rectangle(
-                    bounds.x < 0 ? bounds.x : 0,
-                    bounds.y < 0 ? bounds.y : 0,
-                    Math.max(bounds.x + bounds.width + (bounds.x < 0 ? -bounds.x : 0), this._width),
-                    Math.max(bounds.y + bounds.height + (bounds.y < 0 ? -bounds.y : 0), this._height),
-                );
-            }, 20);
-        };
     }
 
     update(): void
@@ -146,6 +107,19 @@ export class Button extends FocusableWidget
         // No update needed
     }
 
+    initialize(): void
+    {
+        super.initialize();
+        this.setupClick();
+
+        this.insetContainer.interactiveChildren = false;
+        // lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
+    }
+
+    /**
+     * Label for this button.
+     * @member {string}
+     */
     get value(): string
     {
         if (this.textWidget)

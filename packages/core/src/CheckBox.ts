@@ -1,19 +1,28 @@
-import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
+import { FocusableWidget, IFocusableOptions } from './FocusableWidget';
 import { ClickManager } from './event/ClickManager';
-import { InputController } from './event/InputController';
 import { InteractiveGroup } from './InteractiveGroup';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
+import { CheckGroup } from './ctl';
 
-interface ICheckBoxOptions extends IInputBaseOptions
+interface ICheckBoxOptions extends IFocusableOptions
 {
     checked?: boolean;
     background: PIXI.Container;
     checkmark?: PIXI.Container;
-    checkgroup?: any;
+    checkGroup?: CheckGroup;
     value?: string;
     tabIndex?: number;
     tabGroup?: number;
 }
+
+/**
+ * @memberof PUXI
+ * @extends PUXI.IFocusableOptions
+ * @member {boolean} checked
+ * @member {PIXI.Container}[checkmark]
+ * @member {PUXI.CheckGroup}[checkGroup]
+ * @member {string}[value]
+ */
 
 /**
  * A checkbox is a button can be selected (checked). It has a on/off state that
@@ -30,16 +39,16 @@ export class CheckBox extends FocusableWidget
 {
     private _checked: boolean;
     private _value: string;
-    private checkGroup: any;
-
     private checkmark: InteractiveGroup;
+
+    checkGroup: CheckGroup;
 
     /**
      * @param {PUXI.ICheckBoxOptions} options
      * @param [options.checked=false] {bool} is checked
      * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for CheckBox
      * @param options.checkmark {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as checkmark for CheckBox
-     * @param [options.checkgroup=null] {String} CheckGroup name
+     * @param {PUXI.CheckGroup}[options.checkGroup=null] CheckGroup name
      * @param options.value {String} mostly used along with checkgroup
      * @param [options.tabIndex=0] {Number} input tab index
      * @param [options.tabGroup=0] {Number|String} input tab group
@@ -50,7 +59,7 @@ export class CheckBox extends FocusableWidget
 
         this._checked = options.checked !== undefined ? options.checked : false;
         this._value = options.value || '';
-        this.checkGroup = options.checkgroup || null;
+        this.checkGroup = options.checkGroup || null;
 
         this.checkmark = new InteractiveGroup();
         this.checkmark.contentContainer.addChild(options.checkmark);
@@ -66,11 +75,6 @@ export class CheckBox extends FocusableWidget
         this.addChild(this.checkmark);
 
         this.contentContainer.buttonMode = true;
-
-        if (this.checkGroup !== null)
-        {
-            InputController.registrerCheckGroup(this);
-        }
     }
 
     update(): void
@@ -88,7 +92,7 @@ export class CheckBox extends FocusableWidget
         {
             if (this.checkGroup !== null && val)
             {
-                InputController.updateCheckGroupSelected(this);
+                this.stage.checkBoxGroupController.notifyCheck(this);
             }
 
             this._checked = val;
@@ -106,17 +110,16 @@ export class CheckBox extends FocusableWidget
 
         if (this.checked)
         {
-            InputController.updateCheckGroupSelected(this);
+            this.stage.checkBoxGroupController.notifyCheck(this);
         }
     }
 
     get selectedValue(): string
     {
-        return InputController.getCheckGroupSelectedValue(this.checkGroup);
-    }
-    set selectedValue(val: string)
-    {
-        InputController.setCheckGroupSelectedValue(this.checkGroup, val);
+        return this.stage
+            ?.checkBoxGroupController
+            .getSelected(this.checkGroup)
+            .value;
     }
 
     initialize(): void
@@ -145,6 +148,11 @@ export class CheckBox extends FocusableWidget
         {
             this.click();
         };
+
+        if (this.checkGroup !== null)
+        {
+            this.stage.checkBoxGroupController.in(this, this.checkGroup);
+        }
     }
 
     protected change = (val: boolean): void =>
@@ -166,24 +174,6 @@ export class CheckBox extends FocusableWidget
 
         this.checked = !this.checked;
         this.emit('changed', this.checked);
-    };
-
-    focus = (): void =>
-    {
-        if (!this._focused)
-        {
-            super.focus();
-            // document.addEventListener("keydown", keyDownEvent, false);
-        }
-    };
-
-    blur = (): void =>
-    {
-        if (this._focused)
-        {
-            super.blur();
-            // document.removeEventListener("keydown", keyDownEvent);
-        }
     };
 
     /**

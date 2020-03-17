@@ -44,6 +44,7 @@
     "canvas": "^2.6.1",
     "jest": "^25.1.0",
     "jsdoc": "^3.6.3",
+    "pixi.js": "^5.2.1",
     "rollup-plugin-node-builtins": "^2.1.2"
   },
   "dependencies": {

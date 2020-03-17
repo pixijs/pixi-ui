@@ -13,6 +13,13 @@ interface IScrollBarOptions
 }
 
 /**
+ * @memberof PUXI
+ * @interface IScrollBarOptions
+ * @property {PUXI.Sprite} track
+ * @property {PUXI.Sprite} handle
+ */
+
+/**
  * An UI scrollbar to control a ScrollingContainer
  *
  * @class

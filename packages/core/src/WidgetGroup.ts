@@ -10,6 +10,24 @@ import { FastLayout } from './layout-manager/FastLayout';
  * @memberof PUXI
  * @class
  * @extends PUXI.Widget
+ * @example
+ * ```
+ * const group = new PUXI.InteractiveGroup();
+ *
+ * group.useLayout(new PUXI.AnchorLayout());
+ *
+ * group.addChild(new PUXI.Button({ text: "Hey" })
+ *  .setLayoutOptions(
+ *      new PUXI.AnchorLayoutOptions(
+ *             100,
+ *             300,
+ *             .4,
+ *             500,
+ *             PUXI.ALIGN.CENTER
+ *      )
+ *  )
+ * )
+ * ```
  */
 export abstract class WidgetGroup extends Widget
 {
@@ -18,7 +36,7 @@ export abstract class WidgetGroup extends Widget
     /**
      * Will set the given layout-manager to be used for positioning child widgets.
      *
-     * @param {ILayoutManager} layoutMgr
+     * @param {PUXI.ILayoutManager} layoutMgr
      */
     useLayout(layoutMgr: ILayoutManager): void
     {

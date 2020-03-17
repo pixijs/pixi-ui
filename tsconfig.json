@@ -6,7 +6,9 @@
     "target": "ES6",
     "declaration": false,
     "outDir": "dist/compiled",
-    "removeComments": false
+    "removeComments": false,
+    "baseUrl": "src",
+    "moduleResolution": "node"
   },
   "exclude": [
     "node_modules"
@@ -14,5 +16,5 @@
   "typeAcquisition": {
     "enable": true,
     "include": []
-  }
+  },
 }

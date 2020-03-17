@@ -1,27 +1,65 @@
 import * as PIXI from 'pixi.js';
+import { EventManager } from './EventManager';
+import { Widget } from '../Widget';
 
-export class MouseScrollEvent
+/**
+ * Handles the `wheel` and `scroll` DOM events on widgets. It also registers
+ * listeners for `mouseout` and `mouseover`.
+ *
+ * @memberof PUXI
+ * @class
+ * @extends PUXI.EventManager
+ */
+export class ScrollManager extends EventManager
 {
     private bound: boolean;
     private delta: PIXI.Point;
     private preventDefault: boolean;
 
-    private obj: any;
-
-    constructor(obj: any, preventDefault: boolean)
+    constructor(target: Widget, preventDefault = true)
     {
+        super(target);
+
         this.bound = false;
         this.delta = new PIXI.Point();
-        this.obj = obj;
         this.preventDefault = preventDefault;
 
         this.startEvent();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private onMouseScrollImpl = (e): void =>
+    /**
+     * @override
+     */
+    startEvent(): void
     {
-        const { obj, preventDefault, delta } = this;
+        const { target, onHoverImpl, onMouseOutImpl } = this;
+
+        target.contentContainer.on('mouseover', onHoverImpl);
+        target.contentContainer.on('mouseout', onMouseOutImpl);
+    }
+
+    /**
+     * @override
+     */
+    stopEvent(): void
+    {
+        const { target, onMouseScrollImpl, onHoverImpl, onMouseOutImpl } = this;
+
+        if (this.bound)
+        {
+            document.removeEventListener('mousewheel', onMouseScrollImpl);
+            document.removeEventListener('DOMMouseScroll', onMouseScrollImpl);
+
+            this.bound = false;
+        }
+
+        target.contentContainer.removeListener('mouseover', onHoverImpl);
+        target.contentContainer.removeListener('mouseout', onMouseOutImpl);
+    }
+
+    private onMouseScrollImpl = (e: WheelEvent): void =>
+    {
+        const { target, preventDefault, delta } = this;
 
         if (preventDefault)
         {
@@ -38,7 +76,7 @@ export class MouseScrollEvent
                 e.axis === 2 ? e.detail * 60 : 0);
         }
 
-        this.onMouseScroll.call(obj, event, delta);
+        this.onMouseScroll.call(target, event, delta);
     };
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -68,31 +106,6 @@ export class MouseScrollEvent
             this.bound = false;
         }
     };
-
-    stopEvent(): void
-    {
-        const { obj, onMouseScrollImpl, onHoverImpl, onMouseOutImpl } = this;
-
-        if (this.bound)
-        {
-            document.removeEventListener('mousewheel', onMouseScrollImpl);
-            document.removeEventListener('DOMMouseScroll', onMouseScrollImpl);
-
-            this.bound = false;
-        }
-
-        obj.contentContainer.removeListener('mouseover', onHoverImpl);
-        obj.contentContainer.removeListener('mouseout', onMouseOutImpl);
-    }
-
-    startEvent(): void
-    {
-        const { obj, onHoverImpl, onMouseOutImpl } = this;
-
-        obj.contentContainer.on('mouseover', onHoverImpl);
-        obj.contentContainer.on('mouseout', onMouseOutImpl);
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onMouseScroll = function onMouseScroll(event, delta: PIXI.Point): void
     {

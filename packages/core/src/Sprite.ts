@@ -7,7 +7,6 @@ import * as PIXI from 'pixi.js';
  * @memberof PUXI
  * @class
  * @extends PUXI.Widget
- * @param Texture {PIXI.Texture} The texture for the sprite
  */
 export class Sprite extends Widget
 {

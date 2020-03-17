@@ -5,7 +5,7 @@ export * from './InteractiveGroup';
 export * from './DynamicText/DynamicText';
 export * from './DynamicText/DynamicTextStyle';
 export * from './Ease/Ease';
-export * from './event/Interaction';
+export * from './event';
 export * from './Helpers';
 export * from './ScrollBar';
 export * from './ScrollWidget';

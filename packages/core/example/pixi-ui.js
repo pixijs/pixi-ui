@@ -102,7 +102,7 @@
     };
 
     /**
-     * @namespace PUXI
+     * @memberof PUXI
      * @class
      */
     var Insets = /** @class */ (function () {
@@ -120,14 +120,47 @@
     }());
 
     /**
-     * @namespace PUXI
+     * These are the modes in which an entity can measures its dimension. They are
+     * relevant when a layout needs to know the optimal sizes of its children.
+     *
+     * @memberof PUXI
      * @enum
+     * @property {number} UNBOUNDED - no upper limit on bounds. This should calculate the optimal dimensions for the entity.
+     * @property {number} EXACTLY - the entity should set its dimension to the one passed to it.
+     * @property {number} AT_MOST - the entity should find an optimal dimension below the one passed to it.
      */
     (function (MeasureMode) {
         MeasureMode[MeasureMode["UNBOUNDED"] = 0] = "UNBOUNDED";
         MeasureMode[MeasureMode["EXACTLY"] = 1] = "EXACTLY";
         MeasureMode[MeasureMode["AT_MOST"] = 2] = "AT_MOST";
     })(exports.MeasureMode || (exports.MeasureMode = {}));
+    /**
+     * Any renderable entity that can be used in a widget hierarchy must be
+     * measurable.
+     *
+     * @memberof PUXI
+     * @interface IMeasurable
+     */
+    /**
+     * Measures its width & height based on the passed constraints.
+     *
+     * @memberof PUXI.IMeasurable#
+     * @method onMeasure
+     * @param {number} maxWidth
+     * @param {number} maxHeight
+     * @param {PUXI.MeasureMode} widthMode
+     * @param {PUXI.MeasureMode} heightMode
+     */
+    /**
+     * @memberof PUXI.IMeasurable#
+     * @method getMeasuredWidth
+     * @returns {number} - the measured width of the entity after a `onMeasure` call
+     */
+    /**
+     * @memberof PUXI.IMeasurable#
+     * @method getMeasuredHeight
+     * @returns {number} - the measured height of the entity after a `onMeasure` call
+     */
 
     /**
      * An event manager handles the states related to certain events and can augment
@@ -137,6 +170,9 @@
      * Event managers are lifecycle objects - they can start/stop. Their constructor
      * will always accept one argument - the widget. Other settings can be applied before
      * `startEvent`.
+     *
+     * Ideally, you should access event managers _after_ your widget has initialized. This is
+     * because it may depend on the widget's stage being assigned.
      *
      * @memberof PUXI
      * @class
@@ -527,10 +563,89 @@
     }());
 
     /**
+     * Handles the `wheel` and `scroll` DOM events on widgets. It also registers
+     * listeners for `mouseout` and `mouseover`.
+     *
+     * @memberof PUXI
+     * @class
+     * @extends PUXI.EventManager
+     */
+    var ScrollManager = /** @class */ (function (_super) {
+        __extends(ScrollManager, _super);
+        function ScrollManager(target, preventDefault) {
+            if (preventDefault === void 0) { preventDefault = true; }
+            var _this = _super.call(this, target) || this;
+            _this.onMouseScrollImpl = function (e) {
+                var _a = _this, target = _a.target, preventDefault = _a.preventDefault, delta = _a.delta;
+                if (preventDefault) {
+                    event.preventDefault();
+                }
+                if (typeof e.deltaX !== 'undefined') {
+                    delta.set(e.deltaX, e.deltaY);
+                }
+                else // Firefox
+                 {
+                    delta.set(e.axis === 1 ? e.detail * 60 : 0, e.axis === 2 ? e.detail * 60 : 0);
+                }
+                _this.onMouseScroll.call(target, event, delta);
+            };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            _this.onHoverImpl = function (e) {
+                var onMouseScrollImpl = _this.onMouseScrollImpl;
+                if (!_this.bound) {
+                    document.addEventListener('mousewheel', onMouseScrollImpl, false);
+                    document.addEventListener('DOMMouseScroll', onMouseScrollImpl, false);
+                    _this.bound = true;
+                }
+            };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            _this.onMouseOutImpl = function (e) {
+                var onMouseScrollImpl = _this.onMouseScrollImpl;
+                if (_this.bound) {
+                    document.removeEventListener('mousewheel', onMouseScrollImpl);
+                    document.removeEventListener('DOMMouseScroll', onMouseScrollImpl);
+                    _this.bound = false;
+                }
+            };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            _this.onMouseScroll = function onMouseScroll(event, delta) {
+                // Default onMouseScroll.
+            };
+            _this.bound = false;
+            _this.delta = new PIXI$1.Point();
+            _this.preventDefault = preventDefault;
+            _this.startEvent();
+            return _this;
+        }
+        /**
+         * @override
+         */
+        ScrollManager.prototype.startEvent = function () {
+            var _a = this, target = _a.target, onHoverImpl = _a.onHoverImpl, onMouseOutImpl = _a.onMouseOutImpl;
+            target.contentContainer.on('mouseover', onHoverImpl);
+            target.contentContainer.on('mouseout', onMouseOutImpl);
+        };
+        /**
+         * @override
+         */
+        ScrollManager.prototype.stopEvent = function () {
+            var _a = this, target = _a.target, onMouseScrollImpl = _a.onMouseScrollImpl, onHoverImpl = _a.onHoverImpl, onMouseOutImpl = _a.onMouseOutImpl;
+            if (this.bound) {
+                document.removeEventListener('mousewheel', onMouseScrollImpl);
+                document.removeEventListener('DOMMouseScroll', onMouseScrollImpl);
+                this.bound = false;
+            }
+            target.contentContainer.removeListener('mouseover', onHoverImpl);
+            target.contentContainer.removeListener('mouseout', onMouseOutImpl);
+        };
+        return ScrollManager;
+    }(EventManager));
+
+    /**
      * A widget is a user interface control that renders content inside its prescribed
      * rectangle on the screen.
      *
-     * @namespace PUXI
+     * @memberof PUXI
      * @class
      * @extends PIXI.utils.EventEmitter
      * @implements PUXI.IMeasurable
@@ -563,6 +678,11 @@
             return _this;
         }
         Object.defineProperty(Widget.prototype, "measuredWidth", {
+            /**
+             * The measured width that is used by the parent's layout manager to place this
+             * widget.
+             * @member {number}
+             */
             get: function () {
                 return this._measuredWidth;
             },
@@ -570,18 +690,43 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "measuredHeight", {
+            /**
+             * The measured height that is used by the parent's layout manager to place this
+             * widget.
+             * @member {number}
+             */
             get: function () {
                 return this._measuredHeight;
             },
             enumerable: true,
             configurable: true
         });
+        /**
+         * Alias for `Widget.measuredWidth`.
+         *
+         * @returns {number} the measured width
+         */
         Widget.prototype.getMeasuredWidth = function () {
             return this._measuredWidth;
         };
+        /**
+         * Alias for `Widget.measuredHeight`.
+         *
+         * @returns {number} the measured height
+         */
         Widget.prototype.getMeasuredHeight = function () {
             return this._measuredHeight;
         };
+        /**
+         * Override this method to measure the dimensions for your widget. By default, it
+         * will use the natural width/height of this widget's content (`contentContainer`)
+         * plus any padding.
+         *
+         * @param {number} width - width of region provided by parent
+         * @param {number} height - height of region provided by parent
+         * @param {PUXI.MeasureMode} widthMode - mode in which provided width is to be used
+         * @param {PUXI.MeasureMode} heightMode - mode in which provided height is to be used
+         */
         Widget.prototype.onMeasure = function (width, height, widthMode, heightMode) {
             var naturalWidth = this.contentContainer.width + this.paddingHorizontal;
             var naturalHeight = this.contentContainer.height + this.paddingVertical;
@@ -608,6 +753,15 @@
                     break;
             }
         };
+        /**
+         * This method calls `Widget.onMeasure` and should not be overriden. It does internal
+         * bookkeeping.
+         *
+         * @param {number} width
+         * @param {number} height
+         * @param {PUXI.MeasureMode} widthMode
+         * @param {PUXI.MeasureMode} heightMode
+         */
         Widget.prototype.measure = function (width, height, widthMode, heightMode) {
             this.onMeasure(width, height, widthMode, heightMode);
         };
@@ -646,6 +800,14 @@
             // this.container.width = r - l;
             // this.container.height = b - t;
         };
+        /**
+         * Use this to specify how you want to layout this widget w.r.t its parent.
+         * The specific layout options class depends on which layout you are
+         * using in the parent widget.
+         *
+         * @param {PUXI.LayoutOptions} lopt
+         * @returns {Widget} this
+         */
         Widget.prototype.setLayoutOptions = function (lopt) {
             this.layoutOptions = lopt;
             return this;
@@ -667,6 +829,10 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "paddingLeft", {
+            /**
+             * Padding on left side.
+             * @member {number}
+             */
             get: function () {
                 return this._paddingLeft;
             },
@@ -678,6 +844,10 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "paddingTop", {
+            /**
+             * Padding on top side.
+             * @member {number}
+             */
             get: function () {
                 return this._paddingTop;
             },
@@ -689,6 +859,10 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "paddingRight", {
+            /**
+             * Padding on right side.
+             * @member {number}
+             */
             get: function () {
                 return this._paddingRight;
             },
@@ -700,6 +874,10 @@
             configurable: true
         });
         Object.defineProperty(Widget.prototype, "paddingBottom", {
+            /**
+             * Padding on bottom side.
+             * @member {number}
+             */
             get: function () {
                 return this._paddingBottom;
             },
@@ -714,6 +892,7 @@
             /**
              * Sum of left & right padding.
              * @member {number}
+             * @readonly
              */
             get: function () {
                 return this._paddingLeft + this._paddingRight;
@@ -725,6 +904,7 @@
             /**
              * Sum of top & bottom padding.
              * @member {number}
+             * @readonly
              */
             get: function () {
                 return this._paddingTop + this._paddingBottom;
@@ -826,7 +1006,7 @@
          *     a color that will be used to generate a `PIXI.Graphics` as the background.
          */
         Widget.prototype.setBackground = function (bg) {
-            if (!this.background) {
+            if (this.background) {
                 this.insetContainer.removeChild(this.background);
             }
             if (typeof bg === 'string') {
@@ -837,6 +1017,8 @@
                     .beginFill(bg)
                     .drawRect(0, 0, 1, 1)
                     .endFill();
+                bg.width = this.width;
+                bg.height = this.height;
             }
             this.background = bg;
             if (bg) {
@@ -896,41 +1078,49 @@
             }
             return this;
         };
-        Widget.prototype.addChild = function (UIObject) {
-            var argumentsLength = arguments.length;
-            if (argumentsLength > 1) {
-                for (var i = 0; i < argumentsLength; i++) {
-                    this.addChild(arguments[i]);
-                }
+        /**
+         * Adds the widgets as children of this one.
+         *
+         * @param {PUXI.Widget[]} widgets
+         * @returns {Widget} - this widget
+         */
+        Widget.prototype.addChild = function () {
+            var widgets = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                widgets[_i] = arguments[_i];
             }
-            else {
-                if (UIObject.parent) {
-                    UIObject.parent.removeChild(UIObject);
+            for (var i = 0; i < widgets.length; i++) {
+                var widget = widgets[i];
+                if (widget.parent) {
+                    widget.parent.removeChild(widget);
                 }
-                UIObject.parent = this;
-                this.contentContainer.addChild(UIObject.insetContainer);
-                this.widgetChildren.push(UIObject);
+                widget.parent = this;
+                this.contentContainer.addChild(widget.insetContainer);
+                this.widgetChildren.push(widget);
             }
             return this;
         };
-        Widget.prototype.removeChild = function (UIObject) {
-            var argumentLenght = arguments.length;
-            if (argumentLenght > 1) {
-                for (var i = 0; i < argumentLenght; i++) {
-                    this.removeChild(arguments[i]);
-                }
+        /**
+         * Orphans the widgets that are children of this one.
+         *
+         * @param {PUXI.Widget[]} widgets
+         * @returns {Widget} - this widget
+         */
+        Widget.prototype.removeChild = function () {
+            var widgets = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                widgets[_i] = arguments[_i];
             }
-            else {
-                var index = this.widgetChildren.indexOf(UIObject);
+            for (var i = 0; i < widgets.length; i++) {
+                var widget = widgets[i];
+                var index = this.widgetChildren.indexOf(widget);
                 if (index !== -1) {
-                    var oldUIParent = UIObject.parent;
-                    var oldParent = UIObject.container.parent;
-                    UIObject.insetContainer.parent.removeChild(UIObject.insetContainer);
+                    widget.insetContainer.parent.removeChild(widget.insetContainer);
                     this.widgetChildren.splice(index, 1);
-                    UIObject.parent = null;
-                    // oldParent._recursivePostUpdateTransform();
+                    widget.parent = null;
                 }
             }
+            return this;
         };
         /**
          * Makes this widget `draggable`.
@@ -1060,113 +1250,10 @@
         return Widget;
     }(PIXI$1.utils.EventEmitter));
 
-    var _currentItem;
-    var tabGroups = {};
-    var checkGroups = {};
-    var checkGroupValues = {};
-    /**
-     * Handles focus-management in the scene graph.
-     */
-    var InputController = {
-        registrer: function (item, tabIndex, tabGroup) {
-            var groupName = tabGroup || 'default';
-            var items = tabGroups[groupName];
-            if (!items) {
-                items = tabGroups[groupName] = [];
-            }
-            var i = items.indexOf(item);
-            if (i === -1) {
-                item._tabIndex = tabIndex !== undefined ? tabIndex : -1;
-                item._tabGroup = items;
-                items.push(item);
-                items.sort(function sorter(a, b) {
-                    if (a._tabIndex < b._tabIndex) {
-                        return -1;
-                    }
-                    if (a._tabIndex > b._tabIndex) {
-                        return 1;
-                    }
-                    return 0;
-                });
-            }
-        },
-        set: function (item) {
-            this.blur();
-            _currentItem = item;
-        },
-        clear: function () {
-            _currentItem = undefined;
-        },
-        blur: function () {
-            if (_currentItem && typeof _currentItem.blur === 'function') {
-                _currentItem.blur();
-            }
-        },
-        fireTab: function () {
-            if (_currentItem) {
-                var i = _currentItem._tabGroup.indexOf(_currentItem) + 1;
-                if (i >= _currentItem._tabGroup.length)
-                    i = 0;
-                _currentItem._tabGroup[i].focus();
-            }
-        },
-        fireNext: function () {
-            if (_currentItem) {
-                var i = _currentItem._tabGroup.indexOf(_currentItem) + 1;
-                if (i >= _currentItem._tabGroup.length)
-                    i = _currentItem._tabGroup.length - 1;
-                _currentItem._tabGroup[i].focus();
-            }
-        },
-        firePrev: function () {
-            if (_currentItem) {
-                var i = _currentItem._tabGroup.indexOf(_currentItem) - 1;
-                if (i < 0)
-                    i = 0;
-                _currentItem._tabGroup[i].focus();
-            }
-        },
-        registrerCheckGroup: function (cb) {
-            var name = cb.checkGroup;
-            var group = checkGroups[name];
-            if (!group)
-                group = checkGroups[name] = {};
-            group[cb.value] = cb;
-            if (cb.checked) {
-                checkGroupValues[name] = cb.value;
-            }
-        },
-        updateCheckGroupSelected: function (cb) {
-            var group = checkGroups[cb.checkGroup];
-            for (var val in group) {
-                var b = group[val];
-                if (b !== cb) {
-                    b.checked = false;
-                }
-            }
-            checkGroupValues[cb.checkGroup] = cb.value;
-        },
-        getCheckGroupSelectedValue: function (name) {
-            if (checkGroupValues[name]) {
-                return checkGroupValues[name];
-            }
-            return '';
-        },
-        setCheckGroupSelectedValue: function (name, val) {
-            var group = checkGroups[name];
-            if (group) {
-                var cb = group[val];
-                if (cb) {
-                    cb.checked = true;
-                }
-            }
-        },
-    };
-
     /**
      * Alignments supported by layout managers in PuxiJS core.
      *
-     * @namespace PUXI
+     * @memberof PUXI
      * @enum
      */
     (function (ALIGN) {
@@ -1199,7 +1286,7 @@
      * parent.addChild(widget);
      * ```
      *
-     * @namespace PUXI
+     * @memberof PUXI
      * @class
      */
     var LayoutOptions = /** @class */ (function () {
@@ -1329,6 +1416,7 @@
      * child is set to 0, then that child will be scaled to fit in the entire region
      * in that dimension.
      *
+     * @memberof PUXI
      * @extends PUXI.LayoutOptions
      * @class
      */
@@ -1356,7 +1444,7 @@
      * If x or y is between -1 and 1, then that dimension will be interpreted as a
      * percentage of the parent's width or height.
      *
-     * @namespace PUXI
+     * @memberof PUXI
      * @extends PUXI.LayoutOptions
      * @class
      */
@@ -1401,9 +1489,9 @@
      * `PUXI.FastLayout` is used in conjunction with `PUXI.FastLayoutOptions`. It is the
      * default layout for most widget groups.
      *
-     * @namespace PUXI
-     * @extends PUXI.ILayoutManager
+     * @memberof PUXI
      * @class
+     * @extends PUXI.ILayoutManager
      * @example
      * ```
      * parent.useLayout(new PUXI.FastLayout())
@@ -1534,9 +1622,27 @@
      * A widget group is a layout owner that can position its children according
      * to the layout given to it.
      *
-     * @namespace PUXI
+     * @memberof PUXI
      * @class
      * @extends PUXI.Widget
+     * @example
+     * ```
+     * const group = new PUXI.InteractiveGroup();
+     *
+     * group.useLayout(new PUXI.AnchorLayout());
+     *
+     * group.addChild(new PUXI.Button({ text: "Hey" })
+     *  .setLayoutOptions(
+     *      new PUXI.AnchorLayoutOptions(
+     *             100,
+     *             300,
+     *             .4,
+     *             500,
+     *             PUXI.ALIGN.CENTER
+     *      )
+     *  )
+     * )
+     * ```
      */
     var WidgetGroup = /** @class */ (function (_super) {
         __extends(WidgetGroup, _super);
@@ -1546,7 +1652,7 @@
         /**
          * Will set the given layout-manager to be used for positioning child widgets.
          *
-         * @param {ILayoutManager} layoutMgr
+         * @param {PUXI.ILayoutManager} layoutMgr
          */
         WidgetGroup.prototype.useLayout = function (layoutMgr) {
             if (this.layoutMgr) {
@@ -1591,6 +1697,32 @@
     }(Widget));
 
     /**
+     * An interactive container.
+     *
+     * @class
+     * @extends PUXI.WidgetGroup
+     * @memberof PUXI
+     */
+    var InteractiveGroup = /** @class */ (function (_super) {
+        __extends(InteractiveGroup, _super);
+        function InteractiveGroup() {
+            var _this = _super.call(this) || this;
+            _this.hitArea = new PIXI$1.Rectangle();
+            _this.insetContainer.hitArea = _this.hitArea;
+            return _this;
+        }
+        InteractiveGroup.prototype.update = function () {
+            // YO
+        };
+        InteractiveGroup.prototype.layout = function (l, t, r, b, dirty) {
+            _super.prototype.layout.call(this, l, t, r, b, dirty);
+            this.hitArea.width = this.width;
+            this.hitArea.height = this.height;
+        };
+        return InteractiveGroup;
+    }(WidgetGroup));
+
+    /**
      * Represents a view that can gain or loose focus. It is primarily subclassed by
      * input/form widgets.
      *
@@ -1605,93 +1737,120 @@
         /**
          * @param {PUXI.IInputBaseOptions} options
          * @param {PIXI.Container}[options.background]
-         * @param {number}[tabIndex]
-         * @param {any}[tabGroup]
+         * @param {number}[options.tabIndex]
+         * @param {any}[options.tabGroup]
          */
         function FocusableWidget(options) {
             if (options === void 0) { options = {}; }
             var _this = _super.call(this) || this;
-            _this.keyDownEvent = function (e) {
-                if (e.which === 9) {
-                    if (_this._useTab) {
-                        InputController.fireTab();
-                        e.preventDefault();
-                    }
+            _this.bindEvents = function () {
+                _this.stage.on('pointerdown', _this.onDocumentPointerDownImpl);
+                document.addEventListener('keydown', _this.onKeyDownImpl);
+            };
+            _this.clearEvents = function () {
+                _this.stage.off('pointerdown', _this.onDocumentPointerDownImpl);
+                document.removeEventListener('keydown', _this.onKeyDownImpl);
+            };
+            _this.onKeyDownImpl = function (e) {
+                var focusCtl = _this.stage.focusController;
+                if (e.which === 9 && focusCtl.useTab) {
+                    focusCtl.onTab();
+                    e.preventDefault();
                 }
-                else if (e.which === 38) {
-                    if (_this._usePrev) {
-                        InputController.firePrev();
-                        e.preventDefault();
-                    }
+                else if (e.which === 38 && focusCtl.useBack) {
+                    focusCtl.onBack();
+                    e.preventDefault();
                 }
-                else if (e.which === 40) {
-                    if (_this._useNext) {
-                        InputController.fireNext();
-                        e.preventDefault();
-                    }
+                else if (e.which === 40 && focusCtl.useForward) {
+                    focusCtl.onForward();
+                    e.preventDefault();
                 }
                 _this.emit('keydown');
             };
-            _this.documentMouseDown = function () {
-                if (!_this.__down) {
+            _this.onDocumentPointerDownImpl = function () {
+                if (!_this._isMousePressed) {
                     _this.blur();
                 }
-            };
-            _this.bindEvents = function () {
-                if (_this.stage !== null) {
-                    _this.stage.on('pointerdown', _this.documentMouseDown);
-                }
-                document.addEventListener('keydown', _this.keyDownEvent);
-            };
-            _this.clearEvents = function () {
-                if (_this.stage !== null) {
-                    _this.stage.off('pointerdown', _this.documentMouseDown);
-                }
-                document.removeEventListener('keydown', _this.keyDownEvent);
             };
             if (options.background) {
                 _super.prototype.setBackground.call(_this, options.background);
             }
-            var tabIndex = options.tabIndex, tabGroup = options.tabGroup;
-            _this._focused = false;
-            _this._useTab = _this._usePrev = _this._useNext = true;
+            // Prevents double focusing/blurring.
+            _this._isFocused = false;
+            // Used to lose focus when mouse-down outside widget.
+            _this._isMousePressed = false;
             _this.interactive = true;
-            InputController.registrer(_this, tabIndex || 0, tabGroup || 0);
+            /**
+             * @member {number}
+             * @readonly
+             */
+            _this.tabIndex = options.tabIndex;
+            /**
+             * The name of the tab group in which this widget's focus will move on
+             * pressing tab.
+             * @member {PUXI.TabGroup}
+             * @readonly
+             */
+            _this.tabGroup = options.tabGroup;
             _this.insetContainer.on('pointerdown', function () {
                 _this.focus();
-                _this.__down = true;
+                _this._isMousePressed = true;
             });
-            _this.insetContainer.on('pointerup', function () { _this.__down = false; });
-            _this.insetContainer.on('pointerupoutside', function () { _this.__down = false; });
+            _this.insetContainer.on('pointerup', function () { _this._isMousePressed = false; });
+            _this.insetContainer.on('pointerupoutside', function () { _this._isMousePressed = false; });
             return _this;
         }
-        FocusableWidget.prototype.blur = function () {
-            if (this._focused) {
-                InputController.clear();
-                this._focused = false;
-                this.clearEvents();
-                this.emit('focusChanged', false);
-                this.emit('blur');
-            }
-        };
+        /**
+         * Brings this widget into focus.
+         */
         FocusableWidget.prototype.focus = function () {
-            if (!this._focused) {
-                this._focused = true;
-                this.bindEvents();
-                InputController.set(this);
-                this.emit('focusChanged', true);
-                this.emit('focus');
+            if (this.isFocused) {
+                return;
             }
+            this.stage.focusController.notifyFocus(this);
+            this._isFocused = true;
+            this.bindEvents();
+            this.emit('focusChanged', true);
+            this.emit('focus');
+        };
+        /**
+         * Brings this widget out of focus.
+         */
+        FocusableWidget.prototype.blur = function () {
+            if (!this._isFocused) {
+                return;
+            }
+            this.stage.focusController.notifyBlur();
+            this._isFocused = false;
+            this.clearEvents();
+            this.emit('focusChanged', false);
+            this.emit('blur');
+        };
+        Object.defineProperty(FocusableWidget.prototype, "isFocused", {
+            /**
+             * Whether this widget is in focus.
+             * @member {boolean}
+             * @readonly
+             */
+            get: function () {
+                return this._isFocused;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        FocusableWidget.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this.stage.focusController.in(this, this.tabIndex, this.tabGroup);
         };
         return FocusableWidget;
-    }(WidgetGroup));
+    }(InteractiveGroup));
 
     /**
      * A static text widget. It cannot retain children.
      *
+     * @memberof PUXI
      * @class
      * @extends PUXI.Widget
-     * @memberof PUXI
      */
     var TextWidget = /** @class */ (function (_super) {
         __extends(TextWidget, _super);
@@ -1769,7 +1928,7 @@
         }
         Button.prototype.setupClick = function () {
             var _this = this;
-            var clickEvent = new ClickManager(this);
+            var clickEvent = this.eventBroker.click;
             clickEvent.onHover = function (e, over) {
                 _this.isHover = over;
                 _this.emit('hover', over);
@@ -1787,32 +1946,21 @@
             this.click = function () {
                 _this.emit('click');
             };
-            this.focus = function () {
-                if (!_this._focused) {
-                    FocusableWidget.prototype.focus.call(_this);
-                    // document.addEventListener("keydown", keyDownEvent, false);
-                }
-            };
-            this.blur = function () {
-                if (_this._focused) {
-                    FocusableWidget.prototype.blur.call(_this);
-                    // document.removeEventListener("keydown", keyDownEvent);
-                }
-            };
-            this.initialize = function () {
-                _super.prototype.initialize.call(_this);
-                _this.contentContainer.interactiveChildren = false;
-                // lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
-                setTimeout(function () {
-                    var bounds = _this.contentContainer.getLocalBounds();
-                    _this.contentContainer.hitArea = new PIXI$1.Rectangle(bounds.x < 0 ? bounds.x : 0, bounds.y < 0 ? bounds.y : 0, Math.max(bounds.x + bounds.width + (bounds.x < 0 ? -bounds.x : 0), _this._width), Math.max(bounds.y + bounds.height + (bounds.y < 0 ? -bounds.y : 0), _this._height));
-                }, 20);
-            };
         };
         Button.prototype.update = function () {
             // No update needed
         };
+        Button.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this.setupClick();
+            this.insetContainer.interactiveChildren = false;
+            // lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
+        };
         Object.defineProperty(Button.prototype, "value", {
+            /**
+             * Label for this button.
+             * @member {string}
+             */
             get: function () {
                 if (this.textWidget) {
                     return this.textWidget.text;
@@ -1862,31 +2010,13 @@
      */
 
     /**
-     * An interactive container.
-     *
-     * @class
-     * @extends PIXI.UI.UIBase
-     * @memberof PIXI.UI
+     * @memberof PUXI
+     * @extends PUXI.IFocusableOptions
+     * @member {boolean} checked
+     * @member {PIXI.Container}[checkmark]
+     * @member {PUXI.CheckGroup}[checkGroup]
+     * @member {string}[value]
      */
-    var InteractiveGroup = /** @class */ (function (_super) {
-        __extends(InteractiveGroup, _super);
-        function InteractiveGroup() {
-            var _this = _super.call(this) || this;
-            _this.hitArea = new PIXI$1.Rectangle();
-            _this.insetContainer.hitArea = _this.hitArea;
-            return _this;
-        }
-        InteractiveGroup.prototype.update = function () {
-            // TODO:
-        };
-        InteractiveGroup.prototype.layout = function (l, t, r, b, dirty) {
-            _super.prototype.layout.call(this, l, t, r, b, dirty);
-            this.hitArea.width = this.width;
-            this.hitArea.height = this.height;
-        };
-        return InteractiveGroup;
-    }(WidgetGroup));
-
     /**
      * A checkbox is a button can be selected (checked). It has a on/off state that
      * can be controlled by the user.
@@ -1905,7 +2035,7 @@
          * @param [options.checked=false] {bool} is checked
          * @param options.background {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as background for CheckBox
          * @param options.checkmark {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as checkmark for CheckBox
-         * @param [options.checkgroup=null] {String} CheckGroup name
+         * @param {PUXI.CheckGroup}[options.checkGroup=null] CheckGroup name
          * @param options.value {String} mostly used along with checkgroup
          * @param [options.tabIndex=0] {Number} input tab index
          * @param [options.tabGroup=0] {Number|String} input tab group
@@ -1925,30 +2055,15 @@
                 _this.checked = !_this.checked;
                 _this.emit('changed', _this.checked);
             };
-            _this.focus = function () {
-                if (!_this._focused) {
-                    _super.prototype.focus.call(_this);
-                    // document.addEventListener("keydown", keyDownEvent, false);
-                }
-            };
-            _this.blur = function () {
-                if (_this._focused) {
-                    _super.prototype.blur.call(_this);
-                    // document.removeEventListener("keydown", keyDownEvent);
-                }
-            };
             _this._checked = options.checked !== undefined ? options.checked : false;
             _this._value = options.value || '';
-            _this.checkGroup = options.checkgroup || null;
+            _this.checkGroup = options.checkGroup || null;
             _this.checkmark = new InteractiveGroup();
             _this.checkmark.contentContainer.addChild(options.checkmark);
             _this.checkmark.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
             _this.checkmark.alpha = _this._checked ? 1 : 0;
             _this.addChild(_this.checkmark);
             _this.contentContainer.buttonMode = true;
-            if (_this.checkGroup !== null) {
-                InputController.registrerCheckGroup(_this);
-            }
             return _this;
         }
         CheckBox.prototype.update = function () {
@@ -1961,7 +2076,7 @@
             set: function (val) {
                 if (val !== this._checked) {
                     if (this.checkGroup !== null && val) {
-                        InputController.updateCheckGroupSelected(this);
+                        this.stage.checkBoxGroupController.notifyCheck(this);
                     }
                     this._checked = val;
                     this.change(val);
@@ -1977,7 +2092,7 @@
             set: function (val) {
                 this._value = val;
                 if (this.checked) {
-                    InputController.updateCheckGroupSelected(this);
+                    this.stage.checkBoxGroupController.notifyCheck(this);
                 }
             },
             enumerable: true,
@@ -1985,10 +2100,8 @@
         });
         Object.defineProperty(CheckBox.prototype, "selectedValue", {
             get: function () {
-                return InputController.getCheckGroupSelectedValue(this.checkGroup);
-            },
-            set: function (val) {
-                InputController.setCheckGroupSelectedValue(this.checkGroup, val);
+                var _a;
+                return (_a = this.stage) === null || _a === void 0 ? void 0 : _a.checkBoxGroupController.getSelected(this.checkGroup).value;
             },
             enumerable: true,
             configurable: true
@@ -2010,6 +2123,9 @@
             clickMgr.onClick = function () {
                 _this.click();
             };
+            if (this.checkGroup !== null) {
+                this.stage.checkBoxGroupController.in(this, this.checkGroup);
+            }
         };
         return CheckBox;
     }(FocusableWidget));
@@ -3751,77 +3867,6 @@
         }),
     };
 
-    var MouseScrollEvent = /** @class */ (function () {
-        function MouseScrollEvent(obj, preventDefault) {
-            var _this = this;
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            this.onMouseScrollImpl = function (e) {
-                var _a = _this, obj = _a.obj, preventDefault = _a.preventDefault, delta = _a.delta;
-                if (preventDefault) {
-                    event.preventDefault();
-                }
-                if (typeof e.deltaX !== 'undefined') {
-                    delta.set(e.deltaX, e.deltaY);
-                }
-                else // Firefox
-                 {
-                    delta.set(e.axis === 1 ? e.detail * 60 : 0, e.axis === 2 ? e.detail * 60 : 0);
-                }
-                _this.onMouseScroll.call(obj, event, delta);
-            };
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            this.onHoverImpl = function (e) {
-                var onMouseScrollImpl = _this.onMouseScrollImpl;
-                if (!_this.bound) {
-                    document.addEventListener('mousewheel', onMouseScrollImpl, false);
-                    document.addEventListener('DOMMouseScroll', onMouseScrollImpl, false);
-                    _this.bound = true;
-                }
-            };
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            this.onMouseOutImpl = function (e) {
-                var onMouseScrollImpl = _this.onMouseScrollImpl;
-                if (_this.bound) {
-                    document.removeEventListener('mousewheel', onMouseScrollImpl);
-                    document.removeEventListener('DOMMouseScroll', onMouseScrollImpl);
-                    _this.bound = false;
-                }
-            };
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            this.onMouseScroll = function onMouseScroll(event, delta) {
-                // Default onMouseScroll.
-            };
-            this.bound = false;
-            this.delta = new PIXI$1.Point();
-            this.obj = obj;
-            this.preventDefault = preventDefault;
-            this.startEvent();
-        }
-        MouseScrollEvent.prototype.stopEvent = function () {
-            var _a = this, obj = _a.obj, onMouseScrollImpl = _a.onMouseScrollImpl, onHoverImpl = _a.onHoverImpl, onMouseOutImpl = _a.onMouseOutImpl;
-            if (this.bound) {
-                document.removeEventListener('mousewheel', onMouseScrollImpl);
-                document.removeEventListener('DOMMouseScroll', onMouseScrollImpl);
-                this.bound = false;
-            }
-            obj.contentContainer.removeListener('mouseover', onHoverImpl);
-            obj.contentContainer.removeListener('mouseout', onMouseOutImpl);
-        };
-        MouseScrollEvent.prototype.startEvent = function () {
-            var _a = this, obj = _a.obj, onHoverImpl = _a.onHoverImpl, onMouseOutImpl = _a.onMouseOutImpl;
-            obj.contentContainer.on('mouseover', onHoverImpl);
-            obj.contentContainer.on('mouseout', onMouseOutImpl);
-        };
-        return MouseScrollEvent;
-    }());
-
-    const Interaction = {
-        ClickManager,
-        DragManager,
-        InputController,
-        MouseScrollEvent,
-    };
-
     var Helpers = {
         Lerp: function (start, stop, amt) {
             if (amt > 1)
@@ -4214,9 +4259,9 @@
     /**
     * An UI Slider, the default width/height is 90%
     *
+    * @memberof PUXI
     * @class
     * @extends Widget
-    * @memberof PIXI.UI
     * @param options {Object} Slider settings
     * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
     * @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as slider handle
@@ -4429,11 +4474,17 @@
     }(Widget));
 
     /**
+     * @memberof PUXI
+     * @interface IScrollBarOptions
+     * @property {PUXI.Sprite} track
+     * @property {PUXI.Sprite} handle
+     */
+    /**
      * An UI scrollbar to control a ScrollingContainer
      *
      * @class
-     * @extends PIXI.UI.Slider
-     * @memberof PIXI.UI
+     * @extends PUXI.Slider
+     * @memberof PUXI
      * @param options {Object} ScrollBar settings
      * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the scrollbar track
      * @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as scrollbar handle
@@ -4592,7 +4643,7 @@
      * `ScrollWidget` masks its contents to its layout bounds and translates
      * its children when scrolling.
      *
-     * @namespace PUXI
+     * @memberof PUXI
      * @class
      * @extends PUXI.InteractiveGroup
      */
@@ -4656,6 +4707,9 @@
                 _this.scrollPosition.copyFrom(container.position);
                 _this.updateScrollBars();
             };
+            /**
+             * @param {PIXI.Point}[velocity]
+             */
             _this.setScrollPosition = function (velocity) {
                 if (velocity) {
                     _this.scrollVelocity.copyFrom(velocity);
@@ -4668,6 +4722,10 @@
                     Ticker.on('update', _this.updateScrollPosition, _this);
                 }
             };
+            /**
+             * @param {number} delta
+             * @protected
+             */
             _this.updateScrollPosition = function (delta) {
                 _this.stop = true;
                 if (_this.scrollX) {
@@ -4681,6 +4739,11 @@
                     _this.animating = false;
                 }
             };
+            /**
+             * @param {'x' | 'y'} direction
+             * @param {number} delta
+             * @protected
+             */
             _this.updateDirection = function (direction, delta) {
                 var bounds = _this.getInnerBounds();
                 var _a = _this, scrollPosition = _a.scrollPosition, scrollVelocity = _a.scrollVelocity, targetPosition = _a.targetPosition, lastPosition = _a.lastPosition;
@@ -4745,8 +4808,18 @@
             _this.expandMask = options.expandMask || 0;
             _this.overflowY = options.overflowY || 0;
             _this.overflowX = options.overflowX || 0;
-            _this.scrollPosition = new PIXI$1.Point();
             _this.scrollVelocity = new PIXI$1.Point();
+            /**
+             * Widget's position in a scroll.
+             * @member {PIXI.Point}
+             * @private
+             */
+            _this.scrollPosition = new PIXI$1.Point();
+            /**
+             * Position that the cursor is at, i.e. our scroll "target".
+             * @member {PIXI.Point}
+             * @private
+             */
             _this.targetPosition = new PIXI$1.Point();
             _this.lastPosition = new PIXI$1.Point();
             _this.animating = false;
@@ -4756,12 +4829,11 @@
             _this.initScrolling();
             return _this;
         }
-        ScrollWidget.prototype.initialize = function () {
-            _super.prototype.initialize.call(this);
-            if (this.scrollX || this.scrollY) {
-                this.initScrolling();
-            }
-        };
+        /**
+         * Updates the mask and scroll position before rendering.
+         *
+         * @override
+         */
         ScrollWidget.prototype.update = function () {
             _super.prototype.update.call(this);
             if (this.lastWidth !== this.width || this.lastHeight !== this.height) {
@@ -4781,6 +4853,10 @@
             }
             this.setScrollPosition();
         };
+        /**
+         * @param {PUXI.Widget[]} newChildren
+         * @returns {ScrollWidget} this widget
+         */
         ScrollWidget.prototype.addChild = function () {
             var newChildren = [];
             for (var _i = 0; _i < arguments.length; _i++) {
@@ -4808,44 +4884,51 @@
             }
             return this.innerBounds;
         };
+        /**
+         * @override
+         */
+        ScrollWidget.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            if (this.scrollX || this.scrollY) {
+                this.initScrolling();
+            }
+        };
         ScrollWidget.prototype.initScrolling = function () {
             var _this = this;
             var container = this.innerContainer.insetContainer;
-            var containerStart = new PIXI$1.Point();
+            var realPosition = new PIXI$1.Point();
             var _a = this, scrollPosition = _a.scrollPosition, targetPosition = _a.targetPosition;
             // Drag scroll
             if (this.dragScrolling) {
-                var drag = new DragManager(this);
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                var drag = this.eventBroker.dnd;
                 drag.onDragStart = function (e) {
                     if (!_this.scrolling) {
-                        containerStart.copyFrom(container.position);
+                        realPosition.copyFrom(container.position);
                         scrollPosition.copyFrom(container.position);
                         _this.scrolling = true;
                         _this.setScrollPosition();
-                        _this.emit('dragStart', e);
+                        _this.emit('scrollstart', e);
                     }
                 };
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                drag.onDragMove = function (e, offset) {
+                drag.onDragMove = function (_, offset) {
                     if (_this.scrollX) {
-                        targetPosition.x = containerStart.x + offset.x;
+                        targetPosition.x = realPosition.x + offset.x;
                     }
                     if (_this.scrollY) {
-                        targetPosition.y = containerStart.y + offset.y;
+                        targetPosition.y = realPosition.y + offset.y;
                     }
                 };
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 drag.onDragEnd = function (e) {
                     if (_this.scrolling) {
                         _this.scrolling = false;
-                        _this.emit('dragEnd', e);
+                        _this.emit('scrollend', e);
                     }
                 };
             }
             // Mouse scroll
             var scrollSpeed = new PIXI$1.Point();
-            var scroll = new MouseScrollEvent(this, true);
+            var scroll = new ScrollManager(this, true);
             scroll.onMouseScroll = function (e, delta) {
                 scrollSpeed.set(-delta.x * 0.2, -delta.y * 0.2);
                 _this.setScrollPosition(scrollSpeed);
@@ -4858,9 +4941,9 @@
     /**
      * An UI Container object
      *
+     * @memberof PUXI
      * @class
-     * @extends PIXI.UI.UIBase
-     * @memberof PIXI.UI
+     * @extends PUXI.Widget
      * @param desc {Boolean} Sort the list descending
      * @param tweenTime {Number} if above 0 the sort will be animated
      * @param tweenEase {PIXI.UI.Ease} ease method used for animation
@@ -4963,7 +5046,7 @@
      * A sliced sprite with dynamic width and height.
      *
      * @class
-     * @memberof PIXI.UI
+     * @memberof PUXI
      * @param Texture {PIXI.Texture} the texture for this SliceSprite
      * @param BorderWidth {Number} Width of the sprite borders
      * @param horizontalSlice {Boolean} Slice the sprite horizontically
@@ -5124,10 +5207,9 @@
     /**
      * An UI sprite object
      *
+     * @memberof PUXI
      * @class
-     * @extends PIXI.UI.UIBase
-     * @memberof PIXI.UI
-     * @param Texture {PIXI.Texture} The texture for the sprite
+     * @extends PUXI.Widget
      */
     var Sprite = /** @class */ (function (_super) {
         __extends(Sprite, _super);
@@ -5151,6 +5233,300 @@
         return Sprite;
     }(Widget));
 
+    var Controller = /** @class */ (function (_super) {
+        __extends(Controller, _super);
+        function Controller(stage) {
+            var _this = _super.call(this) || this;
+            _this.stage = stage;
+            return _this;
+        }
+        return Controller;
+    }(PIXI$1.utils.EventEmitter));
+    /**
+     * A controller handles a stage-level state that can be held by wigets. For example,
+     * `PUXI.FocusController` handles which widget is focused.
+     *
+     * @memberof PUXI
+     * @class Controller
+     */
+    /**
+     * Enables the widget to enter the controller's state.
+     *
+     * @memberof PUXI.Controller#
+     * @method in
+     * @param {PUXI.Widget} widget
+     */
+    /**
+     * Disables the widget from the controller's state.
+     *
+     * @memberof PUXI.Controller#
+     * @method out
+     * @param {PUXI.Widget} widget
+     */
+
+    /**
+     * Check boxes use this controller to deselect other checkboxes in the group when
+     * they are selected.
+     *
+     * @memberof PUXI
+     * @class
+     * @extends PUXI.Controller
+     */
+    var CheckBoxGroupController = /** @class */ (function (_super) {
+        __extends(CheckBoxGroupController, _super);
+        function CheckBoxGroupController(stage) {
+            var _this = _super.call(this, stage) || this;
+            _this.checkGroups = new Map();
+            return _this;
+        }
+        /**
+         * @param {PUXI.CheckBox} widget
+         * @param {PUXI.CheckGroup} checkGroup
+         * @override
+         */
+        CheckBoxGroupController.prototype.in = function (widget, checkGroup) {
+            if (!checkGroup) {
+                throw new Error('Default check groups don\'t exist!');
+            }
+            var group = this.checkGroups.get(checkGroup) || this.initGroup(checkGroup);
+            group.checks.push(widget);
+            widget.checkGroup = checkGroup;
+        };
+        /**
+         * @override
+         */
+        CheckBoxGroupController.prototype.out = function (widget) {
+            var group = this.checkGroups.get(widget.checkGroup);
+            var i = group.checks.indexOf(widget);
+            if (i > 0) {
+                group.checks.splice(i, 1);
+            }
+            widget.checkGroup = null;
+        };
+        /**
+         * Called when a checkbox is selected. Do not call from outside.
+         *
+         * @param {CheckBox} widget
+         */
+        CheckBoxGroupController.prototype.notifyCheck = function (widget) {
+            var group = this.checkGroups.get(widget.checkGroup);
+            if (!group) {
+                return;
+            }
+            var checks = group.checks;
+            for (var i = 0, j = checks.length; i < j; i++) {
+                if (checks[i] !== widget) {
+                    checks[i].checked = false;
+                }
+            }
+            group.selected = widget;
+        };
+        /**
+         * @param {PUXI.CheckGroup} group
+         * @returns {CheckBox} the selected checkbox in the group
+         */
+        CheckBoxGroupController.prototype.getSelected = function (group) {
+            var _a;
+            return (_a = this.checkGroups.get(group)) === null || _a === void 0 ? void 0 : _a.selected;
+        };
+        /**
+         * Ensures that the check group exists in `this.checkGroups`.
+         *
+         * @param {PUXI.CheckGroup} id
+         * @protected
+         */
+        CheckBoxGroupController.prototype.initGroup = function (id) {
+            var cgroup = {
+                checks: [],
+                selected: null,
+            };
+            this.checkGroups.set(id, cgroup);
+            return cgroup;
+        };
+        return CheckBoxGroupController;
+    }(Controller));
+
+    /**
+     * Pressing tab on a focused widget will make the next widget its tab group
+     * focused. If no tab group is specified for a focusable widget, then it
+     * has the `'default'` tab group.
+     *
+     * @memberof PUXI
+     * @typedef {string} TabGroup
+     */
+    /**
+     * @memberof PUXI
+     * @class
+     * @extends PUXI.Controller
+     */
+    var FocusController = /** @class */ (function (_super) {
+        __extends(FocusController, _super);
+        function FocusController(stage) {
+            var _this = _super.call(this, stage) || this;
+            /**
+             * Map of tab-group names to the widgets in those groups.
+             * @member {Map<PUXI.TabGroup, PUXI.FocusableWidget[]>}
+             * @protected
+             */
+            _this.tabGroups = new Map();
+            /**
+             * Whether to enable tab-based focus movement.
+             * @member {boolean}
+             */
+            _this.useTab = true;
+            /**
+             * Whether to enable forward arrow key focus movement.
+             * @member {boolean}
+             */
+            _this.useForward = true;
+            /**
+             * Whether to enable back arrow key focus movement.
+             * @member {boolean}
+             */
+            _this.useBack = true;
+            return _this;
+        }
+        /**
+         * Adds the (focusable) widget to the tab group so that pressing tab repeatedly
+         * will eventually bring it into focus.
+         *
+         * @param {PUXI.FocusableWidget} widget - the widget to add
+         * @param {number}[tabIndex=0] - unique index for the widget in tab group used for ordering
+         * @param {PUXI.TabGroup}[tabGroup='default'] - tab group name
+         */
+        FocusController.prototype.in = function (widget, tabIndex, tabGroup) {
+            if (tabIndex === void 0) { tabIndex = 0; }
+            if (tabGroup === void 0) { tabGroup = 'default'; }
+            var widgets = this.tabGroups.get(tabGroup);
+            if (!widgets) {
+                widgets = [];
+                this.tabGroups.set(tabGroup, widgets);
+            }
+            var i = widgets.indexOf(widget);
+            // Push widget into tab group list if not present already.
+            if (i === -1) {
+                widget.tabIndex = tabIndex !== undefined ? tabIndex : -1;
+                widget.tabGroup = tabGroup;
+                widgets.push(widget);
+                widgets.sort(function (a, b) { return a.tabIndex - b.tabIndex; });
+            }
+        };
+        /**
+         * @param {PUXI.FocusableWidget} widget
+         * @override
+         */
+        FocusController.prototype.out = function (widget) {
+            var widgets = this.tabGroups.get(widget.tabGroup);
+            if (!widgets) {
+                return;
+            }
+            var i = widgets.indexOf(widget);
+            if (i !== -1) {
+                // Widgets should already be sorted & so deleting should not unsort it.
+                widgets.splice(i, 1);
+            }
+        };
+        /**
+         * Called when a widget comes into focus. Do not call this yourself.
+         *
+         * @param {FocusableWidget} widget
+         */
+        FocusController.prototype.notifyFocus = function (widget) {
+            var lastItem = this.currentItem;
+            if (lastItem) {
+                lastItem.blur();
+                this.emit('blur', lastItem);
+            }
+            this.currentItem = widget;
+            this.emit('focus', widget);
+            this.emit('focusChanged', widget, lastItem);
+        };
+        /**
+         * Clears the currently focused item without blurring it. It is called
+         * when a widget goes out of focus.
+         */
+        FocusController.prototype.notifyBlur = function () {
+            this.emit('blur', this.currentItem);
+            this.emit('focusChanged', null, this.currentItem);
+            this.currentItem = null;
+        };
+        /**
+         * Brings the widget into focus.
+         *
+         * @param {FocusableWidget} item
+         */
+        FocusController.prototype.focus = function (item) {
+            var lastItem = this.currentItem;
+            if (lastItem) {
+                lastItem.blur();
+                this.emit('blur', lastItem);
+            }
+            item.focus();
+            this.emit('focus', item);
+            this.emit('focusChanged', item, lastItem);
+        };
+        /**
+         * Blurs the currently focused widget out of focus.
+         */
+        FocusController.prototype.blur = function () {
+            if (this.currentItem) {
+                this.currentItem.blur();
+                this.emit('blur', this.currentItem);
+                this.emit('focusChanged', null, this.currentItem);
+                this.currentItem = null;
+            }
+        };
+        /**
+         * Called when tab is pressed on a focusable widget.
+         */
+        FocusController.prototype.onTab = function () {
+            var _a = this, tabGroups = _a.tabGroups, currentItem = _a.currentItem;
+            if (currentItem) {
+                var tabGroup = tabGroups.get(currentItem.tabGroup);
+                var i = tabGroup.indexOf(currentItem) + 1;
+                if (i >= tabGroup.length) {
+                    i = 0;
+                }
+                this.focus(tabGroup[i]);
+            }
+        };
+        /**
+         * Focuses the next item without wrapping, i.e. it does not go to the first
+         * item if the current one is the last item. This is called when the user
+         * presses the forward arrow key.
+         */
+        FocusController.prototype.onForward = function () {
+            if (!this.useForward) {
+                return;
+            }
+            var _a = this, currentItem = _a.currentItem, tabGroups = _a.tabGroups;
+            if (currentItem) {
+                var tabGroup = tabGroups.get(currentItem.tabGroup);
+                var i = tabGroup.indexOf(currentItem) + 1;
+                if (i >= tabGroup.length) {
+                    i = tabGroup.length - 1;
+                }
+                this.focus(tabGroup[i]);
+            }
+        };
+        /**
+         * Focuses the last item without wrapping, i.e. it does not go to the last
+         * item if the current item is the first one. This is called when the user
+         * presses the back arrow button.
+         */
+        FocusController.prototype.onBack = function () {
+            var _a = this, currentItem = _a.currentItem, tabGroups = _a.tabGroups;
+            if (currentItem) {
+                var tabGroup = tabGroups.get(currentItem.tabGroup);
+                var i = tabGroup.indexOf(currentItem) - 1;
+                if (i < 0)
+                    i = 0;
+                this.focus(tabGroup[i]);
+            }
+        };
+        return FocusController;
+    }(Controller));
+
     /**
      * The stage is the root node in the PUXI scene graph. It does not provide a
      * sophisticated layout model; however, it will accept constraints defined by
@@ -5158,8 +5534,9 @@
      *
      * The stage is not a `PUXI.Widget` and its dimensions are always fixed.
      *
-     * @class
      * @memberof PUXI
+     * @class
+     * @extends PIXI.Container
      */
     var Stage = /** @class */ (function (_super) {
         __extends(Stage, _super);
@@ -5179,6 +5556,8 @@
             _this.hitArea = new PIXI$1.Rectangle(0, 0, 0, 0);
             _this.initialized = true;
             _this.resize(width, height);
+            _this._checkBoxGroupCtl = new Stage.CHECK_BOX_GROUP_CONTROLLER(_this);
+            _this._focusCtl = new Stage.FOCUS_CONTROLLER(_this);
             return _this;
         }
         Stage.prototype.measureAndLayout = function () {
@@ -5229,11 +5608,11 @@
         Stage.prototype.update = function (widgets) {
             for (var i = 0, j = widgets.length; i < j; i++) {
                 var widget = widgets[i];
+                widget.stage = this;
                 if (!widget.initialized) {
                     widget.initialize();
                 }
                 this.update(widget.widgetChildren);
-                widget.stage = this;
                 widget.update();
             }
         };
@@ -5339,6 +5718,45 @@
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Stage.prototype, "checkBoxGroupController", {
+            /**
+             * The check box group controller for check boxes in this stage.
+             *
+             * @member {PUXI.CheckBoxGroupController}
+             */
+            get: function () {
+                return this._checkBoxGroupCtl;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "focusController", {
+            /**
+             * The focus controller for widgets in this stage. You can use this to bring a
+             * widget into focus.
+             *
+             * @member {PUXI.FocusController}
+             */
+            get: function () {
+                return this._focusCtl;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * Use this to override which class is used for the check box group controller. It
+         * should extend from `PUXI.CheckBoxGroupController`.
+         *
+         * @static
+         */
+        Stage.CHECK_BOX_GROUP_CONTROLLER = CheckBoxGroupController;
+        /**
+         * Use this to override which class is used for the focus controller. It should
+         * extend from `PUXI.FocusController`.
+         *
+         * @static
+         */
+        Stage.FOCUS_CONTROLLER = FocusController;
         return Stage;
     }(PIXI$1.Container));
 
@@ -5386,14 +5804,14 @@
          */
         function TextInput(options) {
             var _this = _super.call(this, options) || this;
-            _this.keyDownEvent = function (e) {
+            _this.onKeyDown = function (e) {
                 if (e.which === _this.ctrlKey || e.which === _this.cmdKey) {
                     _this.ctrlDown = true;
                 }
                 if (e.which === _this.shiftKey) {
                     _this.shiftDown = true;
                 }
-                _this.emit('keydown', e);
+                // FocusableWidget.onKeyDownImpl should've been called before this.
                 if (e.defaultPrevented) {
                     return;
                 }
@@ -5584,7 +6002,7 @@
                 _this.blur();
             };
             _this.focus = function () {
-                if (!_this._focused) {
+                if (!_this._isFocused) {
                     _super.prototype.focus.call(_this);
                     var l = _this.contentContainer.worldTransform.tx + "px";
                     var t = _this.contentContainer.worldTransform.ty + "px";
@@ -5596,7 +6014,7 @@
                     mockDOMInput.setAttribute('style', 'position:fixed; left:-10px; top:-10px; width:0px; height: 0px;');
                     _this.innerContainer.cacheAsBitmap = false;
                     mockDOMInput.addEventListener('blur', _this.inputBlurEvent, false);
-                    document.addEventListener('keydown', _this.keyDownEvent, false);
+                    document.addEventListener('keydown', _this.onKeyDown, false);
                     document.addEventListener('keyup', _this.keyUpEvent, false);
                     document.addEventListener('paste', _this.pasteEvent, false);
                     document.addEventListener('copy', _this.copyEvent, false);
@@ -5610,7 +6028,7 @@
                 }
             };
             _this.blur = function () {
-                if (_this._focused) {
+                if (_this._isFocused) {
                     _super.prototype.blur.call(_this);
                     _this.ctrlDown = false;
                     _this.shiftDown = false;
@@ -5620,7 +6038,7 @@
                         _this.innerContainer.cacheAsBitmap = true;
                     }
                     mockDOMInput.removeEventListener('blur', _this.inputBlurEvent);
-                    document.removeEventListener('keydown', _this.keyDownEvent);
+                    document.removeEventListener('keydown', _this.onKeyDown);
                     document.removeEventListener('keyup', _this.keyUpEvent);
                     document.removeEventListener('paste', _this.pasteEvent);
                     document.removeEventListener('copy', _this.copyEvent);
@@ -5852,7 +6270,7 @@
                 e.data.originalEvent.preventDefault();
             };
             event.onDragMove = function (e, offset) {
-                if (!_this.chars.length || !_this._focused) {
+                if (!_this.chars.length || !_this._isFocused) {
                     return;
                 }
                 _this.de.x = _this.sp.x + offset.x;
@@ -6215,7 +6633,7 @@
     /**
      * `AnchorLayout` is used in conjunction with `AnchorLayoutOptions`.
      *
-     * @namespace PUXI
+     * @memberof PUXI
      * @class
      * @example
      * ```
@@ -6420,16 +6838,20 @@
     exports.AnchorLayoutOptions = AnchorLayoutOptions;
     exports.Button = Button;
     exports.CheckBox = CheckBox;
+    exports.ClickManager = ClickManager;
     exports.DynamicText = DynamicText;
     exports.DynamicTextStyle = DynamicTextStyle;
     exports.Ease = Ease;
+    exports.EventBroker = EventBroker;
+    exports.EventManager = EventManager;
+    exports.FastLayout = FastLayout;
     exports.FastLayoutOptions = FastLayoutOptions;
     exports.Helpers = Helpers;
     exports.Insets = Insets;
-    exports.Interaction = Interaction;
     exports.InteractiveGroup = InteractiveGroup;
     exports.LayoutOptions = LayoutOptions;
     exports.ScrollBar = ScrollBar;
+    exports.ScrollManager = ScrollManager;
     exports.ScrollWidget = ScrollWidget;
     exports.SliceSprite = SliceSprite;
     exports.Slider = Slider;

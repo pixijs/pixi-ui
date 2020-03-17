@@ -1,15 +1,14 @@
-import { FocusableWidget, IInputBaseOptions } from './FocusableWidget';
-import { InteractiveGroup } from './InteractiveGroup';
-import { DragManager } from './event/DragManager';
+import { FocusableWidget, IFocusableOptions } from './FocusableWidget';
 import { ScrollWidget } from './ScrollWidget';
 import * as PIXI from 'pixi.js';
 import { LayoutOptions } from './layout-options';
+import { DragManager } from './event/DragManager';
 
 /**
  * @memberof PUXI
  * @interface
  */
-interface ITextInputOptions extends IInputBaseOptions
+interface ITextInputOptions extends IFocusableOptions
 {
     multiLine?: boolean;
     style?: PIXI.TextStyle;
@@ -290,7 +289,7 @@ export class TextInput extends FocusableWidget
 
         event.onDragMove = (e, offset: PIXI.Point): void =>
         {
-            if (!this.chars.length || !this._focused)
+            if (!this.chars.length || !this._isFocused)
             {
                 return;
             }
@@ -616,7 +615,7 @@ export class TextInput extends FocusableWidget
         }
     }
 
-    keyDownEvent = (e): void =>
+    onKeyDown = (e): void =>
     {
         if (e.which === this.ctrlKey || e.which === this.cmdKey)
         {
@@ -627,7 +626,7 @@ export class TextInput extends FocusableWidget
             this.shiftDown = true;
         }
 
-        this.emit('keydown', e);
+        // FocusableWidget.onKeyDownImpl should've been called before this.
 
         if (e.defaultPrevented)
         {
@@ -904,7 +903,7 @@ export class TextInput extends FocusableWidget
 
     public focus = (): void =>
     {
-        if (!this._focused)
+        if (!this._isFocused)
         {
             super.focus();
 
@@ -920,7 +919,7 @@ export class TextInput extends FocusableWidget
 
             this.innerContainer.cacheAsBitmap = false;
             mockDOMInput.addEventListener('blur', this.inputBlurEvent, false);
-            document.addEventListener('keydown', this.keyDownEvent, false);
+            document.addEventListener('keydown', this.onKeyDown, false);
             document.addEventListener('keyup', this.keyUpEvent, false);
             document.addEventListener('paste', this.pasteEvent, false);
             document.addEventListener('copy', this.copyEvent, false);
@@ -939,7 +938,7 @@ export class TextInput extends FocusableWidget
 
     public blur = (): void =>
     {
-        if (this._focused)
+        if (this._isFocused)
         {
             super.blur();
             this.ctrlDown = false;
@@ -954,7 +953,7 @@ export class TextInput extends FocusableWidget
             }
 
             mockDOMInput.removeEventListener('blur', this.inputBlurEvent);
-            document.removeEventListener('keydown', this.keyDownEvent);
+            document.removeEventListener('keydown', this.onKeyDown);
             document.removeEventListener('keyup', this.keyUpEvent);
             document.removeEventListener('paste', this.pasteEvent);
             document.removeEventListener('copy', this.copyEvent);
