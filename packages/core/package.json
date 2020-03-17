@@ -32,7 +32,7 @@
     "url": "https://github.com/pixijs/pixi-ui/issues"
   },
   "scripts": {
-    "bundle": "npm run compile; rm -rf bin/*; rollup -c; cp bin/pixi-ui.* example/; npm run extract-api",
+    "bundle": "npm run compile; rm -rf bin/*; rollup -c; cp bin/puxi-core.* example/; npm run extract-api",
     "compile": "rm -rf ./lib/*; tsc",
     "extract-api": "api-extractor run",
     "lint": "eslint src/",
@@ -42,6 +42,7 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-env": "^7.8.7",
     "@babel/preset-typescript": "^7.8.3",
+    "@microsoft/api-extractor": "^7.7.8",
     "@pixi/jsdoc-template": "^2.5.1",
     "@rollup/plugin-node-resolve": "^7.1.1",
     "canvas": "^2.6.1",
@@ -49,8 +50,9 @@
     "jsdoc": "^3.6.3",
     "pixi.js": "^5.2.1",
     "rollup": "^2.0.6",
+    "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-builtins": "^2.1.2",
-    "@microsoft/api-extractor": "^7.7.8"
+    "rollup-plugin-terser": "^5.3.0"
   },
   "dependencies": {
     "@pixi/filter-drop-shadow": "^3.1.1",

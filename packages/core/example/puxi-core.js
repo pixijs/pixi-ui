@@ -4964,4 +4964,4 @@
     Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-//# sourceMappingURL=pixi-ui.js.map
+//# sourceMappingURL=puxi-core.js.map

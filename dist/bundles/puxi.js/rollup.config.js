@@ -2,14 +2,15 @@ import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
 import resolve from '@rollup/plugin-node-resolve';
 import builtins from 'rollup-plugin-node-builtins';
+import multi from '@rollup/plugin-multi-entry';
 
 export default [
     {
-        input: 'lib/index.js',
+        input: 'src/index.js',
         output: {
             format: 'umd',
             name: 'PUXI',
-            file: 'bin/puxi-core.js',
+            file: 'dist/puxi.js',
             sourcemap: true,
             globals: {
                 'pixi.js': 'PIXI',
@@ -21,14 +22,15 @@ export default [
             commonjs(),
             resolve(),
             builtins(),
+            multi(),
         ],
     },
     {
-        input: 'lib/index.js',
+        input: 'src/index.js',
         output: {
             format: 'umd',
             name: 'PUXI',
-            file: 'bin/puxi-core.min.js',
+            file: 'dist/puxi.min.js',
             sourcemap: true,
             globals: {
                 'pixi.js': 'PIXI',
@@ -41,6 +43,7 @@ export default [
             commonjs(),
             resolve(),
             builtins(),
+            multi(),
         ],
     },
 ];

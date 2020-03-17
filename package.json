@@ -16,6 +16,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run bundle",
+    "bundle": "lerna run build && lerna run make",
     "clean": "rimraf bin && mkdirp bin",
     "prestart": "npm run clean",
     "start": "parallelshell \"npm run watch:lint\" \"npm run watch\"",
@@ -24,7 +25,8 @@
     "lint": "eslint ./src",
     "predocs": "npm run build",
     "docs": "npm run build && rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;",
-    "docs-nobuild": "rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;"
+    "docs-nobuild": "rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;",
+    "prepublishOnly": "npm run bundle && npm run docs"
   },
   "files": [
     "bin/",
@@ -40,6 +42,8 @@
   "devDependencies": {
     "@pixi/jsdoc-template": "^2.5.1",
     "@rollup/plugin-commonjs": "^11.0.2",
+    "@rollup/plugin-multi-entry": "^3.0.0",
+    "@rollup/plugin-node-resolve": "^7.1.1",
     "browserify-versionify": "^1.0.6",
     "del": "^2.2.0",
     "emoji-regex": "6.4.2",
@@ -60,6 +64,7 @@
     "rimraf": "^2.7.1",
     "rollup": "^1.32.1",
     "rollup-plugin-minify": "^1.0.3",
+    "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-sourcemaps": "^0.5.0",
     "rollup-plugin-terser": "^5.3.0",
     "rollup-plugin-typescript": "^1.0.1",
