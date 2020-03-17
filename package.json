@@ -22,7 +22,9 @@
     "watch": "pixify -o pixi-ui -w",
     "watch:lint": "watch \"jshint --reporter=scripts/reporter.js scripts src test || exit 0\" src",
     "lint": "eslint ./src",
-    "docs": "npm run build && rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;"
+    "predocs": "npm run build",
+    "docs": "npm run build && rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;",
+    "docs-nobuild": "rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;"
   },
   "files": [
     "bin/",

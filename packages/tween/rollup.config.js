@@ -9,7 +9,7 @@ export default [
         output: {
             format: 'umd',
             name: 'PUXI',
-            file: 'bin/pixi-ui.js',
+            file: 'bin/puxi-tween.js',
             sourcemap: true,
             globals: {
                 'pixi.js': 'PIXI',
@@ -27,7 +27,7 @@ export default [
         output: {
             format: 'umd',
             name: 'PUXI',
-            file: 'bin/pixi-ui.min.js',
+            file: 'bin/puxi-tween.min.js',
             sourcemap: true,
             globals: {
                 'pixi.js': 'PIXI',

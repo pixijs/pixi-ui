@@ -11,7 +11,7 @@
   },
   "plugins": [
     "plugins/markdown",
-    "@pixi/jsdoc-template/plugins/es6-fix"
+    "@pixi/jsdoc-template/plugins/es6-fix.js"
   ],
   "templates": {
     "cleverLinks": false,
