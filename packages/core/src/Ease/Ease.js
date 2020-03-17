@@ -1,10 +1,11 @@
-export const Ease = {};
 import { EaseBase } from './EaseBase';
 import { ExponentialEase } from './ExponentialEase';
 
+const Ease = {};
+
 const HALF_PI = Math.PI * 0.5;
 
-function create(fn)
+export function create(fn)
 {
     const e = Object.create(EaseBase.prototype);
 
@@ -13,11 +14,13 @@ function create(fn)
     return e;
 }
 
+const Linear = new EaseBase();
+
 // Liear
-Ease.Linear = new EaseBase();
+Ease.Linear = Linear;
 
 // Exponetial Eases
-function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction)
+export function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction)
 {
     return {
         easeIn: easeInFunction,
@@ -27,7 +30,7 @@ function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction)
 }
 
 Ease.Power0 = {
-    easeNone: Ease.Linear,
+    easeNone: Linear,
 };
 
 Ease.Power1 = Ease.Quad = wrapEase(
@@ -167,3 +170,4 @@ Ease.Sine = {
     }),
 };
 
+export { Ease };

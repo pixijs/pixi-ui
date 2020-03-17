@@ -2,8 +2,6 @@ export * from './Widget';
 export * from './Button';
 export * from './CheckBox';
 export * from './InteractiveGroup';
-export * from './DynamicText/DynamicText';
-export * from './DynamicText/DynamicTextStyle';
 export * from './Ease/Ease';
 export * from './event';
 export * from './Helpers';

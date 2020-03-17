@@ -4,7 +4,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "target": "ES6",
-    "declaration": false,
+    "declaration": true,
     "outDir": "dist/compiled",
     "removeComments": false,
     "baseUrl": "src",

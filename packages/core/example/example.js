@@ -1,16 +1,24 @@
 /* global PIXI, PUXI */
 /* eslint-disable no-console */
 
-function generateBackgroundGraphics(width = 300, height = 50, color = 0xffff)
-{
-    const mockBg = new PIXI.Graphics();
-
-    mockBg.beginFill(color);
-    mockBg.drawRect(0, 0, width, height);
-    mockBg.endFill();
-
-    return mockBg;
-}
+const checkBoxBackground = new PIXI.Graphics()
+    .beginFill(0xff00cc, 0.8)
+    .drawCircle(16, 16, 16)
+    .endFill()
+    .beginFill(0xffffff, 1)
+    .drawCircle(16, 16, 12)
+    .endFill();
+const checkBoxFocusedBackground = new PIXI.Graphics()
+    .beginFill(0xacdefb, 0.8)
+    .drawCircle(16, 16, 16)
+    .endFill()
+    .beginFill(0xffffff, 1)
+    .drawCircle(16, 16, 12)
+    .endFill();
+const checkGraphic = new PIXI.Graphics()
+    .beginFill(0xff1111)
+    .drawCircle(8, 8, 8)
+    .endFill();
 
 window.onload = function onload()
 {
@@ -24,6 +32,8 @@ window.onload = function onload()
         backgroundColor: 0xff00ff,
         width,
         height,
+        resolution: 2,
+        autoDensity: true,
     });
 
     const uxStage = new PUXI.Stage(width, height);
@@ -107,34 +117,28 @@ window.onload = function onload()
     const mockCheckbox = new PUXI.CheckBox({
         checked: true,
         checkGroup: 'demogroup',
-        background: generateBackgroundGraphics(30, 30),
-        checkmark: generateBackgroundGraphics(10, 10, 0xff),
+        background: checkBoxBackground.clone(),
+        checkmark: checkGraphic.clone(),
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(
-            0.1, 0.1, 0.9, 0,
-        ),
+        new PUXI.FastLayoutOptions(32, 32, 0.9, 0),
     );
 
     const mockCheckbox2 = new PUXI.CheckBox({
         checked: false,
         checkGroup: 'demogroup',
-        background: generateBackgroundGraphics(30, 30),
-        checkmark: generateBackgroundGraphics(10, 10, 0xff),
+        background: checkBoxBackground.clone(),
+        checkmark: checkGraphic.clone(),
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(
-            0.1, 0.1, 0.8, 0,
-        ),
+        new PUXI.FastLayoutOptions(32, 32, 0.8, 0),
     );
 
     const mockCheckbox3 = new PUXI.CheckBox({
         checked: false,
         checkGroup: 'demogroup',
-        background: generateBackgroundGraphics(30, 30),
-        checkmark: generateBackgroundGraphics(10, 10, 0xff),
+        background: checkBoxBackground.clone(),
+        checkmark: checkGraphic.clone(),
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(
-            0.1, 0.1, 0.7, 0,
-        ),
+        new PUXI.FastLayoutOptions(32, 32, 0.7, 0),
     );
 
     mockCheckbox.on('hover', () => { console.log('Checkbox hovered!'); });
@@ -153,12 +157,26 @@ window.onload = function onload()
     {
         if (next)
         {
-            next.setBackground(0xddeeff);
+            if (next.checkGroup === 'demogroup')
+            {
+                next.setBackground(checkBoxFocusedBackground.clone());
+            }
+            else
+            {
+                next.setBackground(0xddeeff);
+            }
         }
 
         if (prev)
         {
-            prev.setBackground(0xfabcdf);
+            if (prev.checkGroup === 'demogroup')
+            {
+                prev.setBackground(checkBoxBackground.clone());
+            }
+            else
+            {
+                prev.setBackground(0xfabcdf);
+            }
         }
     });
 
@@ -179,5 +197,7 @@ window.onload = function onload()
     window.mockButton = mockButton;
     window.mockTextInput = mockInput;
     window.mockCheckbox = mockCheckbox;
+    window.mockCheckbox2 = mockCheckbox2;
+    window.mockCheckbox3 = mockCheckbox3;
     window.mockScroll = mockScroll;
 };

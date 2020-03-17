@@ -21,23 +21,28 @@ interface ISliderOptions
 }
 
 /**
-* An UI Slider, the default width/height is 90%
-*
-* @memberof PUXI
-* @class
-* @extends Widget
-* @param options {Object} Slider settings
-* @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
-* @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as slider handle
-* @param [options.fill=null] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used for slider fill
-* @param [options.vertical=false] {boolean} Direction of the slider
-* @param [options.value=0] {number} value of the slider
-* @param [options.minValue=0] {number} minimum value
-* @param [options.maxValue=100] {number} max value
-* @param [options.decimals=0] {boolean} the decimal precision (use negative to round tens and hundreds)
-* @param [options.onValueChange=null] {callback} Callback when the value has changed
-* @param [options.onValueChanging=null] {callback} Callback while the value is changing
-*/
+ * These options are used to configure a `PUXI.Slider`.
+ *
+ * @memberof PUXI
+ * @interface ISliderOptions
+ * @property {PIXI.Container}[track]
+ * @property {PIXI.Container}[fill]
+ * @property {boolean}[vertical]
+ * @property {number}[value]
+ * @property {number}[minValue]
+ * @property {number}[maxValue]
+ * @property {number}[decimals]
+ * @property {Function}[onValueChange]
+ * @property {Function}[onValueChanging]
+ */
+
+/**
+ * An UI Slider, the default width/height is 90%
+ *
+ * @memberof PUXI
+ * @class
+ * @extends PUXI.Widget
+ */
 export class Slider extends Widget
 {
     protected _amt: number;
@@ -58,9 +63,22 @@ export class Slider extends Widget
     onValueChange: (number) => void;
     onValueChanging: (number) => void;
 
+    /**
+     * @param options {Object} Slider settings
+     * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
+     * @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as slider handle
+     * @param [options.fill=null] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used for slider fill
+     * @param [options.vertical=false] {boolean} Direction of the slider
+     * @param [options.value=0] {number} value of the slider
+     * @param [options.minValue=0] {number} minimum value
+     * @param [options.maxValue=100] {number} max value
+     * @param [options.decimals=0] {boolean} the decimal precision (use negative to round tens and hundreds)
+     * @param [options.onValueChange=null] {callback} Callback when the value has changed
+     * @param [options.onValueChanging=null] {callback} Callback while the value is changing
+     */
     constructor(options: ISliderOptions)
     {
-        super(0, 0);
+        super();
 
         this._amt = 0;
         this._disabled = false;

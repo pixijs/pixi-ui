@@ -15,13 +15,14 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
+    "build": "lerna run bundle",
     "clean": "rimraf bin && mkdirp bin",
     "prestart": "npm run clean",
     "start": "parallelshell \"npm run watch:lint\" \"npm run watch\"",
     "watch": "pixify -o pixi-ui -w",
     "watch:lint": "watch \"jshint --reporter=scripts/reporter.js scripts src test || exit 0\" src",
     "lint": "eslint ./src",
-    "docs": "rm -rf ./dist/*; tsc; jsdoc -c jsdoc.conf.json -R README.md; rm -rf ./dist/compiled;"
+    "docs": "npm run build && rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;"
   },
   "files": [
     "bin/",

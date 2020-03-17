@@ -3,6 +3,7 @@ import { ClickManager } from './event/ClickManager';
 import { InteractiveGroup } from './InteractiveGroup';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
 import { CheckGroup } from './ctl';
+import { TextWidget } from './TextWidget';
 
 interface ICheckBoxOptions extends IFocusableOptions
 {
@@ -39,6 +40,8 @@ export class CheckBox extends FocusableWidget
 {
     private _checked: boolean;
     private _value: string;
+
+    private label: TextWidget;
     private checkmark: InteractiveGroup;
 
     checkGroup: CheckGroup;
@@ -56,7 +59,6 @@ export class CheckBox extends FocusableWidget
     constructor(options: ICheckBoxOptions)
     {
         super(options);
-
         this._checked = options.checked !== undefined ? options.checked : false;
         this._value = options.value || '';
         this.checkGroup = options.checkGroup || null;

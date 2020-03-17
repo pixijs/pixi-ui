@@ -1,11 +1,9 @@
-function EaseBase()
+class EaseBase
 {
-    this.getPosition = function (p)
+    getPosition(p)
     {
         return p;
-    };
+    }
 }
-
-EaseBase.prototype.constructor = EaseBase;
 
 export { EaseBase };

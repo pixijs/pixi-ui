@@ -1,6 +1,14 @@
 import { Tween } from './Tween';
 import * as PIXI from 'pixi.js';
 
+/**
+ * This ticker is an event-emitter that can be used for running periodic tasks
+ * in the rendering loop. It emits the `update` event every animation frame.
+ *
+ * @memberof PUXI
+ * @class
+ * @extends PIXI.utils.EventEmitter
+ */
 export class Ticker extends PIXI.utils.EventEmitter
 {
     private _disabled: boolean;
@@ -67,6 +75,13 @@ export class Ticker extends PIXI.utils.EventEmitter
             requestAnimationFrame(Ticker.shared.update);
         }
     }
+
+    /**
+     * The update event is fired periodically and it can be used to for a rendering
+     * loop.
+     * @event update
+     * @param {DOMHighResTimeStamp} deltaTime - milliseconds since last update
+     */
 
     static shared: Ticker;
 

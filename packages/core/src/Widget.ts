@@ -449,14 +449,14 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
                 .beginFill(bg)
                 .drawRect(0, 0, 1, 1)
                 .endFill();
-            bg.width = this.width;
-            bg.height = this.height;
         }
 
         this.background = bg;
 
         if (bg)
         {
+            bg.width = this.width;
+            bg.height = this.height;
             this.insetContainer.addChildAt(bg, 0);
         }
 

@@ -29,6 +29,7 @@ node_modules
 
 # jetBrains IDE ignores
 .idea
+docs
 
 
 /menu
@@ -36,5 +37,7 @@ node_modules
 lerna-debug.log
 npm-debug.log
 
-/dist/compiled.map
-/dist/compiled
+compiled
+compiled.map
+
+lib
