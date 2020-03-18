@@ -48,7 +48,7 @@
     "jshint": "^2.9.2",
     "jshint-stylish": "^2.2.0",
     "jshint-stylish-summary": "^0.1.2",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.2",
     "mkdirp": "^0.5.1",
     "parallelshell": "^2.0.0",
     "pixi.js": "^5.2.1",
