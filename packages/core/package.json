@@ -12,7 +12,9 @@
   "author": "Shukant Pal <shukantpal@outlook.com>",
   "homepage": "https://github.com/pixijs/pixi-ui",
   "license": "MIT",
-  "main": "bin/puxi-core.js",
+  "main": "lib/puxi-core.cjs",
+  "module": "lib/puxi-core.mjs",
+  "bundle": "dist/puxi-core.js",
   "directories": {
     "lib": "lib",
     "test": "__test__",
@@ -32,9 +34,7 @@
     "url": "https://github.com/pixijs/pixi-ui/issues"
   },
   "scripts": {
-    "bundle": "npm run compile; rm -rf bin/*; rollup -c; cp bin/puxi-core.* example/; npm run extract-api",
-    "compile": "rm -rf ./lib/*; tsc",
-    "extract-api": "api-extractor run",
+    "extract-api": "tsc; api-extractor run",
     "lint": "eslint src/",
     "test": "jest --testPathPattern=.test.js"
   },

@@ -4,9 +4,9 @@
   },
   "source": {
     "include": [
-      "packages/core/lib/",
-      "packages/tween/lib"
+      "bundles/puxi.js/lib/puxi.mjs"
     ],
+    "includePattern": ".+\\.(js(doc|x)?|mjs)$",
     "excludePattern": "(node_modules|test)"
   },
   "plugins": [
@@ -19,7 +19,7 @@
     "default": {
       "outputSourceFiles": true
     },
-    "applicationName": "PixiJS",
+    "applicationName": "PuxiJS",
     "footer": "Made with ♥ by Shukant Pal <silcostech@outlook.com>",
     "copyright": "Shukant Pal Copyright © 2020",
     "disqus": "",
