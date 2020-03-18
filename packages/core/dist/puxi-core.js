@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 15:44:36 UTC
+ * Compiled Wed, 18 Mar 2020 16:23:13 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5085,5 +5085,5 @@ var PUXI = (function (exports, PIXI, filterDropShadow) {
 
     return exports;
 
-}({}, PIXI, PIXI.filtesr));
+}({}, PIXI, __filters));
 //# sourceMappingURL=puxi-core.js.map

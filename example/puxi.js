@@ -1,42 +1,70 @@
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('pixi.js'), require('@pixi/filter-drop-shadow')) :
-    typeof define === 'function' && define.amd ? define(['exports', 'pixi.js', '@pixi/filter-drop-shadow'], factory) :
-    (global = global || self, factory(global.PUXI = {}, global.PIXI, global.PIXI.filters));
-}(this, (function (exports, PIXI, filterDropShadow) { 'use strict';
+/*!
+ * puxi.js - v0.0.0
+ * Compiled Wed, 18 Mar 2020 16:23:13 UTC
+ *
+ * puxi.js is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+var PUXI = (function (exports, pixi_js, filterDropShadow) {
+    'use strict';
+
+    /*!
+     * @puxi/core - v1.0.0
+     * Compiled Wed, 18 Mar 2020 16:23:13 UTC
+     *
+     * @puxi/core is licensed under the MIT License.
+     * http://www.opensource.org/licenses/mit-license
+     */
 
     const _items = [];
     const DragDropController = {
-        add(item, event) {
+        add(item, event)
+        {
             item._dragDropEventId = event.data.identifier;
-            if (_items.indexOf(item) === -1) {
+            if (_items.indexOf(item) === -1)
+            {
                 _items.push(item);
+
                 return true;
             }
+
             return false;
         },
-        getItem(object) {
-            let item = null;
-            let index;
-            for (let i = 0; i < _items.length; i++) {
-                if (_items[i] === object) {
+        getItem(object)
+        {
+            let item = null; let
+                index;
+
+            for (let i = 0; i < _items.length; i++)
+            {
+                if (_items[i] === object)
+                {
                     item = _items[i];
                     index = i;
                     break;
                 }
             }
-            if (item !== null) {
+
+            if (item !== null)
+            {
                 _items.splice(index, 1);
+
                 return item;
             }
+
             return false;
         },
-        getEventItem(event, group) {
-            let item = null;
-            let index;
-            const id = event.data.identifier;
-            for (let i = 0; i < _items.length; i++) {
-                if (_items[i]._dragDropEventId === id) {
-                    if (group !== _items[i].dragGroup) {
+        getEventItem(event, group)
+        {
+            let item = null; let index; const
+                id = event.data.identifier;
+
+            for (let i = 0; i < _items.length; i++)
+            {
+                if (_items[i]._dragDropEventId === id)
+                {
+                    if (group !== _items[i].dragGroup)
+                    {
                         return false;
                     }
                     item = _items[i];
@@ -44,10 +72,14 @@
                     break;
                 }
             }
-            if (item !== null) {
+
+            if (item !== null)
+            {
                 _items.splice(index, 1);
+
                 return item;
             }
+
             return false;
         },
     };
@@ -79,6 +111,7 @@
      * @property {number} EXACTLY - the entity should set its dimension to the one passed to it.
      * @property {number} AT_MOST - the entity should find an optimal dimension below the one passed to it.
      */
+
     (function (MeasureMode) {
         MeasureMode[MeasureMode["UNBOUNDED"] = 0] = "UNBOUNDED";
         MeasureMode[MeasureMode["EXACTLY"] = 1] = "EXACTLY";
@@ -303,8 +336,8 @@
             this.bound = false;
             this.id = 0;
             this.ishover = false;
-            this.mouse = new PIXI.Point();
-            this.offset = new PIXI.Point();
+            this.mouse = new pixi_js.Point();
+            this.offset = new pixi_js.Point();
             this.movementX = 0;
             this.movementY = 0;
             this._includeHover = typeof includeHover === 'undefined' ? true : includeHover;
@@ -421,9 +454,9 @@
             this.isBound = false;
             this.isDragging = false;
             this.id = 0;
-            this.dragStart = new PIXI.Point();
-            this.dragOffset = new PIXI.Point();
-            this.lastCursor = new PIXI.Point();
+            this.dragStart = new pixi_js.Point();
+            this.dragOffset = new pixi_js.Point();
+            this.lastCursor = new pixi_js.Point();
             this.movementX = 0;
             this.movementY = 0;
             this.cancel = false;
@@ -540,7 +573,7 @@
                 // Default onMouseScroll.
             };
             this.bound = false;
-            this.delta = new PIXI.Point();
+            this.delta = new pixi_js.Point();
             this.preventDefault = preventDefault;
             this.startEvent();
         }
@@ -576,11 +609,11 @@
      * @extends PIXI.utils.EventEmitter
      * @implements PUXI.IMeasurable
      */
-    class Widget extends PIXI.utils.EventEmitter {
+    class Widget extends pixi_js.utils.EventEmitter {
         constructor() {
             super();
-            this.insetContainer = new PIXI.Container();
-            this.contentContainer = this.insetContainer.addChild(new PIXI.Container());
+            this.insetContainer = new pixi_js.Container();
+            this.contentContainer = this.insetContainer.addChild(new pixi_js.Container());
             this.widgetChildren = [];
             this.stage = null;
             this.layoutMeasure = new Insets();
@@ -597,7 +630,7 @@
             this._paddingBottom = 0;
             this._elevation = 0;
             this.tint = 0;
-            this.blendMode = PIXI.BLEND_MODES.NORMAL;
+            this.blendMode = pixi_js.BLEND_MODES.NORMAL;
             this.draggable = false;
             this.droppable = false;
         }
@@ -876,10 +909,10 @@
                 this.insetContainer.removeChild(this.background);
             }
             if (typeof bg === 'string') {
-                bg = PIXI.utils.string2hex(bg);
+                bg = pixi_js.utils.string2hex(bg);
             }
             if (typeof bg === 'number') {
-                bg = new PIXI.Graphics()
+                bg = new pixi_js.Graphics()
                     .beginFill(bg)
                     .drawRect(0, 0, 1, 1)
                     .endFill();
@@ -1028,8 +1061,8 @@
                 return;
             }
             this.dragInitialized = true;
-            const realPosition = new PIXI.Point();
-            const dragPosition = new PIXI.Point();
+            const realPosition = new pixi_js.Point();
+            const dragPosition = new pixi_js.Point();
             const dnd = this.eventBroker.dnd;
             const { insetContainer } = this;
             dnd.onDragStart = (e) => {
@@ -1111,6 +1144,7 @@
      * @memberof PUXI
      * @enum
      */
+
     (function (ALIGN) {
         ALIGN[ALIGN["LEFT"] = 0] = "LEFT";
         ALIGN[ALIGN["TOP"] = 0] = "TOP";
@@ -1308,8 +1342,8 @@
             this.anchor = anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
         }
     }
-    FastLayoutOptions.DEFAULT_ANCHOR = new PIXI.Point(0, 0);
-    FastLayoutOptions.CENTER_ANCHOR = new PIXI.Point(0.5, 0.5); // fragile, shouldn't be modified
+    FastLayoutOptions.DEFAULT_ANCHOR = new pixi_js.Point(0, 0);
+    FastLayoutOptions.CENTER_ANCHOR = new pixi_js.Point(0.5, 0.5); // fragile, shouldn't be modified
 
     /**
      * `PUXI.FastLayout` is used in conjunction with `PUXI.FastLayoutOptions`. It is the
@@ -1523,7 +1557,7 @@
     class InteractiveGroup extends WidgetGroup {
         constructor() {
             super();
-            this.hitArea = new PIXI.Rectangle();
+            this.hitArea = new pixi_js.Rectangle();
             this.insetContainer.hitArea = this.hitArea;
         }
         update() {
@@ -1665,7 +1699,7 @@
          */
         constructor(text, textStyle) {
             super();
-            this.textDisplay = new PIXI.Text(text, textStyle);
+            this.textDisplay = new pixi_js.Text(text, textStyle);
             this.contentContainer.addChild(this.textDisplay);
         }
         update() {
@@ -1710,7 +1744,7 @@
             super(options);
             this.isHover = false;
             if (typeof options.text === 'string') {
-                options.text = new TextWidget(options.text, new PIXI.TextStyle());
+                options.text = new TextWidget(options.text, new pixi_js.TextStyle());
             }
             this.textWidget = options.text.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
             if (this.textWidget) {
@@ -1921,142 +1955,212 @@
      *
      */
 
-    class EaseBase {
-        getPosition(p) {
+    class EaseBase
+    {
+        getPosition(p)
+        {
             return p;
         }
     }
 
-    function ExponentialEase(power, easeIn, easeOut) {
+    function ExponentialEase(power, easeIn, easeOut)
+    {
         const pow = power;
         const t = easeIn && easeOut ? 3 : easeOut ? 1 : 2;
-        this.getPosition = function (p) {
+
+        this.getPosition = function (p)
+        {
             let r = (t === 1) ? 1 - p : (t === 2) ? p : (p < 0.5) ? p * 2 : (1 - p) * 2;
-            if (pow === 1) {
+
+            if (pow === 1)
+            {
                 r *= r;
             }
-            else if (pow === 2) {
+            else if (pow === 2)
+            {
                 r *= r * r;
             }
-            else if (pow === 3) {
+            else if (pow === 3)
+            {
                 r *= r * r * r;
             }
-            else if (pow === 4) {
+            else if (pow === 4)
+            {
                 r *= r * r * r * r;
             }
+
             return (t === 1) ? 1 - r : (t === 2) ? r : (p < 0.5) ? r / 2 : 1 - (r / 2);
         };
     }
+
     ExponentialEase.prototype = Object.create(EaseBase.prototype);
     ExponentialEase.prototype.constructor = ExponentialEase;
 
     const Ease = {};
+
     const HALF_PI = Math.PI * 0.5;
-    function create(fn) {
+
+    function create(fn)
+    {
         const e = Object.create(EaseBase.prototype);
+
         e.getPosition = fn;
+
         return e;
     }
+
     const Linear = new EaseBase();
+
     // Liear
     Ease.Linear = Linear;
+
     // Exponetial Eases
-    function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction) {
+    function wrapEase(easeInFunction, easeOutFunction, easeInOutFunction)
+    {
         return {
             easeIn: easeInFunction,
             easeOut: easeOutFunction,
             easeInOut: easeInOutFunction,
         };
     }
+
     Ease.Power0 = {
         easeNone: Linear,
     };
-    Ease.Power1 = Ease.Quad = wrapEase(new ExponentialEase(1, 1, 0), new ExponentialEase(1, 0, 1), new ExponentialEase(1, 1, 1));
-    Ease.Power2 = Ease.Cubic = wrapEase(new ExponentialEase(2, 1, 0), new ExponentialEase(2, 0, 1), new ExponentialEase(2, 1, 1));
-    Ease.Power3 = Ease.Quart = wrapEase(new ExponentialEase(3, 1, 0), new ExponentialEase(3, 0, 1), new ExponentialEase(3, 1, 1));
-    Ease.Power4 = Ease.Quint = wrapEase(new ExponentialEase(4, 1, 0), new ExponentialEase(4, 0, 1), new ExponentialEase(4, 1, 1));
+
+    Ease.Power1 = Ease.Quad = wrapEase(
+        new ExponentialEase(1, 1, 0),
+        new ExponentialEase(1, 0, 1),
+        new ExponentialEase(1, 1, 1));
+
+    Ease.Power2 = Ease.Cubic = wrapEase(
+        new ExponentialEase(2, 1, 0),
+        new ExponentialEase(2, 0, 1),
+        new ExponentialEase(2, 1, 1));
+
+    Ease.Power3 = Ease.Quart = wrapEase(
+        new ExponentialEase(3, 1, 0),
+        new ExponentialEase(3, 0, 1),
+        new ExponentialEase(3, 1, 1));
+
+    Ease.Power4 = Ease.Quint = wrapEase(
+        new ExponentialEase(4, 1, 0),
+        new ExponentialEase(4, 0, 1),
+        new ExponentialEase(4, 1, 1));
+
     // Bounce
     Ease.Bounce = {
-        BounceIn: create(function (p) {
-            if ((p = 1 - p) < 1 / 2.75) {
+        BounceIn: create(function (p)
+        {
+            if ((p = 1 - p) < 1 / 2.75)
+            {
                 return 1 - (7.5625 * p * p);
             }
-            else if (p < 2 / 2.75) {
+            else if (p < 2 / 2.75)
+            {
                 return 1 - (7.5625 * (p -= 1.5 / 2.75) * p + 0.75);
             }
-            else if (p < 2.5 / 2.75) {
+            else if (p < 2.5 / 2.75)
+            {
                 return 1 - (7.5625 * (p -= 2.25 / 2.75) * p + 0.9375);
             }
+
             return 1 - (7.5625 * (p -= 2.625 / 2.75) * p + 0.984375);
         }),
-        BounceOut: create(function (p) {
-            if (p < 1 / 2.75) {
+        BounceOut: create(function (p)
+        {
+            if (p < 1 / 2.75)
+            {
                 return 7.5625 * p * p;
             }
-            else if (p < 2 / 2.75) {
+            else if (p < 2 / 2.75)
+            {
                 return 7.5625 * (p -= 1.5 / 2.75) * p + 0.75;
             }
-            else if (p < 2.5 / 2.75) {
+            else if (p < 2.5 / 2.75)
+            {
                 return 7.5625 * (p -= 2.25 / 2.75) * p + 0.9375;
             }
+
             return 7.5625 * (p -= 2.625 / 2.75) * p + 0.984375;
         }),
-        BounceInOut: create(function (p) {
+        BounceInOut: create(function (p)
+        {
             const invert = (p < 0.5);
-            if (invert) {
+
+            if (invert)
+            {
                 p = 1 - (p * 2);
             }
-            else {
+            else
+            {
                 p = (p * 2) - 1;
             }
-            if (p < 1 / 2.75) {
+            if (p < 1 / 2.75)
+            {
                 p = 7.5625 * p * p;
             }
-            else if (p < 2 / 2.75) {
+            else if (p < 2 / 2.75)
+            {
                 p = 7.5625 * (p -= 1.5 / 2.75) * p + 0.75;
             }
-            else if (p < 2.5 / 2.75) {
+            else if (p < 2.5 / 2.75)
+            {
                 p = 7.5625 * (p -= 2.25 / 2.75) * p + 0.9375;
             }
-            else {
+            else
+            {
                 p = 7.5625 * (p -= 2.625 / 2.75) * p + 0.984375;
             }
+
             return invert ? (1 - p) * 0.5 : p * 0.5 + 0.5;
         }),
     };
+
     // Circ
     Ease.Circ = {
-        CircIn: create(function (p) {
+        CircIn: create(function (p)
+        {
             return -(Math.sqrt(1 - (p * p)) - 1);
         }),
-        CircOut: create(function (p) {
+        CircOut: create(function (p)
+        {
             return Math.sqrt(1 - (p = p - 1) * p);
         }),
-        CircInOut: create(function (p) {
+        CircInOut: create(function (p)
+        {
             return ((p *= 2) < 1) ? -0.5 * (Math.sqrt(1 - p * p) - 1) : 0.5 * (Math.sqrt(1 - (p -= 2) * p) + 1);
         }),
     };
+
     // Expo
     Ease.Expo = {
-        ExpoIn: create(function (p) {
+        ExpoIn: create(function (p)
+        {
             return Math.pow(2, 10 * (p - 1)) - 0.001;
         }),
-        ExpoOut: create(function (p) {
+        ExpoOut: create(function (p)
+        {
             return 1 - Math.pow(2, -10 * p);
         }),
-        ExpoInOut: create(function (p) {
+        ExpoInOut: create(function (p)
+        {
             return ((p *= 2) < 1) ? 0.5 * Math.pow(2, 10 * (p - 1)) : 0.5 * (2 - Math.pow(2, -10 * (p - 1)));
         }),
     };
+
     // Sine
     Ease.Sine = {
-        SineIn: create(function (p) {
+        SineIn: create(function (p)
+        {
             return -Math.cos(p * HALF_PI) + 1;
         }),
-        SineOut: create(function (p) {
+        SineOut: create(function (p)
+        {
             return Math.sin(p * HALF_PI);
         }),
-        SineInOut: create(function (p) {
+        SineInOut: create(function (p)
+        {
             return -0.5 * (Math.cos(Math.PI * p) - 1);
         }),
     };
@@ -2558,7 +2662,7 @@
         }
         initialize() {
             super.initialize();
-            const localMousePosition = new PIXI.Point();
+            const localMousePosition = new pixi_js.Point();
             let startValue = 0;
             let maxPosition;
             const triggerValueChange = () => {
@@ -2769,7 +2873,7 @@
      * @class
      * @extends PIXI.utils.EventEmitter
      */
-    class Ticker extends PIXI.utils.EventEmitter {
+    class Ticker extends pixi_js.utils.EventEmitter {
         constructor(autoStart) {
             super();
             this._disabled = true;
@@ -2976,9 +3080,9 @@
                 container.position[direction] = Math.round(scrollPosition[direction]);
                 this.updateScrollBars();
             };
-            this.mask = new PIXI.Graphics();
+            this.mask = new pixi_js.Graphics();
             this.innerContainer = new InteractiveGroup();
-            this.innerBounds = new PIXI.Rectangle();
+            this.innerBounds = new pixi_js.Rectangle();
             super.addChild(this.innerContainer);
             this.contentContainer.addChild(this.mask);
             this.contentContainer.mask = this.mask;
@@ -2990,20 +3094,20 @@
             this.expandMask = options.expandMask || 0;
             this.overflowY = options.overflowY || 0;
             this.overflowX = options.overflowX || 0;
-            this.scrollVelocity = new PIXI.Point();
+            this.scrollVelocity = new pixi_js.Point();
             /**
              * Widget's position in a scroll.
              * @member {PIXI.Point}
              * @private
              */
-            this.scrollPosition = new PIXI.Point();
+            this.scrollPosition = new pixi_js.Point();
             /**
              * Position that the cursor is at, i.e. our scroll "target".
              * @member {PIXI.Point}
              * @private
              */
-            this.targetPosition = new PIXI.Point();
-            this.lastPosition = new PIXI.Point();
+            this.targetPosition = new pixi_js.Point();
+            this.lastPosition = new pixi_js.Point();
             this.animating = false;
             this.scrolling = false;
             this._scrollBars = [];
@@ -3072,7 +3176,7 @@
         }
         initScrolling() {
             const container = this.innerContainer.insetContainer;
-            const realPosition = new PIXI.Point();
+            const realPosition = new pixi_js.Point();
             const { scrollPosition, targetPosition, } = this;
             // Drag scroll
             if (this.dragScrolling) {
@@ -3103,7 +3207,7 @@
                 };
             }
             // Mouse scroll
-            const scrollSpeed = new PIXI.Point();
+            const scrollSpeed = new pixi_js.Point();
             const scroll = new ScrollManager(this, true);
             scroll.onMouseScroll = (e, delta) => {
                 scrollSpeed.set(-delta.x * 0.2, -delta.y * 0.2);
@@ -3286,38 +3390,38 @@
             const { f, bw } = this;
             // get frames
             if (this.vs && this.hs) {
-                this.ftl = new PIXI.Rectangle(f.x, f.y, bw, bw);
-                this.ftr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, bw);
-                this.fbl = new PIXI.Rectangle(f.x, f.y + f.height - bw, bw, bw);
-                this.fbr = new PIXI.Rectangle(f.x + f.width - bw, f.y + f.height - bw, bw, bw);
-                this.ft = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, bw);
-                this.fb = new PIXI.Rectangle(f.x + bw, f.y + f.height - bw, f.width - bw * 2, bw);
-                this.fl = new PIXI.Rectangle(f.x, f.y + bw, bw, f.height - bw * 2);
-                this.fr = new PIXI.Rectangle(f.x + f.width - bw, f.y + bw, bw, f.height - bw * 2);
-                this.ff = new PIXI.Rectangle(f.x + bw, f.y + bw, f.width - bw * 2, f.height - bw * 2);
+                this.ftl = new pixi_js.Rectangle(f.x, f.y, bw, bw);
+                this.ftr = new pixi_js.Rectangle(f.x + f.width - bw, f.y, bw, bw);
+                this.fbl = new pixi_js.Rectangle(f.x, f.y + f.height - bw, bw, bw);
+                this.fbr = new pixi_js.Rectangle(f.x + f.width - bw, f.y + f.height - bw, bw, bw);
+                this.ft = new pixi_js.Rectangle(f.x + bw, f.y, f.width - bw * 2, bw);
+                this.fb = new pixi_js.Rectangle(f.x + bw, f.y + f.height - bw, f.width - bw * 2, bw);
+                this.fl = new pixi_js.Rectangle(f.x, f.y + bw, bw, f.height - bw * 2);
+                this.fr = new pixi_js.Rectangle(f.x + f.width - bw, f.y + bw, bw, f.height - bw * 2);
+                this.ff = new pixi_js.Rectangle(f.x + bw, f.y + bw, f.width - bw * 2, f.height - bw * 2);
             }
             else if (this.hs) {
-                this.fl = new PIXI.Rectangle(this.f.x, f.y, bw, f.height);
-                this.fr = new PIXI.Rectangle(f.x + f.width - bw, f.y, bw, f.height);
-                this.ff = new PIXI.Rectangle(f.x + bw, f.y, f.width - bw * 2, f.height);
+                this.fl = new pixi_js.Rectangle(this.f.x, f.y, bw, f.height);
+                this.fr = new pixi_js.Rectangle(f.x + f.width - bw, f.y, bw, f.height);
+                this.ff = new pixi_js.Rectangle(f.x + bw, f.y, f.width - bw * 2, f.height);
             }
             else { // vs
-                this.ft = new PIXI.Rectangle(f.x, f.y, f.width, bw);
-                this.fb = new PIXI.Rectangle(f.x, f.y + f.height - bw, f.width, bw);
-                this.ff = new PIXI.Rectangle(f.x, f.y + bw, f.width, f.height - bw * 2);
+                this.ft = new pixi_js.Rectangle(f.x, f.y, f.width, bw);
+                this.fb = new pixi_js.Rectangle(f.x, f.y + f.height - bw, f.width, bw);
+                this.ff = new pixi_js.Rectangle(f.x, f.y + bw, f.width, f.height - bw * 2);
             }
             // TODO: swap frames if rotation
             const { t, ff, fl, fr, ft, fb } = this;
             // make sprites
             this.sf = this.tile
-                ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ff))
-                : new PIXI.Sprite(new PIXI.Texture(t, ff));
+                ? new pixi_js.extras.TilingSprite(new pixi_js.Texture(t, ff))
+                : new pixi_js.Sprite(new pixi_js.Texture(t, ff));
             this.contentContainer.addChildAt(this.sf, 0);
             if (this.vs && this.hs) {
-                this.stl = new PIXI.Sprite(new PIXI.Texture(t, this.ftl));
-                this.str = new PIXI.Sprite(new PIXI.Texture(t, this.ftr));
-                this.sbl = new PIXI.Sprite(new PIXI.Texture(t, this.fbl));
-                this.sbr = new PIXI.Sprite(new PIXI.Texture(t, this.fbr));
+                this.stl = new pixi_js.Sprite(new pixi_js.Texture(t, this.ftl));
+                this.str = new pixi_js.Sprite(new pixi_js.Texture(t, this.ftr));
+                this.sbl = new pixi_js.Sprite(new pixi_js.Texture(t, this.fbl));
+                this.sbr = new pixi_js.Sprite(new pixi_js.Texture(t, this.fbr));
                 this.contentContainer.addChildAt(this.stl, 0);
                 this.contentContainer.addChildAt(this.str, 0);
                 this.contentContainer.addChildAt(this.sbl, 0);
@@ -3325,21 +3429,21 @@
             }
             if (hs) {
                 this.sl = this.tile
-                    ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fl))
-                    : new PIXI.Sprite(new PIXI.Texture(t, fl));
+                    ? new pixi_js.extras.TilingSprite(new pixi_js.Texture(t, fl))
+                    : new pixi_js.Sprite(new pixi_js.Texture(t, fl));
                 this.sr = this.tile
-                    ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fr))
-                    : new PIXI.Sprite(new PIXI.Texture(t, fr));
+                    ? new pixi_js.extras.TilingSprite(new pixi_js.Texture(t, fr))
+                    : new pixi_js.Sprite(new pixi_js.Texture(t, fr));
                 this.contentContainer.addChildAt(this.sl, 0);
                 this.contentContainer.addChildAt(this.sr, 0);
             }
             if (this.vs) {
                 this.st = this.tile
-                    ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, ft))
-                    : new PIXI.Sprite(new PIXI.Texture(t, ft));
+                    ? new pixi_js.extras.TilingSprite(new pixi_js.Texture(t, ft))
+                    : new pixi_js.Sprite(new pixi_js.Texture(t, ft));
                 this.sb = this.tile
-                    ? new PIXI.extras.TilingSprite(new PIXI.Texture(t, fb))
-                    : new PIXI.Sprite(new PIXI.Texture(t, fb));
+                    ? new pixi_js.extras.TilingSprite(new pixi_js.Texture(t, fb))
+                    : new pixi_js.Sprite(new pixi_js.Texture(t, fb));
                 this.contentContainer.addChildAt(this.st, 0);
                 this.contentContainer.addChildAt(this.sb, 0);
             }
@@ -3380,7 +3484,7 @@
     class Sprite extends Widget {
         constructor(texture) {
             super();
-            this.spriteDisplay = new PIXI.Sprite(texture);
+            this.spriteDisplay = new pixi_js.Sprite(texture);
             this.contentContainer.addChild(this.spriteDisplay);
         }
         update() {
@@ -3392,11 +3496,11 @@
             }
         }
         static fromImage(imageUrl) {
-            return new Sprite(new PIXI.Texture(new PIXI.BaseTexture(imageUrl)));
+            return new Sprite(new pixi_js.Texture(new pixi_js.BaseTexture(imageUrl)));
         }
     }
 
-    class Controller extends PIXI.utils.EventEmitter {
+    class Controller extends pixi_js.utils.EventEmitter {
         constructor(stage) {
             super();
             this.stage = stage;
@@ -3690,7 +3794,7 @@
      * @class
      * @extends PIXI.Container
      */
-    class Stage extends PIXI.Container {
+    class Stage extends pixi_js.Container {
         /**
          * @param {number} width - width of the stage
          * @param {number} height - height of the stage
@@ -3704,7 +3808,7 @@
             this.widgetChildren = [];
             this.interactive = true;
             this.stage = this;
-            this.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+            this.hitArea = new pixi_js.Rectangle(0, 0, 0, 0);
             this.initialized = true;
             this.resize(width, height);
             this._checkBoxGroupCtl = new Stage.CHECK_BOX_GROUP_CONTROLLER(this);
@@ -4299,19 +4403,19 @@
             this.color = options.style && options.style.fill ? options.style.fill : '#000000';
             this.selectedColor = options.selectedColor || '#ffffff';
             this.selectedBackgroundColor = options.selectedBackgroundColor || '#318cfa';
-            this.tempText = new PIXI.Text('1', options.style);
+            this.tempText = new pixi_js.Text('1', options.style);
             this.textHeight = this.tempText.height;
             this.lineHeight = options.lineHeight || this.textHeight || this._height;
             this.tempText.destroy();
             // set cursor
             // this.container.cursor = "text";
             // selection graphics
-            this.selection = new PIXI.Graphics();
+            this.selection = new pixi_js.Graphics();
             this.selection.visible = false;
             this.selection._startIndex = 0;
             this.selection._endIndex = 0;
             // caret graphics
-            this.caret = new PIXI.Graphics();
+            this.caret = new pixi_js.Graphics();
             this.caret.visible = false;
             this.caret._index = 0;
             this.caret.lineStyle(options.caretWidth || 1, '#ffffff', 1);
@@ -4341,10 +4445,10 @@
                 this.dragThreshold = 5;
             }
             // selection Vars
-            this.sp = new PIXI.Point(); // startposition
-            this._sp = new PIXI.Point();
-            this.ds = new PIXI.Point(); // dragStart
-            this.de = new PIXI.Point(); // dragend
+            this.sp = new pixi_js.Point(); // startposition
+            this._sp = new pixi_js.Point();
+            this.ds = new pixi_js.Point(); // dragStart
+            this.de = new pixi_js.Point(); // dragend
             this.rdd = false; // Reverse drag direction
             this.vrdd = false; // vertical Reverse drag direction
             this.selectionStart = -1;
@@ -4485,7 +4589,7 @@
                 }
                 let charText = this.chars[i];
                 if (!charText) {
-                    charText = new PIXI.Text(c, this.options.style);
+                    charText = new pixi_js.Text(c, this.options.style);
                     this.innerContainer.addChild(charText);
                     this.chars.push(charText);
                 }
@@ -4692,7 +4796,7 @@
      */
     class TilingSprite extends Widget {
         constructor(t, width, height) {
-            const sprite = new PIXI.extras.TilingSprite(t);
+            const sprite = new pixi_js.extras.TilingSprite(t);
             super(width || sprite.width, height || sprite.height);
             this.sprite = sprite;
             this.contentContainer.addChild(this.sprite);
@@ -4929,6 +5033,143 @@
         }
     }
 
+    /*!
+     * @puxi/tween - v1.0.0
+     * Compiled Wed, 18 Mar 2020 16:23:13 UTC
+     *
+     * @puxi/tween is licensed under the MIT License.
+     * http://www.opensource.org/licenses/mit-license
+     */
+
+    /**
+     * Holds the information needed to perform a tweening operation. It is used internally
+     * by `PUXI.tween.TweenManager`.
+     *
+     * @memberof PUXI.tween
+     * @class
+     * @template T
+     */
+    class TweenContext extends pixi_js.utils.EventEmitter {
+        constructor(key, startValue, endValue, erp, observedValue, startTime, endTime) {
+            super();
+            /**
+             * Unique id for this tweening operation
+             * @member {string}
+             */
+            this.key = key;
+            /**
+             * Start value of interpolation
+             * @member {T}
+             */
+            this.startValue = startValue;
+            /**
+             * End value of interpolation
+             * @member {T}
+             */
+            this.endValue = endValue;
+            /**
+             * Interpolation function
+             * @member {Erp}
+             */
+            this.erp = erp;
+            /**
+             * Object that is observed and the interpolated value to be stored in.
+             * @member {T}
+             */
+            this.observedValue = observedValue;
+            /**
+             * @member {DOMHighResTimeStamp}
+             * @readonly
+             */
+            this.startTime = startTime;
+            /**
+             * @member {DOMHighResTimeStamp
+             * @readonly}
+             */
+            this.endTime = endTime;
+        }
+        /**
+         * Updates the observed value.
+         *
+         * @param {DOMHighResTimeStamp} t - current time
+         */
+        update(t = performance.now()) {
+            t = (t - this.startTime) / (this.endTime - this.startTime);
+            this.erp(this.startValue, this.endValue, Math.min(Math.max(t, 0), 1), this.observedValue);
+            this.emit('update', this.observedValue, this.key);
+            if (t >= 1) {
+                this.emit('complete', this);
+                this.removeAllListeners();
+            }
+        }
+    }
+    /**
+     * Fired whenever the observed value is updated.
+     * @event update
+     * @param {T} observedValue
+     * @param {number} key
+     */
+    /**
+     * Fired when tween has finished. References to this tween should be removed.
+     * @event complete
+     * @param {TweenContext} cxt
+     */
+    /**
+     * Used for pooling.
+     * @member {Array<TweenContext>}
+     * @static
+     */
+    TweenContext.pool = [];
+
+    let nextKey = 0;
+    /**
+     * @memberof PUXI.tween
+     * @class
+     */
+    class TweenManager {
+        constructor(autoStart = true) {
+            this.tweenMap = new Map();
+            if (autoStart) {
+                this.start();
+            }
+        }
+        addTween(startValue, endValue, erp, startTime, endTime) {
+            const tweenCxt = (TweenContext.pool.pop() || new TweenContext());
+            tweenCxt.key = nextKey++;
+            tweenCxt.startValue = startValue;
+            tweenCxt.endValue = endValue;
+            tweenCxt.erp = erp;
+            tweenCxt.startTime = startTime;
+            tweenCxt.endTime = endTime;
+            this.tweenMap.set(tweenCxt.key, tweenCxt);
+            tweenCxt.on('complete', this.onTweenComplete);
+            return tweenCxt;
+        }
+        start() {
+            if (this.isRunning) {
+                return;
+            }
+            pixi_js.Ticker.shared.add(this.onUpdate);
+            this.isRunning = true;
+        }
+        stop() {
+            if (!this.isRunning) {
+                return;
+            }
+            pixi_js.Ticker.shared.remove(this.onUpdate);
+            this.isRunning = false;
+        }
+        onUpdate() {
+            for (const [, cxt] of this.tweenMap) {
+                cxt.update();
+            }
+        }
+        onTweenComplete(cxt) {
+            this.tweenMap.delete(cxt.key);
+            TweenContext.pool.push(cxt);
+        }
+    }
+
     exports.AnchorLayout = AnchorLayout;
     exports.AnchorLayoutOptions = AnchorLayoutOptions;
     exports.Button = Button;
@@ -4956,12 +5197,13 @@
     exports.Ticker = Ticker;
     exports.TilingSprite = TilingSprite;
     exports.Tween = Tween;
+    exports.TweenManager = TweenManager;
     exports.Widget = Widget;
     exports.WidgetGroup = WidgetGroup;
     exports.create = create;
     exports.wrapEase = wrapEase;
 
-    Object.defineProperty(exports, '__esModule', { value: true });
+    return exports;
 
-})));
-//# sourceMappingURL=puxi-core.js.map
+}({}, PIXI, __filters));
+//# sourceMappingURL=puxi.js.map

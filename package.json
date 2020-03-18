@@ -19,6 +19,7 @@
     "build:prod": "cross-env NODE_ENV=production rollup -c && lerna run extract-api --no-bail",
     "compile": "rollup -c",
     "compile:prod": "cross-env NODE_ENV=production rollup -c",
+    "compile:example": "npm run compile && cp bundles/puxi.js/dist/puxi.js example/puxi.js && cp bundles/puxi.js/dist/puxi.js.map example/puxi.js.map",
     "docs": "rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;",
     "prepublishOnly": "npm run bundle && npm run docs"
   },
@@ -34,6 +35,8 @@
     "glslify": "^5.0.2"
   },
   "devDependencies": {
+    "@lerna/batch-packages": "^3.16.0",
+    "@lerna/filter-packages": "^3.18.0",
     "@lerna/project": "^3.18.0",
     "@pixi/jsdoc-template": "^2.5.1",
     "@rollup/plugin-commonjs": "^11.0.2",

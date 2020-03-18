@@ -7,33 +7,21 @@ import commonjs from 'rollup-plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import { getPackages } from '@lerna/project';
+import filterPackages from '@lerna/filter-packages';
+import batchPackages from '@lerna/batch-packages';
 
-async function getSortedPackages()
+async function getSortedPackages(scope, ignore)
 {
-    const packages = await getPackages();
+    const packages = await getPackages(__dirname);
+    const filtered = filterPackages(
+        packages,
+        scope,
+        ignore,
+        false,
+    );
 
-    packages.sort((apkg, bpkg) =>
-    {
-        const a = apkg.name;
-        const b = bpkg.name;
-
-        if (a.charAt(0) === '@' && b.charAt(0) === '@')
-        {
-            return 0;
-        }
-        if (a.charAt(0) === '@')
-        {
-            return -1;
-        }
-        if (b.charAt(0) === '@')
-        {
-            return 1;
-        }
-
-        return 0;
-    });
-
-    return packages;
+    return batchPackages(filtered)
+        .reduce((arr, batch) => arr.concat(batch), []);
 }
 
 async function main()
@@ -55,7 +43,7 @@ async function main()
     const external = ['pixi.js', '@pixi/filter-drop-shadow'];
     const globals = {
         'pixi.js': 'PIXI',
-        '@pixi/filter-drop-shadow': 'PIXI.filtesr',
+        '@pixi/filter-drop-shadow': '__filters',
     };
 
     const compiled = (new Date()).toUTCString().replace(/GMT/g, 'UTC');
