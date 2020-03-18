@@ -77,7 +77,7 @@ async function main()
             input,
             output: [
                 {
-                    banner,
+                    banner: `${banner}\n// cjs`,
                     file: path.join(basePath, main),
                     format: 'cjs',
                     sourcemap: true,
@@ -85,7 +85,7 @@ async function main()
                     globals,
                 },
                 {
-                    banner,
+                    banner: `${banner}\n// mjs`,
                     file: path.join(basePath, module),
                     format: 'esm',
                     sourcemap: true,

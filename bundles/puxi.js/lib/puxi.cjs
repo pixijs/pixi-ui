@@ -1,10 +1,11 @@
 /*!
  * puxi.js - v0.0.0
- * Compiled Wed, 18 Mar 2020 18:16:22 UTC
+ * Compiled Wed, 18 Mar 2020 18:32:25 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
+// cjs
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -14,7 +15,7 @@ var filterDropShadow = require('@pixi/filter-drop-shadow');
 
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:16:22 UTC
+ * Compiled Wed, 18 Mar 2020 18:32:25 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5039,7 +5040,7 @@ class AnchorLayout {
 
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:16:22 UTC
+ * Compiled Wed, 18 Mar 2020 18:32:25 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5234,7 +5235,7 @@ class Tween$1 extends pixi_js.utils.EventEmitter {
 Tween$1.pool = [];
 
 // TODO: Prevent update loop from starting if there are no queued tweens.
-exports.nextTweenKey = 0;
+let nextTweenKey = 0;
 /**
  * @memberof PUXI.tween
  * @class
@@ -5262,7 +5263,7 @@ class TweenManager {
         tweenCxt.autoCreated = true;
         tweenCxt.reset();
         tweenCxt.manager = this;
-        tweenCxt.key = exports.nextTweenKey++;
+        tweenCxt.key = nextTweenKey++;
         tweenCxt.startValue = startValue;
         tweenCxt.endValue = endValue;
         tweenCxt.erp = erp;
@@ -5280,7 +5281,7 @@ class TweenManager {
      * @returns {PUXI.TweenManager} this manager, useful for method chaining
      */
     queue(context) {
-        context.key = exports.nextTweenKey++;
+        context.key = nextTweenKey++;
         this.tweenMap.set(context.key, context);
         context.on('complete', this.onTweenComplete);
         return this;
@@ -5393,15 +5394,24 @@ const PointErp = (startValue, endValue, t, observedValue) => {
     return observedValue;
 };
 
+var puxiTween = {
+    __proto__: null,
+    EaseBoth: EaseBoth,
+    EaseIn: EaseIn,
+    EaseOut: EaseOut,
+    NumberErp: NumberErp,
+    PointErp: PointErp,
+    Tween: Tween$1,
+    TweenManager: TweenManager,
+    get nextTweenKey () { return nextTweenKey; }
+};
+
 exports.AnchorLayout = AnchorLayout;
 exports.AnchorLayoutOptions = AnchorLayoutOptions;
 exports.Button = Button;
 exports.CheckBox = CheckBox;
 exports.ClickManager = ClickManager;
 exports.Ease = Ease;
-exports.EaseBoth = EaseBoth;
-exports.EaseIn = EaseIn;
-exports.EaseOut = EaseOut;
 exports.EventBroker = EventBroker;
 exports.EventManager = EventManager;
 exports.FastLayout = FastLayout;
@@ -5410,8 +5420,6 @@ exports.Helpers = Helpers;
 exports.Insets = Insets;
 exports.InteractiveGroup = InteractiveGroup;
 exports.LayoutOptions = LayoutOptions;
-exports.NumberErp = NumberErp;
-exports.PointErp = PointErp;
 exports.ScrollBar = ScrollBar;
 exports.ScrollManager = ScrollManager;
 exports.ScrollWidget = ScrollWidget;
@@ -5424,10 +5432,9 @@ exports.TextInput = TextInput;
 exports.TextWidget = TextWidget;
 exports.Ticker = Ticker;
 exports.TilingSprite = TilingSprite;
-exports.Tween = Tween$1;
-exports.TweenManager = TweenManager;
 exports.Widget = Widget;
 exports.WidgetGroup = WidgetGroup;
 exports.create = create;
+exports.tween = puxiTween;
 exports.wrapEase = wrapEase;
 //# sourceMappingURL=puxi.cjs.map

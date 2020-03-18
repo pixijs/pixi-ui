@@ -1,10 +1,11 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:16:22 UTC
+ * Compiled Wed, 18 Mar 2020 18:32:25 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
+// mjs
 import { Point, utils, Container, BLEND_MODES, Graphics, Rectangle, Text, TextStyle, extras, Texture, Sprite as Sprite$1, BaseTexture } from 'pixi.js';
 import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 

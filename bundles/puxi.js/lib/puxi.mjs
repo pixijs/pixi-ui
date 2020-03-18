@@ -1,16 +1,17 @@
 /*!
  * puxi.js - v0.0.0
- * Compiled Wed, 18 Mar 2020 18:16:22 UTC
+ * Compiled Wed, 18 Mar 2020 18:32:25 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
+// mjs
 import { Point, utils, Container, BLEND_MODES, Graphics, Rectangle, Text, TextStyle, extras, Texture, Sprite as Sprite$1, BaseTexture, Ticker as Ticker$1 } from 'pixi.js';
 import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:16:22 UTC
+ * Compiled Wed, 18 Mar 2020 18:32:25 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5035,7 +5036,7 @@ class AnchorLayout {
 
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:16:22 UTC
+ * Compiled Wed, 18 Mar 2020 18:32:25 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5389,5 +5390,17 @@ const PointErp = (startValue, endValue, t, observedValue) => {
     return observedValue;
 };
 
-export { ALIGN, AnchorLayout, AnchorLayoutOptions, Button, CheckBox, ClickManager, Ease, EaseBoth, EaseIn, EaseOut, EventBroker, EventManager, FastLayout, FastLayoutOptions, Helpers, Insets, InteractiveGroup, LayoutOptions, MeasureMode, NumberErp, PointErp, ScrollBar, ScrollManager, ScrollWidget, SliceSprite, Slider, SortableList, Sprite, Stage, TextInput, TextWidget, Ticker, TilingSprite, Tween$1 as Tween, TweenManager, Widget, WidgetGroup, create, nextTweenKey, wrapEase };
+var puxiTween = {
+    __proto__: null,
+    EaseBoth: EaseBoth,
+    EaseIn: EaseIn,
+    EaseOut: EaseOut,
+    NumberErp: NumberErp,
+    PointErp: PointErp,
+    Tween: Tween$1,
+    TweenManager: TweenManager,
+    get nextTweenKey () { return nextTweenKey; }
+};
+
+export { ALIGN, AnchorLayout, AnchorLayoutOptions, Button, CheckBox, ClickManager, Ease, EventBroker, EventManager, FastLayout, FastLayoutOptions, Helpers, Insets, InteractiveGroup, LayoutOptions, MeasureMode, ScrollBar, ScrollManager, ScrollWidget, SliceSprite, Slider, SortableList, Sprite, Stage, TextInput, TextWidget, Ticker, TilingSprite, Widget, WidgetGroup, create, puxiTween as tween, wrapEase };
 //# sourceMappingURL=puxi.mjs.map

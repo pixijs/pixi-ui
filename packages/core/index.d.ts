@@ -1365,14 +1365,6 @@ export declare class TilingSprite extends Widget {
     set tileScale(val: number);
 }
 
-export declare const Tween: {
-    to(obj: any, time: any, params: any, ease?: any): void;
-    from(obj: any, time: any, params: any, ease: any): void;
-    fromTo(obj: any, time: any, paramsFrom: any, paramsTo: any, ease: any): void;
-    set(obj: any, params: any): void;
-    _update(delta: any): void;
-};
-
 /**
  * A widget is a user interface control that renders content inside its prescribed
  * rectangle on the screen.

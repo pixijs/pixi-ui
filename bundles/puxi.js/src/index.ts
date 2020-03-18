@@ -1,2 +1,4 @@
 export * from '@puxi/core';
-export * from '@puxi/tween';
+import * as tween from '@puxi/tween';
+
+export { tween };
