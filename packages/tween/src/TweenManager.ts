@@ -110,13 +110,13 @@ export class TweenManager
         this.isRunning = false;
     }
 
-    onUpdate(): void
+    onUpdate = (): void =>
     {
         for (const [, cxt] of this.tweenMap)
         {
             cxt.update();
         }
-    }
+    };
 
     protected onTweenComplete(cxt: Tween<any>): void
     {

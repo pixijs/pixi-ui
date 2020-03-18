@@ -1,6 +1,6 @@
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:32:25 UTC
+ * Compiled Wed, 18 Mar 2020 18:38:54 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -206,6 +206,11 @@ var _puxi_tween = (function (exports, PIXI) {
      */
     class TweenManager {
         constructor(autoStart = true) {
+            this.onUpdate = () => {
+                for (const [, cxt] of this.tweenMap) {
+                    cxt.update();
+                }
+            };
             this.tweenMap = new Map();
             if (autoStart) {
                 this.start();
@@ -269,11 +274,6 @@ var _puxi_tween = (function (exports, PIXI) {
             }
             PIXI.Ticker.shared.remove(this.onUpdate);
             this.isRunning = false;
-        }
-        onUpdate() {
-            for (const [, cxt] of this.tweenMap) {
-                cxt.update();
-            }
         }
         onTweenComplete(cxt) {
             this.tweenMap.delete(cxt.key);

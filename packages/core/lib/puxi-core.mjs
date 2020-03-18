@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:32:25 UTC
+ * Compiled Wed, 18 Mar 2020 18:38:54 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license

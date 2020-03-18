@@ -200,4 +200,17 @@ window.onload = function onload()
     window.mockCheckbox2 = mockCheckbox2;
     window.mockCheckbox3 = mockCheckbox3;
     window.mockScroll = mockScroll;
+
+    const tmgr = new PUXI.tween.TweenManager();
+
+    tmgr.tween(
+        new PIXI.Point(0, 0),
+        new PIXI.Point(100, 100),
+        500,
+        PUXI.tween.PointErp,
+        PUXI.tween.EaseBoth,
+    ).target(
+        mockButton.insetContainer,
+        'position',
+    );
 };

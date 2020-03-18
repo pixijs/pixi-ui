@@ -1,11 +1,24 @@
 # `puxi.js`
 
-> TODO: description
+```
+npm install puxi.js
+```
 
 ## Usage
 
 ```
-const puxiJs = require('puxi.js');
+import { Widget, tween } from 'puxi.js';
 
-// TODO: DEMONSTRATE API
+// do something
+
+tween.TweenManager.tween(
+  new PIXI.Point(0, 0),
+  new PIXI.Point(20, 31),
+  500,
+  PUXI.tween.NumberInterpolator,
+  PUXI.tween.EaseBoth
+).target(
+  widget,
+  'position'
+)
 ```
