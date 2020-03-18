@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 16:23:13 UTC
+ * Compiled Wed, 18 Mar 2020 18:16:22 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5053,7 +5053,6 @@ exports.TextInput = TextInput;
 exports.TextWidget = TextWidget;
 exports.Ticker = Ticker;
 exports.TilingSprite = TilingSprite;
-exports.Tween = Tween;
 exports.Widget = Widget;
 exports.WidgetGroup = WidgetGroup;
 exports.create = create;

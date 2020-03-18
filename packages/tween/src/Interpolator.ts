@@ -1,82 +1,57 @@
-/**
- * Interpolation modes that can be used in tweening.
- *
- * @memberof PUXI.tween
- * @enum
- * @property {number} LINEAR
- * @property {number} EASE_IN
- * @property {number} EASE_OUT
- * @property {number} EASE_BOTH
- */
-export enum InterpolatorModes
-{
-    LINEAR = 1,
-    EASE_IN = 2,
-    EASE_OUT = 3,
-    EASE_BOTH = 4
-}
+import * as PIXI from 'pixi.js';
 
-export interface Interpolator<T>
-{
-    linear(start: T, end: T, t: number, into?: T): T;
-    easeIn(start: T, end: T, t: number, into?: T): T;
-    easeOut(start: T, end: T, t: number, into?: T): T;
-    easeBoth(start: T, end: T, t: number, into?: T): T;
-}
-
-export type Erp<T> = (start: T, end: T, t: number, into?: T) => T;
+export type Erp<T> = (startValue: T, endValue: T, t: number, observedValue?: T) => T;
 
 /**
- * An interpolator can calculated an interpolated value between a start and
- * end value.
+ * Defines a (linear) interpolator on a type `T`.
  *
- * @memberof PUXI.tween
- * @interface Interpolator
+ * @memberof PUXI
+ * @typedef {Function} Erp
  * @template T
+ * @param {T} startValue
+ * @param {T} endValue
+ * @param {number} t - interpolation parameter between 0 and 1
+ * @param {T}[observedValue]
  */
 
 /**
- * Linearly interpolates the start and end value.
+ * Interpolation function for number properties like alpha, rotation, component
+ * position/scale/skew, elevation, etc.
  *
- * @memberof PUXI.Interpolator#
- * @method linear
- * @param {T} start
- * @param {T} end
- * @param {number} t - fraction
- * @param {T}[into] - the object to store the result in
+ * @memberof PUXI
+ * @extends PUXI.Erp<number>
+ * @param {number} startValue
+ * @param {number} endValue
+ * @param {number} t
  */
+export const NumberErp: Erp<number> = (startValue: number, endValue: number, t: number) =>
+    (t * startValue) + ((1 - t) * endValue);
 
 /**
- * Interpolates the start & end value with an ease-in quadratic curve.
+ * Interpolation function for 2D vector properties like position, scale, skew, etc.
  *
- * @memberof PUXI.Interpolator#
- * @method easeIn
- * @param {T} start
- * @param {T} end
- * @param {number} t - fraction
- * @param {T}[into] - the object to store the result in
+ * @memberof PUXI
+ * @extends PUXI.Erp<PIXI.Point>
+ * @param {PIXI.Point} startValue
+ * @param {PIXI.Point} endValue
+ * @param {number} t
+ * @param {PIXI.Point} observedValue
  */
+export const PointErp: Erp<PIXI.Point> = (
+    startValue: PIXI.Point,
+    endValue: PIXI.Point,
+    t: number,
+    observedValue: PIXI.Point,
+): PIXI.Point =>
+{
+    if (!observedValue)
+    {
+        observedValue = new PIXI.Point();
+    }
 
-/**
- * Interpolates the start & end value with an ease-out quadratic curve.
- *
- * @memberof PUXI.Interpolator#
- * @method easeOut
- * @param {T} start
- * @param {T} end
- * @param {number} t - fraction
- * @param {T}[into] - the object to store the result in
- */
+    observedValue.x = (t * startValue.x) + ((1 - t) * endValue.x);
+    observedValue.y = (t * endValue.y) + ((1 - t) * endValue.y);
 
-/**
- * Interpolates the start & end value with a quadratic curve that is both ease-in
- * and ease-out.
- *
- * @memberof PUXI.Interpolator#
- * @method easeBoth
- * @param {T} start
- * @param {T} end
- * @param {number} t - fraction
-* @param {T}[into] - the object to store the result in
- */
+    return observedValue;
+};
 

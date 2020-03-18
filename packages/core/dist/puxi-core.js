@@ -1,11 +1,12 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 16:23:13 UTC
+ * Compiled Wed, 18 Mar 2020 18:16:22 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
-var PUXI = (function (exports, PIXI, filterDropShadow) {
+this.PUXI = this.PUXI || {};
+var _puxi_core = (function (exports, PIXI, filterDropShadow) {
     'use strict';
 
     const _items = [];
@@ -5077,7 +5078,6 @@ var PUXI = (function (exports, PIXI, filterDropShadow) {
     exports.TextWidget = TextWidget;
     exports.Ticker = Ticker;
     exports.TilingSprite = TilingSprite;
-    exports.Tween = Tween;
     exports.Widget = Widget;
     exports.WidgetGroup = WidgetGroup;
     exports.create = create;
@@ -5086,4 +5086,5 @@ var PUXI = (function (exports, PIXI, filterDropShadow) {
     return exports;
 
 }({}, PIXI, __filters));
+Object.assign(this.PUXI, _puxi_core)
 //# sourceMappingURL=puxi-core.js.map

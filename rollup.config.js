@@ -53,7 +53,7 @@ async function main()
 
     packages.forEach((pkg) =>
     {
-        const banner = [
+        let banner = [
             `/*!`,
             ` * ${pkg.name} - v${pkg.version}`,
             ` * Compiled ${compiled}`,
@@ -70,6 +70,7 @@ async function main()
             main,
             module,
             bundle,
+            namespace,
         } = pkg.toJSON();
 
         results.push({
@@ -99,17 +100,35 @@ async function main()
         if (bundle)
         {
             const file = path.join(basePath, bundle);
+            const ns = namespace || 'PUXI';
+            const name = pkg.name.replace(/[^a-z]+/g, '_');
+
+            if (ns.includes('.'))
+            {
+                // Base namespace (PUXI)
+                const baseNs = ns.split('.')[0];
+
+                // this.PUXI = this.PUXI || {} - initialize PUXI if not yet
+                banner += `\nthis.${baseNs} = this.${baseNs} || {};`;
+            }
+
+            // this.PUXI.tween = this.PUXI.tween || {} - initialize ns if not yet
+            banner += `\nthis.${ns} = this.${ns} || {};`;
+
+            // Inject module into its namespace
+            const footer = `Object.assign(this.${ns}, ${name})`;
 
             results.push({
                 input,
                 output: [
                     {
                         banner,
-                        name: 'PUXI',
+                        name,
                         file,
                         format: 'iife',
                         sourcemap: true,
                         globals,
+                        footer,
                     },
                 ],
                 treeshake: false,
@@ -123,11 +142,12 @@ async function main()
                     input,
                     output: [{
                         banner,
-                        name: 'PUXI',
+                        name,
                         file: file.replace(/\.js$/, '.min.js'),
                         format: 'iife',
                         sourcemap: true,
                         globals,
+                        footer,
                     }],
                     treeshake: false,
                     plugins: [

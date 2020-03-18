@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 16:23:13 UTC
+ * Compiled Wed, 18 Mar 2020 18:16:22 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5025,5 +5025,5 @@ class AnchorLayout {
     }
 }
 
-export { ALIGN, AnchorLayout, AnchorLayoutOptions, Button, CheckBox, ClickManager, Ease, EventBroker, EventManager, FastLayout, FastLayoutOptions, Helpers, Insets, InteractiveGroup, LayoutOptions, MeasureMode, ScrollBar, ScrollManager, ScrollWidget, SliceSprite, Slider, SortableList, Sprite, Stage, TextInput, TextWidget, Ticker, TilingSprite, Tween, Widget, WidgetGroup, create, wrapEase };
+export { ALIGN, AnchorLayout, AnchorLayoutOptions, Button, CheckBox, ClickManager, Ease, EventBroker, EventManager, FastLayout, FastLayoutOptions, Helpers, Insets, InteractiveGroup, LayoutOptions, MeasureMode, ScrollBar, ScrollManager, ScrollWidget, SliceSprite, Slider, SortableList, Sprite, Stage, TextInput, TextWidget, Ticker, TilingSprite, Widget, WidgetGroup, create, wrapEase };
 //# sourceMappingURL=puxi-core.mjs.map

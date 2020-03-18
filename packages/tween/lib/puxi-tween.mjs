@@ -1,11 +1,11 @@
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Wed, 18 Mar 2020 16:23:13 UTC
+ * Compiled Wed, 18 Mar 2020 18:16:22 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  */
-import { utils, Ticker } from 'pixi.js';
+import { utils, Ticker, Point } from 'pixi.js';
 
 /**
  * Holds the information needed to perform a tweening operation. It is used internally
@@ -15,9 +15,15 @@ import { utils, Ticker } from 'pixi.js';
  * @class
  * @template T
  */
-class TweenContext extends utils.EventEmitter {
-    constructor(key, startValue, endValue, erp, observedValue, startTime, endTime) {
+class Tween extends utils.EventEmitter {
+    constructor(// eslint-disable-line max-params
+    manager, key, startValue, endValue, erp, ease, observedValue, startTime, endTime, repeat = 1, flip = true) {
         super();
+        /**
+         * The tween-manager whose update loop handles this tween.
+         * @member {PUXI.TweenManager}
+         */
+        this.manager = manager;
         /**
          * Unique id for this tweening operation
          * @member {string}
@@ -34,10 +40,15 @@ class TweenContext extends utils.EventEmitter {
          */
         this.endValue = endValue;
         /**
-         * Interpolation function
+         * Linear interpolator on tween property.
          * @member {Erp}
          */
         this.erp = erp;
+        /**
+         * Easing function
+         * @member {Ease}
+         */
+        this.ease = ease;
         /**
          * Object that is observed and the interpolated value to be stored in.
          * @member {T}
@@ -49,10 +60,27 @@ class TweenContext extends utils.EventEmitter {
          */
         this.startTime = startTime;
         /**
-         * @member {DOMHighResTimeStamp
-         * @readonly}
+         * @member {DOMHighResTimeStamp}
+         * @readonly
          */
         this.endTime = endTime;
+        this._repeat = repeat;
+        this._flip = flip;
+        this._next = null;
+        this._target = null;
+        this._observedProperty = null;
+        this.autoCreated = false;
+    }
+    /**
+     * Configures this tween to update the observed-property on a tween target object
+     * each animation frame.
+     * @template T
+     * @param {PUXI.TweenTarget<T>} target - object on which property is being tweened
+     * @param {string} observedProperty - name of property on target
+     */
+    target(target, observedProperty) {
+        this._target = target;
+        this._observedProperty = observedProperty;
     }
     /**
      * Updates the observed value.
@@ -61,11 +89,86 @@ class TweenContext extends utils.EventEmitter {
      */
     update(t = performance.now()) {
         t = (t - this.startTime) / (this.endTime - this.startTime);
-        this.erp(this.startValue, this.endValue, Math.min(Math.max(t, 0), 1), this.observedValue);
+        if (this.ease) {
+            t = this.ease(t);
+        }
+        // Update observed value
+        this.observedValue = this.erp(this.startValue, this.endValue, Math.min(Math.max(t, 0), 1), this.observedValue);
+        // Emit update event
         this.emit('update', this.observedValue, this.key);
+        // Update target object (if any)
+        if (this._target) {
+            this._target[this._observedProperty] = this.observedValue;
+        }
+        // If cycle completed...
         if (t >= 1) {
+            this.emit('cycle', this);
+            --this._repeat;
+            // Repeat tween if required
+            if (this._repeat) {
+                if (this._flip) {
+                    const { startValue: s, endValue: e } = this;
+                    this.endValue = s;
+                    this.startValue = e;
+                }
+                const duration = this.endTime - this.startTime;
+                this.startTime += duration;
+                this.endTime += duration;
+                return;
+            }
+            // Cleanup after completion
             this.emit('complete', this);
             this.removeAllListeners();
+            // Initiate chained tween
+            if (this._next) {
+                this.manager.queue(this._next);
+            }
+            this.reset(); // just to be safe
+        }
+    }
+    /**
+     * Chains a tween that will run after this one finishes.
+     *
+     * @template W
+     * @param {W} startValue
+     * @param {W} endValue
+     * @param {DOMHighResTimeStamp} duration
+     * @param {PUXI.Erp<W>} erp
+     * @param {PUXI.Ease}[ease]
+     */
+    chain(startValue, endValue, duration, erp, ease) {
+        const next = (Tween.pool.pop() || new Tween());
+        next.manager = this.manager;
+        next.key = 0;
+        next.startValue = startValue;
+        next.endValue = endValue;
+        next.startTime = this.endTime;
+        next.endTime = next.startTime + duration;
+        next.erp = erp;
+        next.ease = ease;
+        this._next = next;
+        return next;
+    }
+    /**
+     * Clears the tween's extra properties.
+     */
+    reset() {
+        this.ease = null;
+        this._repeat = 0;
+        this._next = null;
+        this._target = null;
+        this._observedProperty = null;
+    }
+    /**
+     * Called when a tween is complete and no references to it are held. This
+     * will pool it (if auto-created).
+     *
+     * Custom tweens should override this.
+     */
+    destroy() {
+        this.reset();
+        if (this.autoCreated) {
+            Tween.pool.push(this);
         }
     }
 }
@@ -76,18 +179,24 @@ class TweenContext extends utils.EventEmitter {
  * @param {number} key
  */
 /**
+ * Fired whenever the tween has "repeated" once.
+ * @event cycle
+ * @param {Tween} cxt
+ */
+/**
  * Fired when tween has finished. References to this tween should be removed.
  * @event complete
- * @param {TweenContext} cxt
+ * @param {Tween} cxt
  */
 /**
  * Used for pooling.
  * @member {Array<TweenContext>}
  * @static
  */
-TweenContext.pool = [];
+Tween.pool = [];
 
-let nextKey = 0;
+// TODO: Prevent update loop from starting if there are no queued tweens.
+let nextTweenKey = 0;
 /**
  * @memberof PUXI.tween
  * @class
@@ -99,18 +208,48 @@ class TweenManager {
             this.start();
         }
     }
-    addTween(startValue, endValue, erp, startTime, endTime) {
-        const tweenCxt = (TweenContext.pool.pop() || new TweenContext());
-        tweenCxt.key = nextKey++;
+    /**
+     * Initiates a tween from `startValue` to `endValue` for the given duration
+     * using an interpolator.
+     *
+     * @template {T}
+     * @param {T} startValue - value of tween property at start
+     * @param {T} endValue - value of tween property at finish
+     * @param {DOMHighResTimeStamp | number} duration - duration of tween in milliseconds
+     * @param {PUXI.Erp<T>} erp - interpolator on tween property
+     * @param {PUXI.Ease}[ease] - easing function
+     */
+    tween(startValue, endValue, duration, erp, ease) {
+        const tweenCxt = (Tween.pool.pop() || new Tween());
+        tweenCxt.autoCreated = true;
+        tweenCxt.reset();
+        tweenCxt.manager = this;
+        tweenCxt.key = nextTweenKey++;
         tweenCxt.startValue = startValue;
         tweenCxt.endValue = endValue;
         tweenCxt.erp = erp;
-        tweenCxt.startTime = startTime;
-        tweenCxt.endTime = endTime;
+        tweenCxt.ease = ease;
+        tweenCxt.startTime = performance.now();
+        tweenCxt.endTime = tweenCxt.startTime + duration;
         this.tweenMap.set(tweenCxt.key, tweenCxt);
         tweenCxt.on('complete', this.onTweenComplete);
         return tweenCxt;
     }
+    /**
+     * Queues the tween context so that it is updated every frame.
+     *
+     * @param {PUXI.Tween} context
+     * @returns {PUXI.TweenManager} this manager, useful for method chaining
+     */
+    queue(context) {
+        context.key = nextTweenKey++;
+        this.tweenMap.set(context.key, context);
+        context.on('complete', this.onTweenComplete);
+        return this;
+    }
+    /**
+     * Starts the update loop.
+     */
     start() {
         if (this.isRunning) {
             return;
@@ -118,6 +257,9 @@ class TweenManager {
         Ticker.shared.add(this.onUpdate);
         this.isRunning = true;
     }
+    /**
+     * Stops the update loop. This will prevent tweens from getting updated.
+     */
     stop() {
         if (!this.isRunning) {
             return;
@@ -132,9 +274,86 @@ class TweenManager {
     }
     onTweenComplete(cxt) {
         this.tweenMap.delete(cxt.key);
-        TweenContext.pool.push(cxt);
+        cxt.destroy();
     }
 }
 
-export { TweenManager };
+/**
+ * @memberof PUXI
+ * @typedef {Function} Ease
+ * @param {number} t - interpolation parameter (b/w 0 and 1) that increases linearly
+ * @returns {numeber} - output interpolation parameter (b/w 0 and 1)
+ */
+/**
+ * Quadratic ease-in
+ *
+ * @memberof PUXI
+ * @type Ease
+ * @param {number} t
+ * @returns {number}
+ */
+const EaseIn = (t) => t * t;
+/**
+ * Quadratic ease-out
+ *
+ * @memberof PUXI
+ * @type Ease
+ * @param {number} t
+ * @returns {number}
+ */
+const EaseOut = (t) => (1 - t) * (1 - t);
+/**
+ * Quadratic ease-in & ease-out mixed!
+ *
+ * @memberof PUXI
+ * @type Ease
+ * @param {number} t
+ * @returns {number}
+ */
+const EaseBoth = (t) => ((t <= 0.5)
+    ? 2 * t * t
+    : ((2 * ((t - 0.5) * (1.5 - t))) + 0.5));
+
+/**
+ * Defines a (linear) interpolator on a type `T`.
+ *
+ * @memberof PUXI
+ * @typedef {Function} Erp
+ * @template T
+ * @param {T} startValue
+ * @param {T} endValue
+ * @param {number} t - interpolation parameter between 0 and 1
+ * @param {T}[observedValue]
+ */
+/**
+ * Interpolation function for number properties like alpha, rotation, component
+ * position/scale/skew, elevation, etc.
+ *
+ * @memberof PUXI
+ * @extends PUXI.Erp<number>
+ * @param {number} startValue
+ * @param {number} endValue
+ * @param {number} t
+ */
+const NumberErp = (startValue, endValue, t) => (t * startValue) + ((1 - t) * endValue);
+/**
+ * Interpolation function for 2D vector properties like position, scale, skew, etc.
+ *
+ * @memberof PUXI
+ * @extends PUXI.Erp<PIXI.Point>
+ * @param {PIXI.Point} startValue
+ * @param {PIXI.Point} endValue
+ * @param {number} t
+ * @param {PIXI.Point} observedValue
+ */
+const PointErp = (startValue, endValue, t, observedValue) => {
+    if (!observedValue) {
+        observedValue = new Point();
+    }
+    observedValue.x = (t * startValue.x) + ((1 - t) * endValue.x);
+    observedValue.y = (t * endValue.y) + ((1 - t) * endValue.y);
+    return observedValue;
+};
+
+export { EaseBoth, EaseIn, EaseOut, NumberErp, PointErp, Tween, TweenManager, nextTweenKey };
 //# sourceMappingURL=puxi-tween.mjs.map

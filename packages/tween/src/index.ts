@@ -8,3 +8,6 @@
  */
 
 export * from './TweenManager';
+export * from './Ease';
+export * from './Interpolator';
+export * from './Tween';

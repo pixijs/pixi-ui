@@ -15,7 +15,6 @@ export * from './Stage';
 export * from './TextWidget';
 export * from './TextInput';
 export * from './TilingSprite';
-export * from './Tween';
 export * from './Ticker';
 
 export * from './layout-manager';
