@@ -45,9 +45,10 @@ window.onload = function onload()
         height,
         resolution: 2,
         autoDensity: true,
+        antialias: true,
     });
 
-    const uxStage = new PUXI.Stage(width, height);
+    const uxStage = new PUXI.Stage(app.screen.width, app.screen.height);
 
     // Add title
     const mockTitle = new PUXI.TextWidget('PUXI Expo')
@@ -69,7 +70,7 @@ window.onload = function onload()
             0.5,
             PUXI.FastLayoutOptions.CENTER_ANCHOR,
         ))
-        .setElevation(2)
+    // .setElevation(2) heats up my cpu
         .makeDraggable();
 
     mockButton.on('draggablestart', () => { console.log('Button drag started'); });
@@ -121,8 +122,8 @@ window.onload = function onload()
         .addChild(new PUXI.Button({ text: 'Button 1' }).setBackground(0xff))
         .addChild(new PUXI.Button({ text: 'Button 2' })
             .setLayoutOptions(new PUXI.FastLayoutOptions(undefined, undefined, 0, 50))
-            .setBackground(0xff))
-        .setElevation(4);
+            .setBackground(0xff));
+    // .setElevation(4); heats up my cpu :(
 
     // Add a checkbox top-right corner
     const mockCheckbox = new PUXI.CheckBox({
@@ -167,7 +168,8 @@ window.onload = function onload()
             0,
             0.25,
         ),
-    ).setPadding(8, 8, 8, 8);
+    ).setPadding(8, 8, 8, 8)
+        .setBackground(0xff);
 
     uxStage.addChild(mockTitle);
     uxStage.addChild(mockButton);
@@ -208,7 +210,7 @@ window.onload = function onload()
     const stageBackground = new PIXI.Sprite.from('./bg.png');
 
     stageBackground.filters = [
-        new PIXI.filters.BlurFilter(11),
+        //  new PIXI.filters.BlurFilter(11), heats up my cpu
     ];
 
     uxStage.setBackground(stageBackground);

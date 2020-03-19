@@ -410,6 +410,7 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
     /**
      * Layout width of this widget.
      * @member {number}
+     * @readonly
      */
     get width(): number
     {
@@ -419,10 +420,31 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
     /**
      * Layout height of this widget.
      * @member {number}
+     * @readonly
      */
     get height(): number
     {
         return this._height;
+    }
+
+    /**
+     * Layout width of this widget's content, which is the width minus horizontal padding.
+     * @member {number}
+     * @readonly
+     */
+    get contentWidth(): number
+    {
+        return this._width - this.paddingHorizontal;
+    }
+
+    /**
+     * Layout height of this widget's content, which is the height minus vertical padding.
+     * @member {number}
+     * @readonly
+     */
+    get contentHeight(): number
+    {
+        return this._height - this.paddingVertical;
     }
 
     /**

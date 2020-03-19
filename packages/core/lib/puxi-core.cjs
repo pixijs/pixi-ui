@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Thu, 19 Mar 2020 18:55:27 UTC
+ * Compiled Thu, 19 Mar 2020 21:22:23 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -887,6 +887,7 @@ class Widget extends PIXI.utils.EventEmitter {
     /**
      * Layout width of this widget.
      * @member {number}
+     * @readonly
      */
     get width() {
         return this._width;
@@ -894,9 +895,26 @@ class Widget extends PIXI.utils.EventEmitter {
     /**
      * Layout height of this widget.
      * @member {number}
+     * @readonly
      */
     get height() {
         return this._height;
+    }
+    /**
+     * Layout width of this widget's content, which is the width minus horizontal padding.
+     * @member {number}
+     * @readonly
+     */
+    get contentWidth() {
+        return this._width - this.paddingHorizontal;
+    }
+    /**
+     * Layout height of this widget's content, which is the height minus vertical padding.
+     * @member {number}
+     * @readonly
+     */
+    get contentHeight() {
+        return this._height - this.paddingVertical;
     }
     /**
      * Alpha of this widget & its contents.
@@ -2326,8 +2344,8 @@ class Slider extends Widget {
         this._value = 0;
         this._disabled = false;
         // set options
-        this.track = Widget.fromContent(options.track || Slider.DEFAULT_TRACK);
-        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE);
+        this.track = Widget.fromContent(options.track || Slider.DEFAULT_TRACK.clone());
+        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE.clone());
         this.addChild(this.track, this.handle); // initialize(), update() usage
         this.fill = options.fill || null;
         this._value = this._minValue;
@@ -2339,18 +2357,14 @@ class Slider extends Widget {
         this.onValueChanging = options.onValueChanging || null;
         this.value = options.value || 50;
         this.handle.pivot = 0.5;
-        this.addChild(this.track);
-        if (this.fill) {
-            this.track.addChild(this.fill);
-        }
-        this.addChild(this.handle);
+        this._localCursor = new PIXI.Point();
         this.handle.contentContainer.buttonMode = true;
     }
     initialize() {
         super.initialize();
         const localMousePosition = new PIXI.Point();
         let startValue = 0;
-        let maxPosition;
+        let trackSize;
         const triggerValueChange = () => {
             this.emit('change', this.value);
             if (this._lastChange != this.value) {
@@ -2370,11 +2384,8 @@ class Slider extends Widget {
             }
         };
         const updatePositionToMouse = (mousePosition, soft) => {
-            this.track.contentContainer.toLocal(mousePosition, null, localMousePosition, true);
-            const newPos = this.vertical ? localMousePosition.y - this.handle._height * 0.5 : localMousePosition.x - this.handle._width * 0.5;
-            const maxPos = this.vertical ? this._height - this.handle._height : this._width - this.handle._width;
-            this._value = !maxPos ? 0 : Math.max(0, Math.min(1, newPos / maxPos));
-            this.update(soft);
+            this._value = this.getValueAtPhysicalPosition(mousePosition);
+            this.layoutHandle();
             triggerValueChanging();
         };
         // //Handle dragging
@@ -2384,12 +2395,12 @@ class Slider extends Widget {
         };
         handleDrag.onDragStart = () => {
             startValue = this._value;
-            maxPosition = this.orientation === Slider.HORIZONTAL
-                ? this.width - this.paddingHorizontal
-                : this.height - this.paddingVertical;
+            trackSize = this.orientation === Slider.HORIZONTAL
+                ? this.track.width
+                : this.track.height;
         };
         handleDrag.onDragMove = (event, offset) => {
-            this._value = Math.max(0, Math.min(1, startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / maxPosition)));
+            this._value = Math.max(0, Math.min(1, startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / trackSize)));
             triggerValueChanging();
             this.layoutHandle();
         };
@@ -2401,12 +2412,12 @@ class Slider extends Widget {
         const trackDrag = this.track.eventBroker.dnd;
         trackDrag.onPress = (event, isPressed) => {
             if (isPressed) {
-                updatePositionToMouse(event.data.global, true);
+                updatePositionToMouse(event.data.global);
             }
             event.stopPropagation();
         };
         trackDrag.onDragMove = (event) => {
-            updatePositionToMouse(event.data.global, false);
+            updatePositionToMouse(event.data.global);
         };
         trackDrag.onDragEnd = () => {
             triggerValueChange();
@@ -2450,21 +2461,59 @@ class Slider extends Widget {
             this.track.contentContainer.interactive = !val;
         }
     }
+    /**
+     * @protected
+     * @returns the amount of the freedom that handle has in physical units, i.e. pixels. This
+     *      is the width of the track minus the handle's size.
+     */
+    getPhysicalRange() {
+        return this.orientation === Slider.HORIZONTAL
+            ? this.contentWidth - this.handle.getMeasuredWidth()
+            : this.contentHeight - this.handle.getMeasuredHeight();
+    }
+    /**
+     * @protected
+     * @param {PIXI.Point} cursor
+     * @returns the value of the slider if the handle's center were (globally)
+     *      positioned at the given point.
+     */
+    getValueAtPhysicalPosition(cursor) {
+        // Transform position
+        const localCursor = this.contentContainer.toLocal(cursor, null, this._localCursor, true);
+        let offset;
+        let range;
+        if (this.orientation === Slider.HORIZONTAL) {
+            const handleWidth = this.handle.getMeasuredWidth();
+            offset = localCursor.x - this.paddingLeft - (handleWidth / 4);
+            range = this.contentWidth - handleWidth;
+        }
+        else {
+            const handleHeight = this.handle.getMeasuredHeight();
+            offset = localCursor.y - this.paddingTop - (handleHeight / 4);
+            range = this.contentHeight - handleHeight;
+        }
+        return offset / range;
+    }
+    /**
+     * Re-positions the handle. This should be called after `_value` has been changed.
+     */
     layoutHandle() {
         const handle = this.handle;
-        const width = this.width;
-        const height = this.height;
         const handleWidth = handle.getMeasuredWidth();
         const handleHeight = handle.getMeasuredHeight();
+        let width = this.width - this.paddingHorizontal;
+        let height = this.height - this.paddingVertical;
         let handleX;
         let handleY;
         if (this.orientation === Slider.HORIZONTAL) {
+            width -= handleWidth;
             handleY = (height - handleHeight) / 2;
-            handleX = ((width - this.paddingHorizontal) * this._value) - (handleWidth / 2);
+            handleX = (width * this._value);
         }
         else {
+            height -= handleHeight;
             handleX = (width - handleWidth) / 2;
-            handleY = ((height - this.paddingVertical) * this._value) - (handleHeight / 2);
+            handleY = (height * this._value);
         }
         handle.layout(handleX, handleY, handleX + handleWidth, handleY + handleHeight);
     }
@@ -2524,10 +2573,12 @@ class Slider extends Widget {
     onLayout(l, t, r, b, dirty) {
         super.onLayout(l, t, r, b, dirty);
         const { handle, track } = this;
-        track.layout(0, 0, this.width, this.height);
+        track.layout(0, 0, this.width - this.paddingHorizontal, this.height - this.paddingVertical);
         // Layout doesn't scale the widget
-        track.insetContainer.width = this.width;
-        track.insetContainer.height = this.height;
+        // TODO: Create a Track widget, this won't work for custom tracks that don't wanna
+        // scale (and it looks ugly.)
+        track.insetContainer.width = track.width;
+        track.insetContainer.height = track.height;
         handle.measure(this.width, this.height, exports.MeasureMode.AT_MOST, exports.MeasureMode.AT_MOST);
         this.layoutHandle();
     }
@@ -2536,22 +2587,21 @@ class Slider extends Widget {
  * @static
  */
 Slider.DEFAULT_TRACK = new PIXI.Graphics()
-    .lineStyle(1, 0xaaaaaa, 0.9, 0.5, false)
     .beginFill(0xffffff, 1)
     .drawRect(0, 0, 16, 16) // natural width & height = 16
     .endFill()
-    .lineStyle(2, 0x000000, 1) // draw line in middle
-    .moveTo(0, 8)
-    .lineTo(16, 8);
+    .lineStyle(1, 0x000000, 0.7, 1, true) // draw line in middle
+    .moveTo(1, 8)
+    .lineTo(15, 8);
 /**
  * @static
  */
 Slider.DEFAULT_HANDLE = new PIXI.Graphics()
     .beginFill(0x000000)
-    .drawCircle(24, 24, 24)
+    .drawCircle(16, 16, 8)
     .endFill()
-    .beginFill(0xffffff)
-    .drawCircle(24, 24, 16)
+    .beginFill(0x000000, 0.5)
+    .drawCircle(16, 16, 16)
     .endFill();
 /**
  * Horizontal orientation

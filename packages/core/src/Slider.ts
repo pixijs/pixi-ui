@@ -66,6 +66,8 @@ export class Slider extends Widget
     protected _minValue: number;
     protected _maxValue: number;
 
+    private _localCursor: PIXI.Point;
+
     decimals: number;
     vertical: boolean;
 
@@ -96,8 +98,8 @@ export class Slider extends Widget
         this._disabled = false;
 
         // set options
-        this.track = Widget.fromContent(options.track || Slider.DEFAULT_TRACK);
-        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE);
+        this.track = Widget.fromContent(options.track || Slider.DEFAULT_TRACK.clone());
+        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE.clone());
 
         this.addChild(this.track, this.handle);// initialize(), update() usage
 
@@ -112,12 +114,8 @@ export class Slider extends Widget
         this.value = options.value || 50;
         this.handle.pivot = 0.5;
 
-        this.addChild(this.track);
-        if (this.fill)
-        {
-            this.track.addChild(this.fill);
-        }
-        this.addChild(this.handle);
+        this._localCursor = new PIXI.Point();
+
         this.handle.contentContainer.buttonMode = true;
     }
 
@@ -127,7 +125,7 @@ export class Slider extends Widget
 
         const localMousePosition = new PIXI.Point();
         let startValue = 0;
-        let maxPosition;
+        let trackSize;
 
         const triggerValueChange = (): void =>
         {
@@ -161,13 +159,8 @@ export class Slider extends Widget
 
         const updatePositionToMouse = (mousePosition, soft): void =>
         {
-            this.track.contentContainer.toLocal(mousePosition, null, localMousePosition, true);
-
-            const newPos = this.vertical ? localMousePosition.y - this.handle._height * 0.5 : localMousePosition.x - this.handle._width * 0.5;
-            const maxPos = this.vertical ? this._height - this.handle._height : this._width - this.handle._width;
-
-            this._value = !maxPos ? 0 : Math.max(0, Math.min(1, newPos / maxPos));
-            this.update(soft);
+            this._value = this.getValueAtPhysicalPosition(mousePosition);
+            this.layoutHandle();
             triggerValueChanging();
         };
 
@@ -182,16 +175,16 @@ export class Slider extends Widget
         handleDrag.onDragStart = (): void =>
         {
             startValue = this._value;
-            maxPosition = this.orientation === Slider.HORIZONTAL
-                ? this.width - this.paddingHorizontal
-                : this.height - this.paddingVertical;
+            trackSize = this.orientation === Slider.HORIZONTAL
+                ? this.track.width
+                : this.track.height;
         };
 
         handleDrag.onDragMove = (event, offset: PIXI.Point): void =>
         {
             this._value = Math.max(0, Math.min(
                 1,
-                startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / maxPosition
+                startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / trackSize
                 )));
 
             triggerValueChanging();
@@ -210,7 +203,10 @@ export class Slider extends Widget
         trackDrag.onPress = (event, isPressed): void =>
         {
             if (isPressed)
-            { updatePositionToMouse(event.data.global, true); }
+            {
+                updatePositionToMouse(event.data.global, true);
+            }
+
             event.stopPropagation();
         };
 
@@ -280,26 +276,78 @@ export class Slider extends Widget
         }
     }
 
+    /**
+     * @protected
+     * @returns the amount of the freedom that handle has in physical units, i.e. pixels. This
+     *      is the width of the track minus the handle's size.
+     */
+    protected getPhysicalRange(): number
+    {
+        return this.orientation === Slider.HORIZONTAL
+            ? this.contentWidth - this.handle.getMeasuredWidth()
+            : this.contentHeight - this.handle.getMeasuredHeight();
+    }
+
+    /**
+     * @protected
+     * @param {PIXI.Point} cursor
+     * @returns the value of the slider if the handle's center were (globally)
+     *      positioned at the given point.
+     */
+    protected getValueAtPhysicalPosition(cursor: PIXI.Point): number
+    {
+        // Transform position
+        const localCursor = this.contentContainer.toLocal(cursor, null, this._localCursor, true);
+
+        let offset: number;
+        let range: number;
+
+        if (this.orientation === Slider.HORIZONTAL)
+        {
+            const handleWidth = this.handle.getMeasuredWidth();
+
+            offset = localCursor.x - this.paddingLeft - (handleWidth / 4);
+            range = this.contentWidth - handleWidth;
+        }
+        else
+        {
+            const handleHeight = this.handle.getMeasuredHeight();
+
+            offset = localCursor.y - this.paddingTop - (handleHeight / 4);
+            range = this.contentHeight - handleHeight;
+        }
+
+        return offset / range;
+    }
+
+    /**
+     * Re-positions the handle. This should be called after `_value` has been changed.
+     */
     protected layoutHandle(): void
     {
         const handle = this.handle;
 
-        const width = this.width;
-        const height = this.height;
         const handleWidth = handle.getMeasuredWidth();
         const handleHeight = handle.getMeasuredHeight();
+        let width = this.width - this.paddingHorizontal;
+        let height = this.height - this.paddingVertical;
+
         let handleX: number;
         let handleY: number;
 
         if (this.orientation === Slider.HORIZONTAL)
         {
+            width -= handleWidth;
+
             handleY = (height - handleHeight) / 2;
-            handleX = ((width - this.paddingHorizontal) * this._value) - (handleWidth / 2);
+            handleX = (width * this._value);
         }
         else
         {
+            height -= handleHeight;
+
             handleX = (width - handleWidth) / 2;
-            handleY = ((height - this.paddingVertical) * this._value) - (handleHeight / 2);
+            handleY = (height * this._value);
         }
 
         handle.layout(handleX, handleY, handleX + handleWidth, handleY + handleHeight);
@@ -369,9 +417,11 @@ export class Slider extends Widget
         super.onLayout(l, t, r, b, dirty);
         const { handle, track } = this;
 
-        track.layout(0, 0, this.width, this.height);
+        track.layout(0, 0, this.width - this.paddingHorizontal, this.height - this.paddingVertical);
 
         // Layout doesn't scale the widget
+        // TODO: Create a Track widget, this won't work for custom tracks that don't wanna
+        // scale (and it looks ugly.)
         track.insetContainer.width = track.width;
         track.insetContainer.height = track.height;
 
@@ -383,26 +433,24 @@ export class Slider extends Widget
     /**
      * @static
      */
-    static DEFAULT_TRACK: PIXI.Container = new PIXI.Graphics()
-        .lineStyle(1, 0xaaaaaa, 0.9, 0.5, false)
+    static DEFAULT_TRACK: PIXI.Graphics = new PIXI.Graphics()
         .beginFill(0xffffff, 1)
         .drawRect(0, 0, 16, 16) // natural width & height = 16
         .endFill()
-        .lineStyle(2, 0x000000, 1) // draw line in middle
-        .moveTo(0, 8)
-        .lineTo(16, 8);
+        .lineStyle(1, 0x000000, 0.7, 1, true) // draw line in middle
+        .moveTo(1, 8)
+        .lineTo(15, 8);
 
     /**
      * @static
      */
-    static DEFAULT_HANDLE: PIXI.Container = new PIXI.Graphics()
+    static DEFAULT_HANDLE: PIXI.Graphics = new PIXI.Graphics()
         .beginFill(0x000000)
-        .drawCircle(24, 24, 24)
+        .drawCircle(16, 16, 8)
         .endFill()
-        .beginFill(0xffffff)
-        .drawCircle(24, 24, 16)
+        .beginFill(0x000000, 0.5)
+        .drawCircle(16, 16, 16)
         .endFill();
-
     /**
      * Horizontal orientation
      * @static
