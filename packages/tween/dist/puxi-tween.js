@@ -1,6 +1,6 @@
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:38:54 UTC
+ * Compiled Thu, 19 Mar 2020 18:55:27 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -75,23 +75,13 @@ var _puxi_tween = (function (exports, PIXI) {
             this.autoCreated = false;
         }
         /**
-         * Configures this tween to update the observed-property on a tween target object
-         * each animation frame.
-         * @template T
-         * @param {PUXI.TweenTarget<T>} target - object on which property is being tweened
-         * @param {string} observedProperty - name of property on target
-         */
-        target(target, observedProperty) {
-            this._target = target;
-            this._observedProperty = observedProperty;
-        }
-        /**
          * Updates the observed value.
          *
          * @param {DOMHighResTimeStamp} t - current time
          */
         update(t = performance.now()) {
             t = (t - this.startTime) / (this.endTime - this.startTime);
+            t = Math.min(Math.max(t, 0), 1);
             if (this.ease) {
                 t = this.ease(t);
             }
@@ -105,10 +95,10 @@ var _puxi_tween = (function (exports, PIXI) {
             }
             // If cycle completed...
             if (t >= 1) {
-                this.emit('cycle', this);
                 --this._repeat;
+                this.emit('cycle', this);
                 // Repeat tween if required
-                if (this._repeat) {
+                if (this._repeat > 0) {
                     if (this._flip) {
                         const { startValue: s, endValue: e } = this;
                         this.endValue = s;
@@ -119,15 +109,45 @@ var _puxi_tween = (function (exports, PIXI) {
                     this.endTime += duration;
                     return;
                 }
-                // Cleanup after completion
-                this.emit('complete', this);
-                this.removeAllListeners();
                 // Initiate chained tween
                 if (this._next) {
                     this.manager.queue(this._next);
                 }
-                this.reset(); // just to be safe
+                this.reset();
+                // Cleanup after completion
+                this.emit('complete', this);
+                this.removeAllListeners();
             }
+        }
+        /**
+         * Configures this tween to update the observed-property on a tween target object
+         * each animation frame.
+         * @template T
+         * @param {PUXI.TweenTarget<T>} target - object on which property is being tweened
+         * @param {string} observedProperty - name of property on target
+         */
+        target(target, observedProperty) {
+            this._target = target;
+            this._observedProperty = observedProperty;
+            return this;
+        }
+        /**
+         * Repeats this tween `repeat` no. of times again. If the tween is still running,
+         * then this is no. of times it will again (not added to the previous repeat
+         * count).
+         *
+         * Each time the tween is repeated, a `cycle` event is fired.
+         *
+         * By default, the repeat count of any tween is 1.
+         *
+         * @param {number} repeat - the repeat count
+         * @param {boolean}[flip=true] - whether to switch start/end values each cycle
+         * @returns {Tween<T>} - this tween, useful for method chaining
+         */
+        repeat(repeat, flip = true) {
+            this._repeat = repeat;
+            this._flip = flip;
+            return this;
         }
         /**
          * Chains a tween that will run after this one finishes.
@@ -211,6 +231,10 @@ var _puxi_tween = (function (exports, PIXI) {
                     cxt.update();
                 }
             };
+            this.onTweenComplete = (cxt) => {
+                this.tweenMap.delete(cxt.key);
+                cxt.destroy();
+            };
             this.tweenMap = new Map();
             if (autoStart) {
                 this.start();
@@ -275,10 +299,6 @@ var _puxi_tween = (function (exports, PIXI) {
             PIXI.Ticker.shared.remove(this.onUpdate);
             this.isRunning = false;
         }
-        onTweenComplete(cxt) {
-            this.tweenMap.delete(cxt.key);
-            cxt.destroy();
-        }
     }
 
     /**
@@ -338,7 +358,7 @@ var _puxi_tween = (function (exports, PIXI) {
      * @param {number} endValue
      * @param {number} t
      */
-    const NumberErp = (startValue, endValue, t) => (t * startValue) + ((1 - t) * endValue);
+    const NumberErp = (startValue, endValue, t) => ((1 - t) * startValue) + (t * endValue);
     /**
      * Interpolation function for 2D vector properties like position, scale, skew, etc.
      *
@@ -353,8 +373,8 @@ var _puxi_tween = (function (exports, PIXI) {
         if (!observedValue) {
             observedValue = new PIXI.Point();
         }
-        observedValue.x = (t * startValue.x) + ((1 - t) * endValue.x);
-        observedValue.y = (t * endValue.y) + ((1 - t) * endValue.y);
+        observedValue.x = ((1 - t) * startValue.x) + (t * endValue.x);
+        observedValue.y = ((1 - t) * startValue.y) + (t * endValue.y);
         return observedValue;
     };
 

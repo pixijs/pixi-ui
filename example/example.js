@@ -1,3 +1,14 @@
+/* !
+ * To check your changes against the example, run the following commands in
+ * the project directory:
+ *
+ * npm run compile:example
+ * npx live-server example
+ *
+ * puxi.js is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
 /* global PIXI, PUXI */
 /* eslint-disable no-console */
 
@@ -145,6 +156,19 @@ window.onload = function onload()
     mockCheckbox.on('click', () => { console.log('Checkbox clicked'); });
     mockCheckbox.on('changed', (checked) => { console.log(`Checkbox checked?: ${checked}`); });
 
+    // Showcase slider
+    const mockSlider = new PUXI.Slider({
+        minValue: 0,
+        maxValue: 100,
+    }).setLayoutOptions(
+        new PUXI.FastLayoutOptions(
+            0.9999,
+            PUXI.LayoutOptions.WRAP_CONTENT,
+            0,
+            0.25,
+        ),
+    ).setPadding(8, 8, 8, 8);
+
     uxStage.addChild(mockTitle);
     uxStage.addChild(mockButton);
     uxStage.addChild(mockInput);
@@ -152,6 +176,7 @@ window.onload = function onload()
     uxStage.addChild(mockCheckbox2);
     uxStage.addChild(mockCheckbox3);
     uxStage.addChild(mockScroll);
+    uxStage.addChild(mockSlider);
 
     uxStage.focusController.on('focusChanged', (next, prev) =>
     {
@@ -200,17 +225,22 @@ window.onload = function onload()
     window.mockCheckbox2 = mockCheckbox2;
     window.mockCheckbox3 = mockCheckbox3;
     window.mockScroll = mockScroll;
+    window.mockSlider = mockSlider;
 
     const tmgr = new PUXI.tween.TweenManager();
 
     tmgr.tween(
+        mockButton.insetContainer.position.clone(),
         new PIXI.Point(0, 0),
-        new PIXI.Point(100, 100),
         500,
         PUXI.tween.PointErp,
         PUXI.tween.EaseBoth,
     ).target(
         mockButton.insetContainer,
         'position',
-    );
+    ).repeat(3)
+        .on('complete', () =>
+        {
+            mockButton.requestLayout();
+        });
 };

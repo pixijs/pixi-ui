@@ -17,12 +17,12 @@ import { EventBroker } from './event';
  * @extends PIXI.utils.EventEmitter
  * @implements PUXI.IMeasurable
  */
-export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasurable
+export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 {
-    insetContainer: PIXI.Container;
-    contentContainer: PIXI.Container;
-    widgetChildren: Widget[];
-    stage: Stage;
+    public readonly insetContainer: PIXI.Container;
+    public readonly contentContainer: PIXI.Container;
+    public readonly widgetChildren: Widget[];
+    public readonly stage: Stage;
 
     initialized: boolean;
     protected dragInitialized: boolean;
@@ -38,8 +38,6 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     pixelPerfect: boolean;
 
     parent: Widget;
-    _parentWidth: number;
-    _parentHeight: number;
 
     public layoutMeasure: Insets;
     public layoutOptions: LayoutOptions;
@@ -47,12 +45,10 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     protected tint: number;
     protected blendMode: PIXI.BLEND_MODES;
     protected background: PIXI.Container;
-
     protected _measuredWidth: number;
     protected _measuredHeight: number;
 
     private _eventBroker: EventBroker;
-
     private _paddingLeft: number;
     private _paddingTop: number;
     private _paddingRight: number;
@@ -62,14 +58,47 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     private _elevation: number;
     private _dropShadow: DropShadowFilter;
 
+    private _layoutDirty: boolean;
+
     constructor()
     {
         super();
 
+        /**
+         * This container owns the background + content of this widget.
+         * @member {PIXI.Container}
+         * @readonly
+         */
         this.insetContainer = new PIXI.Container();
+
+        /**
+         * This container holds the content of this widget. Subclasses should add
+         * renderable display-objects to this container.
+         * @member {PIXI.Container}
+         * @readonly
+         */
         this.contentContainer = this.insetContainer.addChild(new PIXI.Container());
+
+        /**
+         * Children of this widget. Use `WidgetGroup` to position children.
+         * @member {PUXI.Widget[]}
+         * @readonly
+         */
         this.widgetChildren = [];
+
+        /**
+         * Stage whose scene graph holds this widget. Once set, this cannot be changed.
+         * @member {PUXI.Stage}
+         * @readonly
+         */
         this.stage = null;
+
+        /**
+         * Layout insets of this widget. In normal state, the widget should be in this
+         * rectangle inside the parent reference frame.
+         * @member {PUXI.Insets}
+         * @readonly
+         */
         this.layoutMeasure = new Insets();
 
         this.initialized = false;
@@ -100,7 +129,20 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
      *
      * @private
      */
-    abstract update(): any;
+    update(): any
+    {
+        if (this._layoutDirty)
+        {
+            console.log('here');
+            setTimeout(() =>
+            {
+                if (this._layoutDirty)
+                {
+                    this.stage.measureAndLayout();
+                }
+            }, 0);
+        }
+    }
 
     /**
      * The measured width that is used by the parent's layout manager to place this
@@ -209,7 +251,7 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
      * @param dirty
      * @protected
      */
-    layout(l: number, t: number = l, r: number = l, b: number = t, dirty = true): void
+    onLayout(l: number, t: number = l, r: number = l, b: number = t, dirty = true): void
     {
         this.layoutMeasure.left = l;
         this.layoutMeasure.top = t;
@@ -232,8 +274,16 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
         this.insetContainer.y = t;
         this.contentContainer.x = this._paddingLeft;
         this.contentContainer.y = this._paddingTop;
-        // this.container.width = r - l;
-        // this.container.height = b - t;
+
+        // Don't set width/height on inset, content because that would scale
+        // the contents (we don't want that).
+
+        this._layoutDirty = false;
+    }
+
+    layout(l: number, t: number = l, r: number = l, b: number = t, dirty = true): void
+    {
+        this.onLayout(l, t, r, b, dirty);
     }
 
     /**
@@ -537,6 +587,14 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
     }
 
     /**
+     * Will trigger a full layout pass next animation frame.
+     */
+    requestLayout(): void
+    {
+        this._layoutDirty = true;
+    }
+
+    /**
      * Adds the widgets as children of this one.
      *
      * @param {PUXI.Widget[]} widgets
@@ -761,5 +819,25 @@ export abstract class Widget extends PIXI.utils.EventEmitter implements IMeasura
             container.on('mouseup', this.onDrop);
             container.on('touchend', this.onDrop);
         }
+    }
+
+    /**
+     * Creates a widget that holds the display-object as its content. If `content` is
+     * a `PUXI.Widget`, then it will be returned.
+     * @param {PIXI.Container | Widget} content
+     * @static
+     */
+    static fromContent(content: PIXI.Container | Widget): Widget
+    {
+        if (content instanceof Widget)
+        {
+            return content;
+        }
+
+        const widget = new Widget();
+
+        widget.contentContainer.addChild(content);
+
+        return widget;
     }
 }

@@ -118,10 +118,10 @@ export class TweenManager
         }
     };
 
-    protected onTweenComplete(cxt: Tween<any>): void
+    protected onTweenComplete = (cxt: Tween<any>): void =>
     {
         this.tweenMap.delete(cxt.key);
 
         cxt.destroy();
-    }
+    };
 }

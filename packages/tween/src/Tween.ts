@@ -118,19 +118,6 @@ export class Tween<T> extends PIXI.utils.EventEmitter
     }
 
     /**
-     * Configures this tween to update the observed-property on a tween target object
-     * each animation frame.
-     * @template T
-     * @param {PUXI.TweenTarget<T>} target - object on which property is being tweened
-     * @param {string} observedProperty - name of property on target
-     */
-    target(target: TweenTarget<T>, observedProperty: string): void
-    {
-        this._target = target;
-        this._observedProperty = observedProperty;
-    }
-
-    /**
      * Updates the observed value.
      *
      * @param {DOMHighResTimeStamp} t - current time
@@ -138,6 +125,7 @@ export class Tween<T> extends PIXI.utils.EventEmitter
     update(t: DOMHighResTimeStamp = performance.now()): void
     {
         t = (t - this.startTime) / (this.endTime - this.startTime);
+        t = Math.min(Math.max(t, 0), 1);
 
         if (this.ease)
         {
@@ -164,12 +152,12 @@ export class Tween<T> extends PIXI.utils.EventEmitter
         // If cycle completed...
         if (t >= 1)
         {
-            this.emit('cycle', this);
-
             --this._repeat;
 
+            this.emit('cycle', this);
+
             // Repeat tween if required
-            if (this._repeat)
+            if (this._repeat > 0)
             {
                 if (this._flip)
                 {
@@ -187,18 +175,54 @@ export class Tween<T> extends PIXI.utils.EventEmitter
                 return;
             }
 
-            // Cleanup after completion
-            this.emit('complete', this);
-            this.removeAllListeners();
-
             // Initiate chained tween
             if (this._next)
             {
                 this.manager.queue(this._next);
             }
 
-            this.reset();// just to be safe
+            this.reset();
+
+            // Cleanup after completion
+            this.emit('complete', this);
+            this.removeAllListeners();
         }
+    }
+
+    /**
+     * Configures this tween to update the observed-property on a tween target object
+     * each animation frame.
+     * @template T
+     * @param {PUXI.TweenTarget<T>} target - object on which property is being tweened
+     * @param {string} observedProperty - name of property on target
+     */
+    target(target: TweenTarget<T>, observedProperty: string): Tween<T>
+    {
+        this._target = target;
+        this._observedProperty = observedProperty;
+
+        return this;
+    }
+
+    /**
+     * Repeats this tween `repeat` no. of times again. If the tween is still running,
+     * then this is no. of times it will again (not added to the previous repeat
+     * count).
+     *
+     * Each time the tween is repeated, a `cycle` event is fired.
+     *
+     * By default, the repeat count of any tween is 1.
+     *
+     * @param {number} repeat - the repeat count
+     * @param {boolean}[flip=true] - whether to switch start/end values each cycle
+     * @returns {Tween<T>} - this tween, useful for method chaining
+     */
+    repeat(repeat: number, flip = true): Tween<T>
+    {
+        this._repeat = repeat;
+        this._flip = flip;
+
+        return this;
     }
 
     /**

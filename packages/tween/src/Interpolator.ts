@@ -25,7 +25,7 @@ export type Erp<T> = (startValue: T, endValue: T, t: number, observedValue?: T) 
  * @param {number} t
  */
 export const NumberErp: Erp<number> = (startValue: number, endValue: number, t: number) =>
-    (t * startValue) + ((1 - t) * endValue);
+    ((1 - t) * startValue) + (t * endValue);
 
 /**
  * Interpolation function for 2D vector properties like position, scale, skew, etc.
@@ -49,8 +49,8 @@ export const PointErp: Erp<PIXI.Point> = (
         observedValue = new PIXI.Point();
     }
 
-    observedValue.x = (t * startValue.x) + ((1 - t) * endValue.x);
-    observedValue.y = (t * endValue.y) + ((1 - t) * endValue.y);
+    observedValue.x = ((1 - t) * startValue.x) + (t * endValue.x);
+    observedValue.y = ((1 - t) * startValue.y) + (t * endValue.y);
 
     return observedValue;
 };

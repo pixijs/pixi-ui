@@ -6,6 +6,9 @@ import { ScrollManager } from './event/ScrollManager';
 import * as PIXI from 'pixi.js';
 import { Widget } from './Widget';
 import { WidgetGroup } from './WidgetGroup';
+import { AnchorLayout } from './layout-manager';
+import { ScrollBar } from './ScrollBar';
+import { AnchorLayoutOptions } from './layout-options';
 
 /**
  * @namespace PUXI
@@ -25,7 +28,7 @@ interface IScrollingContainerOptions
 
 /**
  * `ScrollWidget` masks its contents to its layout bounds and translates
- * its children when scrolling.
+ * its children when scrolling. It uses the anchor layout.
  *
  * @memberof PUXI
  * @class
@@ -109,6 +112,8 @@ export class ScrollWidget extends InteractiveGroup
          */
         this.targetPosition = new PIXI.Point();
         this.lastPosition = new PIXI.Point();
+
+        this.useLayout(new AnchorLayout());
 
         this.animating = false;
         this.scrolling = false;

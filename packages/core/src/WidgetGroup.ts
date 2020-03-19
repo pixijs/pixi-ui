@@ -62,9 +62,9 @@ export abstract class WidgetGroup extends Widget
         this.useLayout(new FastLayout());
     }
 
-    measure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
+    onMeasure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
-        super.measure(width, height, widthMode, heightMode);
+        super.onMeasure(width, height, widthMode, heightMode);
 
         if (this.widgetChildren.length === 0)
         {
@@ -81,9 +81,9 @@ export abstract class WidgetGroup extends Widget
         this._measuredHeight = Math.max(this.measuredHeight, this.layoutMgr.getMeasuredHeight());
     }
 
-    layout(l: number, t: number, r: number, b: number, dirty = true): void
+    onLayout(l: number, t: number, r: number, b: number, dirty = true): void
     {
-        super.layout(l, t, r, b, dirty);
+        super.onLayout(l, t, r, b, dirty);
 
         if (this.widgetChildren.length === 0)
         {

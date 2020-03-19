@@ -1,9 +1,10 @@
-import * as PUXI from '../../bin/pixi-ui';
-import { createMockWidgetRectangle } from '../createMockWidget';
+const PUXI = require('../../lib/puxi-core.cjs');
+const { createMockWidgetRectangle } = require('../createMockWidget');
+const expect = require('chai').expect;
 
 describe('AnchorLayout', () =>
 {
-    test('Lays out weighted anchors correctly', () =>
+    it('Lays out weighted anchors correctly', () =>
     {
         const mockLayout = new PUXI.AnchorLayout();
         const mockParent = new PUXI.WidgetGroup();
@@ -34,8 +35,8 @@ describe('AnchorLayout', () =>
 
         mockParent.measure(0, 0, PUXI.MeasureMode.UNBOUNDED, PUXI.MeasureMode.UNBOUNDED);
 
-        expect(mockParent.getMeasuredWidth()).toBe(600);
-        expect(mockParent.getMeasuredHeight()).toBe(700);
+        expect(mockParent.getMeasuredWidth()).to.equal(600);
+        expect(mockParent.getMeasuredHeight()).to.equal(700);
 
         mockParent.layout(0, 0, mockParent.getMeasuredWidth(), mockParent.getMeasuredWidth(), true);
     });

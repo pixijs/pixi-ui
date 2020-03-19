@@ -1,18 +1,18 @@
-import * as PUXI from '../bin/pixi-ui';
-import * as PIXI from 'pixi.js';
+const PUXI = require('../lib/puxi-core.cjs');
+const PIXI = require('pixi.js');
 
-export function createMockWidget(content)
+function createMockWidget(content)
 {
     const mock = new PUXI.Widget(content.width, content.height);
 
-    mock.container.addChild(content);
+    mock.contentContainer.addChild(content);
 
     mock.update = () => {};
 
     return mock;
 }
 
-export function createMockWidgetRectangle(width, height)
+function createMockWidgetRectangle(width, height)
 {
     const rect = new PIXI.Graphics();
 
@@ -22,3 +22,8 @@ export function createMockWidgetRectangle(width, height)
 
     return createMockWidget(rect);
 }
+
+module.exports = {
+    createMockWidget,
+    createMockWidgetRectangle,
+};

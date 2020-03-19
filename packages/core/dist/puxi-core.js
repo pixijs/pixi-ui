@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Wed, 18 Mar 2020 18:38:54 UTC
+ * Compiled Thu, 19 Mar 2020 18:55:27 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -604,10 +604,37 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
     class Widget extends PIXI.utils.EventEmitter {
         constructor() {
             super();
+            /**
+             * This container owns the background + content of this widget.
+             * @member {PIXI.Container}
+             * @readonly
+             */
             this.insetContainer = new PIXI.Container();
+            /**
+             * This container holds the content of this widget. Subclasses should add
+             * renderable display-objects to this container.
+             * @member {PIXI.Container}
+             * @readonly
+             */
             this.contentContainer = this.insetContainer.addChild(new PIXI.Container());
+            /**
+             * Children of this widget. Use `WidgetGroup` to position children.
+             * @member {PUXI.Widget[]}
+             * @readonly
+             */
             this.widgetChildren = [];
+            /**
+             * Stage whose scene graph holds this widget. Once set, this cannot be changed.
+             * @member {PUXI.Stage}
+             * @readonly
+             */
             this.stage = null;
+            /**
+             * Layout insets of this widget. In normal state, the widget should be in this
+             * rectangle inside the parent reference frame.
+             * @member {PUXI.Insets}
+             * @readonly
+             */
             this.layoutMeasure = new Insets();
             this.initialized = false;
             this.dragInitialized = false;
@@ -625,6 +652,22 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this.blendMode = PIXI.BLEND_MODES.NORMAL;
             this.draggable = false;
             this.droppable = false;
+        }
+        /**
+         * Update method that is to be overriden. This is called before a `render()`
+         * pass on widgets that are dirty.
+         *
+         * @private
+         */
+        update() {
+            if (this._layoutDirty) {
+                console.log('here');
+                setTimeout(() => {
+                    if (this._layoutDirty) {
+                        this.stage.measureAndLayout();
+                    }
+                }, 0);
+            }
         }
         /**
          * The measured width that is used by the parent's layout manager to place this
@@ -717,7 +760,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
          * @param dirty
          * @protected
          */
-        layout(l, t = l, r = l, b = t, dirty = true) {
+        onLayout(l, t = l, r = l, b = t, dirty = true) {
             this.layoutMeasure.left = l;
             this.layoutMeasure.top = t;
             this.layoutMeasure.right = r;
@@ -735,8 +778,12 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this.insetContainer.y = t;
             this.contentContainer.x = this._paddingLeft;
             this.contentContainer.y = this._paddingTop;
-            // this.container.width = r - l;
-            // this.container.height = b - t;
+            // Don't set width/height on inset, content because that would scale
+            // the contents (we don't want that).
+            this._layoutDirty = false;
+        }
+        layout(l, t = l, r = l, b = t, dirty = true) {
+            this.onLayout(l, t, r, b, dirty);
         }
         /**
          * Use this to specify how you want to layout this widget w.r.t its parent.
@@ -970,6 +1017,12 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             return this;
         }
         /**
+         * Will trigger a full layout pass next animation frame.
+         */
+        requestLayout() {
+            this._layoutDirty = true;
+        }
+        /**
          * Adds the widgets as children of this one.
          *
          * @param {PUXI.Widget[]} widgets
@@ -1127,6 +1180,20 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
                 container.on('mouseup', this.onDrop);
                 container.on('touchend', this.onDrop);
             }
+        }
+        /**
+         * Creates a widget that holds the display-object as its content. If `content` is
+         * a `PUXI.Widget`, then it will be returned.
+         * @param {PIXI.Container | Widget} content
+         * @static
+         */
+        static fromContent(content) {
+            if (content instanceof Widget) {
+                return content;
+            }
+            const widget = new Widget();
+            widget.contentContainer.addChild(content);
+            return widget;
         }
     }
 
@@ -1514,8 +1581,8 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
         useDefaultLayout() {
             this.useLayout(new FastLayout());
         }
-        measure(width, height, widthMode, heightMode) {
-            super.measure(width, height, widthMode, heightMode);
+        onMeasure(width, height, widthMode, heightMode) {
+            super.onMeasure(width, height, widthMode, heightMode);
             if (this.widgetChildren.length === 0) {
                 return;
             }
@@ -1526,8 +1593,8 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this._measuredWidth = Math.max(this.measuredWidth, this.layoutMgr.getMeasuredWidth());
             this._measuredHeight = Math.max(this.measuredHeight, this.layoutMgr.getMeasuredHeight());
         }
-        layout(l, t, r, b, dirty = true) {
-            super.layout(l, t, r, b, dirty);
+        onLayout(l, t, r, b, dirty = true) {
+            super.onLayout(l, t, r, b, dirty);
             if (this.widgetChildren.length === 0) {
                 return;
             }
@@ -1552,7 +1619,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this.insetContainer.hitArea = this.hitArea;
         }
         update() {
-            // YO
+            super.update();
         }
         layout(l, t, r, b, dirty) {
             super.layout(l, t, r, b, dirty);
@@ -1765,6 +1832,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             };
         }
         update() {
+            super.update();
             // No update needed
         }
         initialize() {
@@ -2206,6 +2274,292 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
         },
     };
 
+    /**
+     * @memberof PUXI
+     * @interface ISliderOptions
+     * @property {PIXI.Container}[track]
+     * @property {PIXI.Container}[handle]
+     */
+    /**
+     * These options are used to configure a `PUXI.Slider`.
+     *
+     * @memberof PUXI
+     * @interface ISliderOptions
+     * @property {PIXI.Container}[track]
+     * @property {PIXI.Container}[fill]
+     * @property {boolean}[vertical]
+     * @property {number}[value]
+     * @property {number}[minValue]
+     * @property {number}[maxValue]
+     * @property {number}[decimals]
+     * @property {Function}[onValueChange]
+     * @property {Function}[onValueChanging]
+     */
+    /**
+     * A slider is a form of input to set a variable to a value in a continuous
+     * range. It cannot have its own children.
+     *
+     * @memberof PUXI
+     * @class
+     * @extends PUXI.Widget
+     */
+    class Slider extends Widget {
+        /**
+         * @param options {Object} Slider settings
+         * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
+         * @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as slider handle
+         * @param [options.fill=null] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used for slider fill
+         * @param [options.vertical=false] {boolean} Direction of the slider
+         * @param [options.value=0] {number} value of the slider
+         * @param [options.minValue=0] {number} minimum value
+         * @param [options.maxValue=100] {number} max value
+         * @param [options.decimals=0] {boolean} the decimal precision (use negative to round tens and hundreds)
+         * @param [options.onValueChange=null] {callback} Callback when the value has changed
+         * @param [options.onValueChanging=null] {callback} Callback while the value is changing
+         */
+        constructor(options) {
+            super();
+            this._value = 0;
+            this._disabled = false;
+            // set options
+            this.track = Widget.fromContent(options.track || Slider.DEFAULT_TRACK);
+            this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE);
+            this.addChild(this.track, this.handle); // initialize(), update() usage
+            this.fill = options.fill || null;
+            this._value = this._minValue;
+            this._minValue = options.minValue || 0;
+            this._maxValue = options.maxValue || 100;
+            this.decimals = options.decimals || 0;
+            this.orientation = options.orientation || Slider.HORIZONTAL;
+            this.onValueChange = options.onValueChange || null;
+            this.onValueChanging = options.onValueChanging || null;
+            this.value = options.value || 50;
+            this.handle.pivot = 0.5;
+            this.addChild(this.track);
+            if (this.fill) {
+                this.track.addChild(this.fill);
+            }
+            this.addChild(this.handle);
+            this.handle.contentContainer.buttonMode = true;
+        }
+        initialize() {
+            super.initialize();
+            const localMousePosition = new PIXI.Point();
+            let startValue = 0;
+            let maxPosition;
+            const triggerValueChange = () => {
+                this.emit('change', this.value);
+                if (this._lastChange != this.value) {
+                    this._lastChange = this.value;
+                    if (typeof this.onValueChange === 'function') {
+                        this.onValueChange(this.value);
+                    }
+                }
+            };
+            const triggerValueChanging = () => {
+                this.emit('changing', this.value);
+                if (this._lastChanging != this.value) {
+                    this._lastChanging = this.value;
+                    if (typeof this.onValueChanging === 'function') {
+                        this.onValueChanging(this.value);
+                    }
+                }
+            };
+            const updatePositionToMouse = (mousePosition, soft) => {
+                this.track.contentContainer.toLocal(mousePosition, null, localMousePosition, true);
+                const newPos = this.vertical ? localMousePosition.y - this.handle._height * 0.5 : localMousePosition.x - this.handle._width * 0.5;
+                const maxPos = this.vertical ? this._height - this.handle._height : this._width - this.handle._width;
+                this._value = !maxPos ? 0 : Math.max(0, Math.min(1, newPos / maxPos));
+                this.update(soft);
+                triggerValueChanging();
+            };
+            // //Handle dragging
+            const handleDrag = this.handle.eventBroker.dnd;
+            handleDrag.onPress = (event) => {
+                event.stopPropagation();
+            };
+            handleDrag.onDragStart = () => {
+                startValue = this._value;
+                maxPosition = this.orientation === Slider.HORIZONTAL
+                    ? this.width - this.paddingHorizontal
+                    : this.height - this.paddingVertical;
+            };
+            handleDrag.onDragMove = (event, offset) => {
+                this._value = Math.max(0, Math.min(1, startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / maxPosition)));
+                triggerValueChanging();
+                this.layoutHandle();
+            };
+            handleDrag.onDragEnd = () => {
+                triggerValueChange();
+                this.layoutHandle();
+            };
+            // Bar pressing/dragging
+            const trackDrag = this.track.eventBroker.dnd;
+            trackDrag.onPress = (event, isPressed) => {
+                if (isPressed) {
+                    updatePositionToMouse(event.data.global, true);
+                }
+                event.stopPropagation();
+            };
+            trackDrag.onDragMove = (event) => {
+                updatePositionToMouse(event.data.global, false);
+            };
+            trackDrag.onDragEnd = () => {
+                triggerValueChange();
+            };
+        }
+        get value() {
+            return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this._value), this.decimals);
+        }
+        set value(val) {
+            this._value = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
+            if (typeof this.onValueChange === 'function') {
+                this.onValueChange(this.value);
+            }
+            if (typeof this.onValueChanging === 'function') {
+                this.onValueChanging(this.value);
+            }
+            this.update();
+        }
+        get minValue() {
+            return this._minValue;
+        }
+        set minValue(val) {
+            this._minValue = val;
+            this.update();
+        }
+        get maxValue() {
+            return this._maxValue;
+        }
+        set maxValue(val) {
+            this._maxValue = val;
+            this.update();
+        }
+        get disabled() {
+            return this._disabled;
+        }
+        set disabled(val) {
+            if (val !== this._disabled) {
+                this._disabled = val;
+                this.handle.contentContainer.buttonMode = !val;
+                this.handle.contentContainer.interactive = !val;
+                this.track.contentContainer.interactive = !val;
+            }
+        }
+        layoutHandle() {
+            const handle = this.handle;
+            const width = this.width;
+            const height = this.height;
+            const handleWidth = handle.getMeasuredWidth();
+            const handleHeight = handle.getMeasuredHeight();
+            let handleX;
+            let handleY;
+            if (this.orientation === Slider.HORIZONTAL) {
+                handleY = (height - handleHeight) / 2;
+                handleX = ((width - this.paddingHorizontal) * this._value) - (handleWidth / 2);
+            }
+            else {
+                handleX = (width - handleWidth) / 2;
+                handleY = ((height - this.paddingVertical) * this._value) - (handleHeight / 2);
+            }
+            handle.layout(handleX, handleY, handleX + handleWidth, handleY + handleHeight);
+        }
+        /**
+         * Slider measures itself using the track's natural dimensions in its non-oriented
+         * direction. The oriented direction will be the equal the range's size times
+         * the track's resolution.
+         *
+         * @param width
+         * @param height
+         * @param widthMode
+         * @param heightMode
+         */
+        onMeasure(width, height, widthMode, heightMode) {
+            const naturalWidth = ((this.orientation === Slider.HORIZONTAL)
+                ? this._maxValue - this._minValue
+                : Math.max(this.handle.contentContainer.width, this.track.contentContainer.width))
+                + this.paddingHorizontal;
+            const naturalHeight = ((this.orientation === Slider.VERTICAL)
+                ? this._maxValue - this._minValue
+                : Math.max(this.handle.contentContainer.height, this.track.contentContainer.height))
+                + this.paddingVertical;
+            switch (widthMode) {
+                case exports.MeasureMode.EXACTLY:
+                    this._measuredWidth = width;
+                    break;
+                case exports.MeasureMode.UNBOUNDED:
+                    this._measuredWidth = naturalWidth;
+                    break;
+                case exports.MeasureMode.AT_MOST:
+                    this._measuredWidth = Math.min(width, naturalWidth);
+                    break;
+            }
+            switch (heightMode) {
+                case exports.MeasureMode.EXACTLY:
+                    this._measuredHeight = height;
+                    break;
+                case exports.MeasureMode.UNBOUNDED:
+                    this._measuredHeight = naturalHeight;
+                    break;
+                case exports.MeasureMode.AT_MOST:
+                    this._measuredHeight = Math.min(height, naturalHeight);
+                    break;
+            }
+        }
+        /**
+         * `Slider` lays the track to fill all of its width and height. The handle is aligned
+         * in the middle in the non-oriented direction.
+         *
+         * @param l
+         * @param t
+         * @param r
+         * @param b
+         * @param dirty
+         * @override
+         */
+        onLayout(l, t, r, b, dirty) {
+            super.onLayout(l, t, r, b, dirty);
+            const { handle, track } = this;
+            track.layout(0, 0, this.width, this.height);
+            // Layout doesn't scale the widget
+            track.insetContainer.width = this.width;
+            track.insetContainer.height = this.height;
+            handle.measure(this.width, this.height, exports.MeasureMode.AT_MOST, exports.MeasureMode.AT_MOST);
+            this.layoutHandle();
+        }
+    }
+    /**
+     * @static
+     */
+    Slider.DEFAULT_TRACK = new PIXI.Graphics()
+        .lineStyle(1, 0xaaaaaa, 0.9, 0.5, false)
+        .beginFill(0xffffff, 1)
+        .drawRect(0, 0, 16, 16) // natural width & height = 16
+        .endFill()
+        .lineStyle(2, 0x000000, 1) // draw line in middle
+        .moveTo(0, 8)
+        .lineTo(16, 8);
+    /**
+     * @static
+     */
+    Slider.DEFAULT_HANDLE = new PIXI.Graphics()
+        .beginFill(0x000000)
+        .drawCircle(24, 24, 24)
+        .endFill()
+        .beginFill(0xffffff)
+        .drawCircle(24, 24, 16)
+        .endFill();
+    /**
+     * Horizontal orientation
+     * @static
+     */
+    Slider.HORIZONTAL = 0xff5;
+    /**
+     * Vertical orientation
+     * @static
+     */
+    Slider.VERTICAL = 0xffe;
+
     const _tweenItemCache = [];
     const _callbackItemCache = [];
     const _tweenObjects = {};
@@ -2543,219 +2897,6 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
     };
 
     /**
-     * These options are used to configure a `PUXI.Slider`.
-     *
-     * @memberof PUXI
-     * @interface ISliderOptions
-     * @property {PIXI.Container}[track]
-     * @property {PIXI.Container}[fill]
-     * @property {boolean}[vertical]
-     * @property {number}[value]
-     * @property {number}[minValue]
-     * @property {number}[maxValue]
-     * @property {number}[decimals]
-     * @property {Function}[onValueChange]
-     * @property {Function}[onValueChanging]
-     */
-    /**
-     * An UI Slider, the default width/height is 90%
-     *
-     * @memberof PUXI
-     * @class
-     * @extends PUXI.Widget
-     */
-    class Slider extends Widget {
-        /**
-         * @param options {Object} Slider settings
-         * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
-         * @param options.handle {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used as slider handle
-         * @param [options.fill=null] {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)} will be used for slider fill
-         * @param [options.vertical=false] {boolean} Direction of the slider
-         * @param [options.value=0] {number} value of the slider
-         * @param [options.minValue=0] {number} minimum value
-         * @param [options.maxValue=100] {number} max value
-         * @param [options.decimals=0] {boolean} the decimal precision (use negative to round tens and hundreds)
-         * @param [options.onValueChange=null] {callback} Callback when the value has changed
-         * @param [options.onValueChanging=null] {callback} Callback while the value is changing
-         */
-        constructor(options) {
-            super();
-            this._amt = 0;
-            this._disabled = false;
-            // set options
-            this.track = options.track;
-            this.handle = options.handle;
-            this.fill = options.fill || null;
-            this._minValue = options.minValue || 0;
-            this._maxValue = options.maxValue || 100;
-            this.decimals = options.decimals || 0;
-            this.vertical = options.vertical || false;
-            this.onValueChange = options.onValueChange || null;
-            this.onValueChanging = options.onValueChanging || null;
-            this.value = options.value || 50;
-            this.handle.pivot = 0.5;
-            this.addChild(this.track);
-            if (this.fill) {
-                this.track.addChild(this.fill);
-            }
-            this.addChild(this.handle);
-            this.handle.contentContainer.buttonMode = true;
-            if (this.vertical) {
-                this.height = '100%';
-                this.width = this.track.width;
-                this.track.height = '100%';
-                this.handle.horizontalAlign = 'center';
-                if (this.fill) {
-                    this.fill.horizontalAlign = 'center';
-                }
-            }
-            else {
-                this.width = '100%';
-                this.height = this.track.height;
-                this.track.width = '100%';
-                this.handle.verticalAlign = 'middle';
-                if (this.fill) {
-                    this.fill.verticalAlign = 'middle';
-                }
-            }
-        }
-        update(soft = 0) {
-            let handleSize;
-            let val;
-            if (this.vertical) {
-                handleSize = this.handle._height || this.handle.contentContainer.height;
-                val = ((this._height - handleSize) * this._amt) + (handleSize * 0.5);
-                if (soft) {
-                    Tween.to(this.handle, 0.3, { top: val }, Ease.Power2.easeOut);
-                    if (this.fill)
-                        Tween.to(this.fill, 0.3, { height: val }, Ease.Power2.easeOut);
-                }
-                else {
-                    Tween.set(this.handle, { top: val });
-                    if (this.fill)
-                        Tween.set(this.fill, { height: val });
-                }
-            }
-            else {
-                handleSize = this.handle._width || this.handle.contentContainer.width;
-                val = ((this._width - handleSize) * this._amt) + (handleSize * 0.5);
-                if (soft) {
-                    Tween.to(this.handle, 0.3, { left: val }, Ease.Power2.easeOut);
-                    if (this.fill)
-                        Tween.to(this.fill, 0.3, { width: val }, Ease.Power2.easeOut);
-                }
-                else {
-                    Tween.set(this.handle, { left: val });
-                    if (this.fill)
-                        Tween.set(this.fill, { width: val });
-                }
-            }
-        }
-        initialize() {
-            super.initialize();
-            const localMousePosition = new PIXI.Point();
-            let startValue = 0;
-            let maxPosition;
-            const triggerValueChange = () => {
-                this.emit('change', this.value);
-                if (this._lastChange != this.value) {
-                    this._lastChange = this.value;
-                    if (typeof this.onValueChange === 'function') {
-                        this.onValueChange(this.value);
-                    }
-                }
-            };
-            const triggerValueChanging = () => {
-                this.emit('changing', this.value);
-                if (this._lastChanging != this.value) {
-                    this._lastChanging = this.value;
-                    if (typeof this.onValueChanging === 'function') {
-                        this.onValueChanging(this.value);
-                    }
-                }
-            };
-            const updatePositionToMouse = (mousePosition, soft) => {
-                this.track.contentContainer.toLocal(mousePosition, null, localMousePosition, true);
-                const newPos = this.vertical ? localMousePosition.y - this.handle._height * 0.5 : localMousePosition.x - this.handle._width * 0.5;
-                const maxPos = this.vertical ? this._height - this.handle._height : this._width - this.handle._width;
-                this._amt = !maxPos ? 0 : Math.max(0, Math.min(1, newPos / maxPos));
-                this.update(soft);
-                triggerValueChanging();
-            };
-            // //Handle dragging
-            const handleDrag = new DragManager(this.handle);
-            handleDrag.onPress = (event, isPressed) => {
-                event.stopPropagation();
-            };
-            handleDrag.onDragStart = (event) => {
-                startValue = this._amt;
-                maxPosition = this.vertical ? this._height - this.handle._height : this._width - this.handle._width;
-            };
-            handleDrag.onDragMove = (event, offset) => {
-                this._amt = !maxPosition ? 0 : Math.max(0, Math.min(1, startValue + ((this.vertical ? offset.y : offset.x) / maxPosition)));
-                triggerValueChanging();
-                this.update();
-            };
-            handleDrag.onDragEnd = function () {
-                triggerValueChange();
-                this.update();
-            };
-            // Bar pressing/dragging
-            const trackDrag = new DragManager(this.track);
-            trackDrag.onPress = (event, isPressed) => {
-                if (isPressed) {
-                    updatePositionToMouse(event.data.global, true);
-                }
-                event.stopPropagation();
-            };
-            trackDrag.onDragMove = (event) => {
-                updatePositionToMouse(event.data.global, false);
-            };
-            trackDrag.onDragEnd = () => {
-                triggerValueChange();
-            };
-        }
-        get value() {
-            return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this._amt), this.decimals);
-        }
-        set value(val) {
-            this._amt = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
-            if (typeof this.onValueChange === 'function') {
-                this.onValueChange(this.value);
-            }
-            if (typeof this.onValueChanging === 'function') {
-                this.onValueChanging(this.value);
-            }
-            this.update();
-        }
-        get minValue() {
-            return this._minValue;
-        }
-        set minValue(val) {
-            this._minValue = val;
-            this.update();
-        }
-        get maxValue() {
-            return this._maxValue;
-        }
-        set maxValue(val) {
-            this._maxValue = val;
-            this.update();
-        }
-        get disabled() {
-            return this._disabled;
-        }
-        set disabled(val) {
-            if (val !== this._disabled) {
-                this._disabled = val;
-                this.handle.contentContainer.buttonMode = !val;
-                this.handle.contentContainer.interactive = !val;
-                this.track.contentContainer.interactive = !val;
-            }
-        }
-    }
-
-    /**
      * @memberof PUXI
      * @interface IScrollBarOptions
      * @property {PUXI.Sprite} track
@@ -2919,8 +3060,239 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
     Ticker.shared = new Ticker(true);
 
     /**
+     * `AnchorLayout` is used in conjunction with `AnchorLayoutOptions`.
+     *
+     * @memberof PUXI
+     * @class
+     * @example
+     * ```
+     * parent.useLayout(new PUXI.AnchorLayout());
+     * ```
+     */
+    class AnchorLayout {
+        constructor() {
+            this.noPercents = false;
+        }
+        onAttach(host) {
+            this.host = host;
+        }
+        onDetach() {
+            this.host = null;
+        }
+        measureChild(child, maxParentWidth, maxParentHeight, widthMode, heightMode) {
+            const lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
+            const anchorLeft = lopt.anchorLeft || 0;
+            const anchorTop = lopt.anchorTop || 0;
+            const anchorRight = lopt.anchorRight || 0;
+            const anchorBottom = lopt.anchorBottom || 0;
+            let maxWidgetWidth = 0;
+            let maxWidgetHeight = 0;
+            let widgetWidthMode;
+            let widgetHeightMode;
+            // Widget width measurement
+            if (this.noPercents || (Math.abs(anchorLeft) > 1 && Math.abs(anchorRight) > 1)) {
+                maxWidgetWidth = Math.ceil(anchorRight) - Math.floor(anchorLeft);
+                widgetWidthMode = exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorLeft) < 1 && Math.abs(anchorRight) < 1) {
+                maxWidgetWidth = maxParentWidth * (anchorRight - anchorLeft);
+                widgetWidthMode = (widthMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorLeft) < 1) {
+                maxWidgetWidth = anchorRight;
+                widgetWidthMode = exports.MeasureMode.AT_MOST;
+            }
+            else {
+                maxWidgetWidth = (maxParentWidth * anchorRight) - anchorLeft;
+                widgetWidthMode = (widthMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            // Widget height measurement
+            if (this.noPercents || (Math.abs(anchorTop) > 1 && Math.abs(anchorBottom) > 1)) {
+                maxWidgetHeight = Math.ceil(anchorBottom) - Math.floor(anchorTop);
+                widgetHeightMode = exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorTop) < 1 && Math.abs(anchorBottom) < 1) {
+                maxWidgetHeight = maxParentHeight * (anchorBottom - anchorTop);
+                widgetHeightMode = (heightMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            else if (Math.abs(anchorTop) < 1) {
+                maxWidgetHeight = anchorBottom;
+                widgetHeightMode = exports.MeasureMode.AT_MOST;
+            }
+            else {
+                maxWidgetHeight = (maxParentHeight * anchorBottom) - anchorTop;
+                widgetHeightMode = (heightMode === exports.MeasureMode.UNBOUNDED)
+                    ? exports.MeasureMode.UNBOUNDED
+                    : exports.MeasureMode.AT_MOST;
+            }
+            child.measure(maxWidgetWidth, maxWidgetHeight, widgetWidthMode, widgetHeightMode);
+        }
+        measureStretch(lowerAnchor, upperAnchor, childDimen) {
+            if (this.noPercents || (Math.abs(upperAnchor) > 1 && Math.abs(lowerAnchor) > 1)) {
+                return Math.max(lowerAnchor, upperAnchor);
+            }
+            else if (Math.abs(lowerAnchor) < 1 && Math.abs(upperAnchor) < 1) {
+                return childDimen / (upperAnchor - lowerAnchor);
+            }
+            else if (Math.abs(lowerAnchor) < 1) {
+                return upperAnchor;
+            }
+            return (childDimen + lowerAnchor) / upperAnchor;
+        }
+        measureChildren(maxParentWidth, maxParentHeight, widthMode, heightMode) {
+            const children = this.host.widgetChildren;
+            for (let i = 0, j = children.length; i < j; i++) {
+                this.measureChild(children[i], maxParentWidth, maxParentHeight, widthMode, heightMode);
+            }
+        }
+        onMeasure(maxWidth, maxHeight, widthMode, heightMode) {
+            if (widthMode === exports.MeasureMode.EXACTLY && heightMode === exports.MeasureMode.EXACTLY) {
+                this.measuredWidth = maxWidth;
+                this.measuredHeight = maxHeight;
+                this.measureChildren(this.measuredWidth, this.measuredHeight, exports.MeasureMode.EXACTLY, exports.MeasureMode.EXACTLY);
+            }
+            let maxX = 0;
+            let maxY = 0;
+            const children = this.host.widgetChildren;
+            this.measureChildren(maxWidth, maxHeight, widthMode, heightMode);
+            for (let i = 0, j = children.length; i < j; i++) {
+                const child = children[i];
+                const lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
+                const anchorLeft = lopt.anchorLeft || 0;
+                const anchorTop = lopt.anchorTop || 0;
+                const anchorRight = lopt.anchorRight || 0;
+                const anchorBottom = lopt.anchorBottom || 0;
+                maxX = Math.max(maxX, this.measureStretch(anchorLeft, anchorRight, child.getMeasuredWidth()));
+                maxY = Math.max(maxY, this.measureStretch(anchorTop, anchorBottom, child.getMeasuredHeight()));
+            }
+            if (widthMode === exports.MeasureMode.EXACTLY) {
+                this.measuredWidth = maxWidth;
+            }
+            else if (widthMode === exports.MeasureMode.AT_MOST) {
+                this.measuredWidth = Math.min(maxX, maxWidth);
+            }
+            else {
+                this.measuredWidth = maxX;
+            }
+            if (heightMode === exports.MeasureMode.EXACTLY) {
+                this.measuredHeight = maxHeight;
+            }
+            else if (heightMode === exports.MeasureMode.AT_MOST) {
+                this.measuredHeight = Math.min(maxY, maxHeight);
+            }
+            else {
+                this.measuredHeight = maxY;
+            }
+            this.measureChildren(this.measuredWidth, this.measuredHeight, exports.MeasureMode.EXACTLY, exports.MeasureMode.EXACTLY);
+        }
+        getMeasuredWidth() {
+            return this.measuredWidth;
+        }
+        getMeasuredHeight() {
+            return this.measuredHeight;
+        }
+        onLayout() {
+            const parent = this.host;
+            const { widgetChildren } = parent;
+            for (let i = 0; i < widgetChildren.length; i++) {
+                const child = widgetChildren[i];
+                const layoutOptions = (child.layoutOptions || {});
+                let childWidth = child.measuredWidth;
+                let childHeight = child.measuredHeight;
+                let anchorLeft = layoutOptions.anchorLeft || 0;
+                let anchorTop = layoutOptions.anchorTop || 0;
+                let anchorRight = layoutOptions.anchorRight || 0;
+                let anchorBottom = layoutOptions.anchorBottom || 0;
+                if (anchorLeft > -1 && anchorLeft <= 1) {
+                    anchorLeft *= parent.width;
+                }
+                if (anchorTop > -1 && anchorTop <= 1) {
+                    anchorTop *= parent.height;
+                }
+                if (anchorRight > -1 && anchorRight <= 1) {
+                    anchorRight *= parent.width;
+                }
+                if (anchorBottom > -1 && anchorBottom <= 1) {
+                    anchorBottom *= parent.height;
+                }
+                let x = 0;
+                let y = 0;
+                if (childWidth !== 0) {
+                    switch (layoutOptions.horizontalAlign || exports.ALIGN.NONE) {
+                        case exports.ALIGN.LEFT:
+                            x = anchorLeft;
+                            break;
+                        case exports.ALIGN.MIDDLE:
+                            x = (anchorRight - anchorLeft - childWidth) / 2;
+                            break;
+                        case exports.ALIGN.RIGHT:
+                            x = anchorRight - childWidth;
+                            break;
+                    }
+                }
+                else {
+                    x = anchorLeft;
+                    childWidth = anchorRight - anchorLeft;
+                }
+                if (childHeight !== 0) {
+                    switch (layoutOptions.verticalAlign || exports.ALIGN.NONE) {
+                        case exports.ALIGN.TOP:
+                            y = anchorTop;
+                            break;
+                        case exports.ALIGN.MIDDLE:
+                            y = (anchorBottom - anchorTop - childHeight) / 2;
+                            break;
+                        case exports.ALIGN.RIGHT:
+                            y = anchorBottom - childWidth;
+                            break;
+                    }
+                }
+                else {
+                    y = anchorRight;
+                    childHeight = anchorBottom - anchorTop;
+                }
+                child.layout(x, y, x + childWidth, y + childHeight);
+            }
+        }
+    }
+
+    /**
+     * Represents a layout manager that can be attached to any widget group. A layout
+     * manager handles the positions and dimensions of child widgets.
+     *
+     * @memberof PUXI
+     * @interface
+     */
+    /**
+     * Attaches the layout manager to a widget. This is automatically done by `WidgetGroup#useLayout`.
+     *
+     * @memberof PUXI.ILayoutManager#
+     * @method onAttach
+     * @param {PUXI.WidgetGroup} host
+     */
+    /**
+     * Detaches the layout manager from a widget. This is done by `WidgetGroup#useLayout`. Do
+     * not use this on your own.
+     *
+     * @memberof PUXI.ILayoutManager#
+     * @method onDetach
+     */
+    /**
+     * Lays out the children of the layout's host. It assumes that the layout is attached.
+     *
+     * @memberof PUXI.ILayoutManager#
+     * @method onLayout
+     */
+
+    /**
      * `ScrollWidget` masks its contents to its layout bounds and translates
-     * its children when scrolling.
+     * its children when scrolling. It uses the anchor layout.
      *
      * @memberof PUXI
      * @class
@@ -3099,6 +3471,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
              */
             this.targetPosition = new PIXI.Point();
             this.lastPosition = new PIXI.Point();
+            this.useLayout(new AnchorLayout());
             this.animating = false;
             this.scrolling = false;
             this._scrollBars = [];
@@ -3851,6 +4224,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             }
         }
         update(widgets) {
+            this.emit('preupdate', this);
             for (let i = 0, j = widgets.length; i < j; i++) {
                 const widget = widgets[i];
                 widget.stage = this;
@@ -3860,6 +4234,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
                 this.update(widget.widgetChildren);
                 widget.update();
             }
+            this.emit('postupdate', this);
         }
         render(renderer) {
             this.update(this.widgetChildren);
@@ -4820,237 +5195,6 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this.sprite.tileScale = val;
         }
     }
-
-    /**
-     * `AnchorLayout` is used in conjunction with `AnchorLayoutOptions`.
-     *
-     * @memberof PUXI
-     * @class
-     * @example
-     * ```
-     * parent.useLayout(new PUXI.AnchorLayout());
-     * ```
-     */
-    class AnchorLayout {
-        constructor() {
-            this.noPercents = false;
-        }
-        onAttach(host) {
-            this.host = host;
-        }
-        onDetach() {
-            this.host = null;
-        }
-        measureChild(child, maxParentWidth, maxParentHeight, widthMode, heightMode) {
-            const lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
-            const anchorLeft = lopt.anchorLeft || 0;
-            const anchorTop = lopt.anchorTop || 0;
-            const anchorRight = lopt.anchorRight || 0;
-            const anchorBottom = lopt.anchorBottom || 0;
-            let maxWidgetWidth = 0;
-            let maxWidgetHeight = 0;
-            let widgetWidthMode;
-            let widgetHeightMode;
-            // Widget width measurement
-            if (this.noPercents || (Math.abs(anchorLeft) > 1 && Math.abs(anchorRight) > 1)) {
-                maxWidgetWidth = Math.ceil(anchorRight) - Math.floor(anchorLeft);
-                widgetWidthMode = exports.MeasureMode.AT_MOST;
-            }
-            else if (Math.abs(anchorLeft) < 1 && Math.abs(anchorRight) < 1) {
-                maxWidgetWidth = maxParentWidth * (anchorRight - anchorLeft);
-                widgetWidthMode = (widthMode === exports.MeasureMode.UNBOUNDED)
-                    ? exports.MeasureMode.UNBOUNDED
-                    : exports.MeasureMode.AT_MOST;
-            }
-            else if (Math.abs(anchorLeft) < 1) {
-                maxWidgetWidth = anchorRight;
-                widgetWidthMode = exports.MeasureMode.AT_MOST;
-            }
-            else {
-                maxWidgetWidth = (maxParentWidth * anchorRight) - anchorLeft;
-                widgetWidthMode = (widthMode === exports.MeasureMode.UNBOUNDED)
-                    ? exports.MeasureMode.UNBOUNDED
-                    : exports.MeasureMode.AT_MOST;
-            }
-            // Widget height measurement
-            if (this.noPercents || (Math.abs(anchorTop) > 1 && Math.abs(anchorBottom) > 1)) {
-                maxWidgetHeight = Math.ceil(anchorBottom) - Math.floor(anchorTop);
-                widgetHeightMode = exports.MeasureMode.AT_MOST;
-            }
-            else if (Math.abs(anchorTop) < 1 && Math.abs(anchorBottom) < 1) {
-                maxWidgetHeight = maxParentHeight * (anchorBottom - anchorTop);
-                widgetHeightMode = (heightMode === exports.MeasureMode.UNBOUNDED)
-                    ? exports.MeasureMode.UNBOUNDED
-                    : exports.MeasureMode.AT_MOST;
-            }
-            else if (Math.abs(anchorTop) < 1) {
-                maxWidgetHeight = anchorBottom;
-                widgetHeightMode = exports.MeasureMode.AT_MOST;
-            }
-            else {
-                maxWidgetHeight = (maxParentHeight * anchorBottom) - anchorTop;
-                widgetHeightMode = (heightMode === exports.MeasureMode.UNBOUNDED)
-                    ? exports.MeasureMode.UNBOUNDED
-                    : exports.MeasureMode.AT_MOST;
-            }
-            child.measure(maxWidgetWidth, maxWidgetHeight, widgetWidthMode, widgetHeightMode);
-        }
-        measureStretch(lowerAnchor, upperAnchor, childDimen) {
-            if (this.noPercents || (Math.abs(upperAnchor) > 1 && Math.abs(lowerAnchor) > 1)) {
-                return Math.max(lowerAnchor, upperAnchor);
-            }
-            else if (Math.abs(lowerAnchor) < 1 && Math.abs(upperAnchor) < 1) {
-                return childDimen / (upperAnchor - lowerAnchor);
-            }
-            else if (Math.abs(lowerAnchor) < 1) {
-                return upperAnchor;
-            }
-            return (childDimen + lowerAnchor) / upperAnchor;
-        }
-        measureChildren(maxParentWidth, maxParentHeight, widthMode, heightMode) {
-            const children = this.host.widgetChildren;
-            for (let i = 0, j = children.length; i < j; i++) {
-                this.measureChild(children[i], maxParentWidth, maxParentHeight, widthMode, heightMode);
-            }
-        }
-        onMeasure(maxWidth, maxHeight, widthMode, heightMode) {
-            if (widthMode === exports.MeasureMode.EXACTLY && heightMode === exports.MeasureMode.EXACTLY) {
-                this.measuredWidth = maxWidth;
-                this.measuredHeight = maxHeight;
-                this.measureChildren(this.measuredWidth, this.measuredHeight, exports.MeasureMode.EXACTLY, exports.MeasureMode.EXACTLY);
-            }
-            let maxX = 0;
-            let maxY = 0;
-            const children = this.host.widgetChildren;
-            this.measureChildren(maxWidth, maxHeight, widthMode, heightMode);
-            for (let i = 0, j = children.length; i < j; i++) {
-                const child = children[i];
-                const lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
-                const anchorLeft = lopt.anchorLeft || 0;
-                const anchorTop = lopt.anchorTop || 0;
-                const anchorRight = lopt.anchorRight || 0;
-                const anchorBottom = lopt.anchorBottom || 0;
-                maxX = Math.max(maxX, this.measureStretch(anchorLeft, anchorRight, child.getMeasuredWidth()));
-                maxY = Math.max(maxY, this.measureStretch(anchorTop, anchorBottom, child.getMeasuredHeight()));
-            }
-            if (widthMode === exports.MeasureMode.EXACTLY) {
-                this.measuredWidth = maxWidth;
-            }
-            else if (widthMode === exports.MeasureMode.AT_MOST) {
-                this.measuredWidth = Math.min(maxX, maxWidth);
-            }
-            else {
-                this.measuredWidth = maxX;
-            }
-            if (heightMode === exports.MeasureMode.EXACTLY) {
-                this.measuredHeight = maxHeight;
-            }
-            else if (heightMode === exports.MeasureMode.AT_MOST) {
-                this.measuredHeight = Math.min(maxY, maxHeight);
-            }
-            else {
-                this.measuredHeight = maxY;
-            }
-            this.measureChildren(this.measuredWidth, this.measuredHeight, exports.MeasureMode.EXACTLY, exports.MeasureMode.EXACTLY);
-        }
-        getMeasuredWidth() {
-            return this.measuredWidth;
-        }
-        getMeasuredHeight() {
-            return this.measuredHeight;
-        }
-        onLayout() {
-            const parent = this.host;
-            const { widgetChildren } = parent;
-            for (let i = 0; i < widgetChildren.length; i++) {
-                const child = widgetChildren[i];
-                const layoutOptions = (child.layoutOptions || {});
-                let childWidth = child.measuredWidth;
-                let childHeight = child.measuredHeight;
-                let anchorLeft = layoutOptions.anchorLeft || 0;
-                let anchorTop = layoutOptions.anchorTop || 0;
-                let anchorRight = layoutOptions.anchorRight || 0;
-                let anchorBottom = layoutOptions.anchorBottom || 0;
-                if (anchorLeft > -1 && anchorLeft <= 1) {
-                    anchorLeft *= parent.width;
-                }
-                if (anchorTop > -1 && anchorTop <= 1) {
-                    anchorTop *= parent.height;
-                }
-                if (anchorRight > -1 && anchorRight <= 1) {
-                    anchorRight *= parent.width;
-                }
-                if (anchorBottom > -1 && anchorBottom <= 1) {
-                    anchorBottom *= parent.height;
-                }
-                let x = 0;
-                let y = 0;
-                if (childWidth !== 0) {
-                    switch (layoutOptions.horizontalAlign || exports.ALIGN.NONE) {
-                        case exports.ALIGN.LEFT:
-                            x = anchorLeft;
-                            break;
-                        case exports.ALIGN.MIDDLE:
-                            x = (anchorRight - anchorLeft - childWidth) / 2;
-                            break;
-                        case exports.ALIGN.RIGHT:
-                            x = anchorRight - childWidth;
-                            break;
-                    }
-                }
-                else {
-                    x = anchorLeft;
-                    childWidth = anchorRight - anchorLeft;
-                }
-                if (childHeight !== 0) {
-                    switch (layoutOptions.verticalAlign || exports.ALIGN.NONE) {
-                        case exports.ALIGN.TOP:
-                            y = anchorTop;
-                            break;
-                        case exports.ALIGN.MIDDLE:
-                            y = (anchorBottom - anchorTop - childHeight) / 2;
-                            break;
-                        case exports.ALIGN.RIGHT:
-                            y = anchorBottom - childWidth;
-                            break;
-                    }
-                }
-                else {
-                    y = anchorRight;
-                    childHeight = anchorBottom - anchorTop;
-                }
-                child.layout(x, y, x + childWidth, y + childHeight);
-            }
-        }
-    }
-
-    /**
-     * Represents a layout manager that can be attached to any widget group. A layout
-     * manager handles the positions and dimensions of child widgets.
-     *
-     * @memberof PUXI
-     * @interface
-     */
-    /**
-     * Attaches the layout manager to a widget. This is automatically done by `WidgetGroup#useLayout`.
-     *
-     * @memberof PUXI.ILayoutManager#
-     * @method onAttach
-     * @param {PUXI.WidgetGroup} host
-     */
-    /**
-     * Detaches the layout manager from a widget. This is done by `WidgetGroup#useLayout`. Do
-     * not use this on your own.
-     *
-     * @memberof PUXI.ILayoutManager#
-     * @method onDetach
-     */
-    /**
-     * Lays out the children of the layout's host. It assumes that the layout is attached.
-     *
-     * @memberof PUXI.ILayoutManager#
-     * @method onLayout
-     */
 
     exports.AnchorLayout = AnchorLayout;
     exports.AnchorLayoutOptions = AnchorLayoutOptions;

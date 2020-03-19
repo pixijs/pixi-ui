@@ -55,7 +55,7 @@ export class Stage extends PIXI.Container
         this._focusCtl = new Stage.FOCUS_CONTROLLER(this);
     }
 
-    protected measureAndLayout(): void
+    public measureAndLayout(): void
     {
         if (this.background)
         {
@@ -131,6 +131,8 @@ export class Stage extends PIXI.Container
 
     private update(widgets: Widget[]): void
     {
+        this.emit('preupdate', this);
+
         for (let i = 0, j = widgets.length; i < j; i++)
         {
             const widget = widgets[i];
@@ -145,6 +147,8 @@ export class Stage extends PIXI.Container
             this.update(widget.widgetChildren);
             widget.update();
         }
+
+        this.emit('postupdate', this);
     }
 
     render(renderer: PIXI.Renderer): void

@@ -1,9 +1,10 @@
-import * as PUXI from '../bin/pixi-ui';
-import { createMockWidgetRectangle } from './createMockWidget';
+const { createMockWidgetRectangle } = require('./createMockWidget');
+const PUXI = require('../lib/puxi-core.cjs');
+const expect = require('chai').expect;
 
 describe('Stage', () =>
 {
-    test('Implements fast-layout algorithm correctly!', () =>
+    it('Implements fast-layout algorithm correctly!', () =>
     {
         const mockStage = new PUXI.Stage(512, 1024);
 
@@ -26,14 +27,14 @@ describe('Stage', () =>
 
         mockStage.addChild(...mockRects);
 
-        expect(mockRects[0].layoutMeasure.left).toBe(64);
-        expect(mockRects[0].layoutMeasure.top).toBe(64);
-        expect(mockRects[0].layoutMeasure.right).toBe(192);
-        expect(mockRects[0].layoutMeasure.bottom).toBe(192);
+        expect(mockRects[0].layoutMeasure.left).to.equal(64);
+        expect(mockRects[0].layoutMeasure.top).to.equal(64);
+        expect(mockRects[0].layoutMeasure.right).to.equal(192);
+        expect(mockRects[0].layoutMeasure.bottom).to.equal(192);
 
-        expect(mockRects[1].layoutMeasure.left).toBe(128);
-        expect(mockRects[1].layoutMeasure.top).toBe(512);
-        expect(mockRects[1].layoutMeasure.right).toBe(384);
-        expect(mockRects[1].layoutMeasure.bottom).toBe(768);
+        expect(mockRects[1].layoutMeasure.left).to.equal(128);
+        expect(mockRects[1].layoutMeasure.top).to.equal(512);
+        expect(mockRects[1].layoutMeasure.right).to.equal(384);
+        expect(mockRects[1].layoutMeasure.bottom).to.equal(768);
     });
 });

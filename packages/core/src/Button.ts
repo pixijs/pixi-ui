@@ -104,6 +104,7 @@ export class Button extends FocusableWidget
 
     update(): void
     {
+        super.update();
         // No update needed
     }
 

@@ -21,7 +21,7 @@ export class InteractiveGroup extends WidgetGroup
 
     update(): void
     {
-        // YO
+        super.update();
     }
 
     layout(l: number, t: number, r: number, b: number, dirty: boolean): void
