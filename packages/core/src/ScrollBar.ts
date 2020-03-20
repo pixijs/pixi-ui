@@ -1,14 +1,14 @@
-import { Slider } from './Slider';
+import { Slider, ISliderOptions } from './Slider';
 import { Tween } from './Tween';
 import { Sprite } from './Sprite';
 import { ScrollWidget } from './ScrollWidget';
 
-interface IScrollBarOptions
+interface IScrollBarOptions extends ISliderOptions
 {
-    track: Sprite;
-    handle: Sprite;
+    track?: Sprite;
+    handle?: Sprite;
     scrollingContainer: ScrollWidget;
-    vertical?: boolean;
+    orientation: number;
     autohide?: boolean;
 }
 
@@ -44,7 +44,7 @@ export class ScrollBar extends Slider
             track: options.track,
             handle: options.handle,
             fill: null,
-            vertical: options.vertical,
+            orientation: options.orientation,
         });
 
         this.scrollingContainer = options.scrollingContainer;
@@ -60,15 +60,13 @@ export class ScrollBar extends Slider
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.onValueChanging = (val): void =>
         {
-            const sizeAmt = this.scrollingContainer._height / this.scrollingContainer.innerContainer.height || 0.001;
+            const sizeAmt = this.scrollingContainer.height / this.scrollingContainer.innerContainer.height || 0.001;
 
             if (sizeAmt < 1)
             {
                 this.scrollingContainer.forcePctPosition(this.vertical ? 'y' : 'x', this._amt);
             }
         };
-
-        this.scrollingContainer._scrollBars.push(this);
     }
 
     alignToContainer(): void

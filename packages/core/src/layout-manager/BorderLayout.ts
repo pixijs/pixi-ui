@@ -82,14 +82,14 @@ export class BorderLayout implements ILayoutManager
             0,
             this.measuredTopHeight,
             this.measuredLeftWidth,
-            this.measuredHeight - this.measuredTopHeight - this.measuredBottomHeight);
+            this.measuredCenterHeight);
         this.layoutChildren(this.topWidgets, 0, 0, this.measuredWidth, this.measuredTopHeight);
         this.layoutChildren(
             this.rightWidgets,
             this.measuredWidth - this.measuredRightWidth,
             this.measuredTopHeight,
             this.measuredRightWidth,
-            this.measuredHeight - this.measuredTopHeight - this.measuredBottomHeight,
+            this.measuredCenterHeight,
         );
         this.layoutChildren(
             this.bottomWidgets,
@@ -119,8 +119,8 @@ export class BorderLayout implements ILayoutManager
         {
             const widget = widgets[i];
 
-            let x;
-            let y;
+            let x = 0;
+            let y = 0;
 
             switch ((widget.layoutOptions as BorderLayoutOptions)?.horizontalAlign)
             {
@@ -131,8 +131,8 @@ export class BorderLayout implements ILayoutManager
 
             switch ((widget.layoutOptions as BorderLayoutOptions)?.verticalAlign)
             {
-                case ALIGN.CENTER: x = (regionHeight - widget.getMeasuredHeight()) / 2; break;
-                case ALIGN.BOTTOM: x = regionHeight - widget.getMeasuredHeight(); break;
+                case ALIGN.CENTER: y = (regionHeight - widget.getMeasuredHeight()) / 2; break;
+                case ALIGN.BOTTOM: y = regionHeight - widget.getMeasuredHeight(); break;
                 default: y = 0; break;
             }
 
@@ -286,7 +286,7 @@ export class BorderLayout implements ILayoutManager
 
         this.fitChildren(this.leftWidgets, this.measuredLeftWidth, this.measuredCenterHeight);
         this.fitChildren(this.topWidgets, this.measuredWidth, this.measuredTopHeight);
-        this.fitChildren(this.rightWidgets, this.measuredRightWidth, this.measuredTopHeight);
+        this.fitChildren(this.rightWidgets, this.measuredRightWidth, this.measuredCenterHeight);
         this.fitChildren(this.bottomWidgets, this.measuredWidth, this.measuredBottomHeight);
         this.fitChildren(this.centerWidgets, this.measuredCenterWidth, this.measuredCenterHeight);
     }

@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Fri, 20 Mar 2020 19:07:20 UTC
+ * Compiled Fri, 20 Mar 2020 19:29:35 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -3054,7 +3054,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
                 track: options.track,
                 handle: options.handle,
                 fill: null,
-                vertical: options.vertical,
+                orientation: options.orientation,
             });
             this.scrollingContainer = options.scrollingContainer;
             this.autohide = options.autohide;
@@ -3065,12 +3065,11 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this.decimals = 3; // up decimals to trigger ValueChanging more often
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.onValueChanging = (val) => {
-                const sizeAmt = this.scrollingContainer._height / this.scrollingContainer.innerContainer.height || 0.001;
+                const sizeAmt = this.scrollingContainer.height / this.scrollingContainer.innerContainer.height || 0.001;
                 if (sizeAmt < 1) {
                     this.scrollingContainer.forcePctPosition(this.vertical ? 'y' : 'x', this._amt);
                 }
             };
-            this.scrollingContainer._scrollBars.push(this);
         }
         alignToContainer() {
             let newPos;
@@ -3459,9 +3458,9 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this.clearRegions();
         }
         onLayout() {
-            this.layoutChildren(this.leftWidgets, 0, this.measuredTopHeight, this.measuredLeftWidth, this.measuredHeight - this.measuredTopHeight - this.measuredBottomHeight);
+            this.layoutChildren(this.leftWidgets, 0, this.measuredTopHeight, this.measuredLeftWidth, this.measuredCenterHeight);
             this.layoutChildren(this.topWidgets, 0, 0, this.measuredWidth, this.measuredTopHeight);
-            this.layoutChildren(this.rightWidgets, this.measuredWidth - this.measuredRightWidth, this.measuredTopHeight, this.measuredRightWidth, this.measuredHeight - this.measuredTopHeight - this.measuredBottomHeight);
+            this.layoutChildren(this.rightWidgets, this.measuredWidth - this.measuredRightWidth, this.measuredTopHeight, this.measuredRightWidth, this.measuredCenterHeight);
             this.layoutChildren(this.bottomWidgets, 0, this.measuredTopHeight + this.measuredCenterHeight, this.measuredWidth, this.measuredBottomHeight);
             this.layoutChildren(this.centerWidgets, this.measuredLeftWidth, this.measuredTopHeight, this.measuredCenterWidth, this.measuredCenterHeight);
         }
@@ -3469,8 +3468,8 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             var _a, _b;
             for (let i = 0, j = widgets.length; i < j; i++) {
                 const widget = widgets[i];
-                let x;
-                let y;
+                let x = 0;
+                let y = 0;
                 switch ((_a = widget.layoutOptions) === null || _a === void 0 ? void 0 : _a.horizontalAlign) {
                     case exports.ALIGN.CENTER:
                         x = (regionWidth - widget.getMeasuredWidth()) / 2;
@@ -3484,10 +3483,10 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
                 }
                 switch ((_b = widget.layoutOptions) === null || _b === void 0 ? void 0 : _b.verticalAlign) {
                     case exports.ALIGN.CENTER:
-                        x = (regionHeight - widget.getMeasuredHeight()) / 2;
+                        y = (regionHeight - widget.getMeasuredHeight()) / 2;
                         break;
                     case exports.ALIGN.BOTTOM:
-                        x = regionHeight - widget.getMeasuredHeight();
+                        y = regionHeight - widget.getMeasuredHeight();
                         break;
                     default:
                         y = 0;
@@ -3592,7 +3591,7 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
             this.measuredCenterHeight = ch;
             this.fitChildren(this.leftWidgets, this.measuredLeftWidth, this.measuredCenterHeight);
             this.fitChildren(this.topWidgets, this.measuredWidth, this.measuredTopHeight);
-            this.fitChildren(this.rightWidgets, this.measuredRightWidth, this.measuredTopHeight);
+            this.fitChildren(this.rightWidgets, this.measuredRightWidth, this.measuredCenterHeight);
             this.fitChildren(this.bottomWidgets, this.measuredWidth, this.measuredBottomHeight);
             this.fitChildren(this.centerWidgets, this.measuredCenterWidth, this.measuredCenterHeight);
         }
@@ -3903,10 +3902,19 @@ var _puxi_core = (function (exports, PIXI, filterDropShadow) {
              */
             this.targetPosition = new PIXI.Point();
             this.lastPosition = new PIXI.Point();
-            this.useLayout(new AnchorLayout());
+            this.useLayout(new BorderLayout());
             this.animating = false;
             this.scrolling = false;
             this._scrollBars = [];
+            if (this.scrollY) {
+                super.addChild(new ScrollBar({
+                    orientation: ScrollBar.VERTICAL,
+                    scrollingContainer: this,
+                })
+                    .setLayoutOptions(new BorderLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.FILL_PARENT, BorderLayoutOptions.REGION_RIGHT, exports.ALIGN.RIGHT, exports.ALIGN.CENTER))
+                    .setBackground(0xff)
+                    .setBackgroundAlpha(0.8));
+            }
             this.boundCached = performance.now() - 1000;
             this.initScrolling();
         }

@@ -7,7 +7,7 @@ import { Sprite } from './Sprite';
 import * as PIXI from 'pixi.js';
 import { MeasureMode } from './IMeasurable';
 
-interface ISliderOptions
+export interface ISliderOptions
 {
     track?: PIXI.Container | Widget;
     handle?: PIXI.Container | Widget;

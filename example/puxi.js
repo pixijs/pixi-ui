@@ -1,6 +1,6 @@
 /*!
  * puxi.js - v0.0.0
- * Compiled Thu, 19 Mar 2020 21:22:23 UTC
+ * Compiled Fri, 20 Mar 2020 19:29:35 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,7 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
 
     /*!
      * @puxi/core - v1.0.0
-     * Compiled Thu, 19 Mar 2020 21:22:23 UTC
+     * Compiled Fri, 20 Mar 2020 19:29:35 UTC
      *
      * @puxi/core is licensed under the MIT License.
      * http://www.opensource.org/licenses/mit-license
@@ -1432,6 +1432,88 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
     FastLayoutOptions.CENTER_ANCHOR = new pixi_js.Point(0.5, 0.5); // fragile, shouldn't be modified
 
     /**
+     * `PUXI.BorderLayoutOptions` defines a simple layout with five regions - the center and
+     * four regions along each border. The top and bottom regions span the full width of
+     * the parent widget-group. The left and right regions span the height of the layout
+     * minus the top and bottom region heights.
+     *
+     * ```
+     * ------------------------------------------------
+     * |                 TOP REGION                   |
+     * ------------------------------------------------
+     * |        |                            |        |
+     * |  LEFT  |          CENTER            | RIGHT  |
+     * | REGION |          REGION            | REGION |
+     * |        |                            |        |
+     * ------------------------------------------------
+     * |                BOTTOM REGION                 |
+     * ------------------------------------------------
+     * ```
+     *
+     * The height of the layout is measured as the sum of the heights of the top, center, and bottom
+     * regions. Similarly, the width of the layout is measured as the width of the left, center, and
+     * right regions.
+     *
+     * As of now, border layout doesn't support percent widths and heights.
+     *
+     * @memberof PUXI
+     * @class
+     * @extends PUXI.LayoutOptions
+     */
+    class BorderLayoutOptions extends LayoutOptions {
+        constructor(width, height, region, horizontalAlign, verticalAlign) {
+            super(width, height);
+            /**
+             * The border along which the widget is to be placed. This can be one of `POS_LEFT`,
+             * `POS_TOP`, `POS_RIGHT`, `POS_BOTTOM`.
+             * @member {number}
+             */
+            this.region = region;
+            /**
+             * Alignment of the widget horizontally in its region.
+             * @member {PUXI.Align}
+             */
+            this.horizontalAlign = horizontalAlign;
+            /**
+             * Alignment of the widget vertically in its region.
+             * @member {PUXI.Align}
+             */
+            this.verticalAlign = verticalAlign;
+        }
+    }
+    /**
+     * Positions a widget inside the left border of the layout.
+     * @static
+     * @member {number}
+     */
+    BorderLayoutOptions.REGION_LEFT = 0xeff1;
+    /**
+     * Positions a widget below the top border of the layout.
+     * @static
+     * @member {number}
+     */
+    BorderLayoutOptions.REGION_TOP = 0xeff2;
+    /**
+     * Positions a widget below the right border of the layout.
+     * @static
+     * @member {number}
+     */
+    BorderLayoutOptions.REGION_RIGHT = 0xeff3;
+    /**
+     * Positions a widget below the top border of the layout.
+     * @static
+     * @member {number}
+     */
+    BorderLayoutOptions.REGION_BOTTOM = 0xeff4;
+    /**
+     * Positions a widget in the center of the layout. The main content of the layout
+     * should be in the center.
+     * @static
+     * @member {number}
+     */
+    BorderLayoutOptions.REGION_CENTER = 0xeff5;
+
+    /**
      * `PUXI.FastLayout` is used in conjunction with `PUXI.FastLayoutOptions`. It is the
      * default layout for most widget groups.
      *
@@ -1601,6 +1683,7 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
             if (layoutMgr) {
                 this.layoutMgr.onAttach(this);
             }
+            return this;
         }
         /**
          * Sets the widget-recommended layout manager. By default (if not overriden by widget
@@ -2981,7 +3064,7 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
                 track: options.track,
                 handle: options.handle,
                 fill: null,
-                vertical: options.vertical,
+                orientation: options.orientation,
             });
             this.scrollingContainer = options.scrollingContainer;
             this.autohide = options.autohide;
@@ -2992,12 +3075,11 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
             this.decimals = 3; // up decimals to trigger ValueChanging more often
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.onValueChanging = (val) => {
-                const sizeAmt = this.scrollingContainer._height / this.scrollingContainer.innerContainer.height || 0.001;
+                const sizeAmt = this.scrollingContainer.height / this.scrollingContainer.innerContainer.height || 0.001;
                 if (sizeAmt < 1) {
                     this.scrollingContainer.forcePctPosition(this.vertical ? 'y' : 'x', this._amt);
                 }
             };
-            this.scrollingContainer._scrollBars.push(this);
         }
         alignToContainer() {
             let newPos;
@@ -3322,6 +3404,301 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
         }
     }
 
+    const { REGION_LEFT, REGION_TOP, REGION_RIGHT, REGION_BOTTOM, REGION_CENTER, } = BorderLayoutOptions;
+    const { FILL_PARENT, } = LayoutOptions;
+    const { EXACTLY, AT_MOST, } = exports.MeasureMode;
+    /**
+     * `PUXI.BorderLayout` is used in conjunction with `PUXI.BorderLayoutOptions`.
+     *
+     * This layout guarantees that the "center" region will always be in the center of
+     * the widget-group.
+     *
+     * WARNING: This layout may have some bugs in edge cases that haven't been reported.
+     *
+     * @memberof PUXI
+     * @class
+     * @implements PUXI.ILayoutManager
+     */
+    class BorderLayout {
+        constructor() {
+            this.leftWidgets = [];
+            this.topWidgets = [];
+            this.rightWidgets = [];
+            this.bottomWidgets = [];
+            this.centerWidgets = [];
+        }
+        onAttach(host) {
+            this.host = host;
+        }
+        onDetach() {
+            this.host = null;
+            this.clearMeasureCache();
+            this.clearRegions();
+        }
+        onLayout() {
+            this.layoutChildren(this.leftWidgets, 0, this.measuredTopHeight, this.measuredLeftWidth, this.measuredCenterHeight);
+            this.layoutChildren(this.topWidgets, 0, 0, this.measuredWidth, this.measuredTopHeight);
+            this.layoutChildren(this.rightWidgets, this.measuredWidth - this.measuredRightWidth, this.measuredTopHeight, this.measuredRightWidth, this.measuredCenterHeight);
+            this.layoutChildren(this.bottomWidgets, 0, this.measuredTopHeight + this.measuredCenterHeight, this.measuredWidth, this.measuredBottomHeight);
+            this.layoutChildren(this.centerWidgets, this.measuredLeftWidth, this.measuredTopHeight, this.measuredCenterWidth, this.measuredCenterHeight);
+        }
+        layoutChildren(widgets, regionX, regionY, regionWidth, regionHeight) {
+            var _a, _b;
+            for (let i = 0, j = widgets.length; i < j; i++) {
+                const widget = widgets[i];
+                let x = 0;
+                let y = 0;
+                switch ((_a = widget.layoutOptions) === null || _a === void 0 ? void 0 : _a.horizontalAlign) {
+                    case exports.ALIGN.CENTER:
+                        x = (regionWidth - widget.getMeasuredWidth()) / 2;
+                        break;
+                    case exports.ALIGN.RIGHT:
+                        x = regionWidth - widget.getMeasuredWidth();
+                        break;
+                    default:
+                        x = 0;
+                        break;
+                }
+                switch ((_b = widget.layoutOptions) === null || _b === void 0 ? void 0 : _b.verticalAlign) {
+                    case exports.ALIGN.CENTER:
+                        y = (regionHeight - widget.getMeasuredHeight()) / 2;
+                        break;
+                    case exports.ALIGN.BOTTOM:
+                        y = regionHeight - widget.getMeasuredHeight();
+                        break;
+                    default:
+                        y = 0;
+                        break;
+                }
+                x += regionX;
+                y += regionY;
+                widget.layout(x, y, x + widget.getMeasuredWidth(), y + widget.getMeasuredHeight(), true);
+            }
+        }
+        /**
+         * @param {number} maxWidth
+         * @param {number} maxHeight
+         * @param {PUXI.MeasureMode} widthMode
+         * @param {PUXI.MeasureMode} heightMode
+         * @override
+         */
+        onMeasure(maxWidth, maxHeight, widthMode, heightMode) {
+            this.indexRegions();
+            this.clearMeasureCache();
+            // Children can be aligned inside region if smaller
+            const childWidthMode = widthMode === exports.MeasureMode.EXACTLY ? exports.MeasureMode.AT_MOST : widthMode;
+            const childHeightMode = heightMode === exports.MeasureMode.EXACTLY ? exports.MeasureMode.AT_MOST : widthMode;
+            // Measure top, bottom, and center. The max. of each row's width will be our "reference".
+            let [tw, th, , thmin] = this.measureChildren(// eslint-disable-line prefer-const
+            this.topWidgets, maxWidth, maxHeight, childWidthMode, childHeightMode);
+            let [bw, bh, , bhmin] = this.measureChildren(// eslint-disable-line prefer-const
+            this.bottomWidgets, maxWidth, maxHeight, childWidthMode, childHeightMode);
+            let [cw, ch, cwmin, chmin] = this.measureChildren(// eslint-disable-line prefer-const
+            this.centerWidgets, maxWidth, maxHeight, childWidthMode, heightMode);
+            // Measure left & right regions. Their heights will equal center's height.
+            let [lw, , lwmin] = this.measureChildren(// eslint-disable-line prefer-const
+            this.leftWidgets, maxWidth, ch, childWidthMode, exports.MeasureMode.AT_MOST);
+            let [rw, , rwmin] = this.measureChildren(// eslint-disable-line prefer-const
+            this.rightWidgets, maxWidth, ch, childWidthMode, exports.MeasureMode.AT_MOST);
+            // Check if total width/height is greater than our limit. If so, then downscale
+            // each row's height or each column's (in middle row) width.
+            const middleRowWidth = lw + rw + cw;
+            const netWidth = Math.max(tw, bw, middleRowWidth);
+            const netHeight = th + bh + ch;
+            // Resolve our limits.
+            if (widthMode === exports.MeasureMode.EXACTLY) {
+                this.measuredWidth = maxWidth;
+            }
+            else if (widthMode === exports.MeasureMode.AT_MOST) {
+                this.measuredWidth = Math.min(netWidth, maxWidth);
+            }
+            else {
+                this.measuredWidth = netWidth;
+            }
+            if (heightMode === exports.MeasureMode.EXACTLY) {
+                this.measuredHeight = maxHeight;
+            }
+            else if (heightMode === exports.MeasureMode.AT_MOST) {
+                this.measuredHeight = Math.min(netHeight, maxHeight);
+            }
+            else {
+                this.measuredHeight = netHeight;
+            }
+            tw = this.measuredWidth;
+            bw = this.measuredWidth;
+            if (netHeight > this.measuredHeight) {
+                const hmin = (thmin + chmin + bhmin);
+                // Redistribute heights minus min-heights.
+                if (hmin < this.measuredHeight) {
+                    const downscale = (this.measuredHeight - hmin) / (netHeight - hmin);
+                    th = thmin + ((th - thmin) * downscale);
+                    bh = bhmin + ((bh - bhmin) * downscale);
+                    ch = chmin + ((ch - chmin) * downscale);
+                }
+                // Redistribute full heights.
+                else {
+                    const downscale = this.measuredHeight / netHeight;
+                    th *= downscale;
+                    bh *= downscale;
+                    ch *= downscale;
+                }
+            }
+            if (netWidth > this.measuredWidth) {
+                const wmin = lwmin + cwmin + rwmin;
+                // Redistribute widths minus min. widths
+                if (wmin < this.measuredWidth) {
+                    const downscale = (this.measuredWidth - wmin) / (netWidth - wmin);
+                    lw = lwmin + ((lw - lwmin) * downscale);
+                    cw = cwmin + ((cw - cwmin) * downscale);
+                    rw = rwmin + ((rw - rwmin) * downscale);
+                }
+                // Redistribute full widths
+                else {
+                    const downscale = this.measuredWidth / netWidth;
+                    lw *= downscale;
+                    cw *= downscale;
+                    rw *= downscale;
+                }
+            }
+            // Useful to know!
+            this.measuredLeftWidth = lw;
+            this.measuredRightWidth = rw;
+            this.measuredCenterWidth = cw;
+            this.measuredTopHeight = th;
+            this.measuredBottomHeight = bh;
+            this.measuredCenterHeight = ch;
+            this.fitChildren(this.leftWidgets, this.measuredLeftWidth, this.measuredCenterHeight);
+            this.fitChildren(this.topWidgets, this.measuredWidth, this.measuredTopHeight);
+            this.fitChildren(this.rightWidgets, this.measuredRightWidth, this.measuredCenterHeight);
+            this.fitChildren(this.bottomWidgets, this.measuredWidth, this.measuredBottomHeight);
+            this.fitChildren(this.centerWidgets, this.measuredCenterWidth, this.measuredCenterHeight);
+        }
+        /**
+         * This measures the list of widgets given the constraints. The max width and
+         * height amongst the children is returned.
+         *
+         * @param {PUXI.Widget[]} list
+         * @param {number} maxWidth
+         * @param {number} maxHeight
+         * @param {PUXI.MeasureMode} widthMode
+         * @param {PUXI.MeasureMode} heightMode
+         * @returns {number[]} - [width, height, widthFixedLowerBound, heightFixedLowerBound] -
+         *    the max. width and height amongst children. Also, the minimum required width/height
+         *    for the region (as defined in layout-options).
+         */
+        measureChildren(list, maxWidth, maxHeight, widthMode, heightMode) {
+            let width = 0;
+            let height = 0;
+            let widthFixedLowerBound = 0;
+            let heightFixedLowerBound = 0;
+            for (let i = 0, j = list.length; i < j; i++) {
+                const widget = list[i];
+                const lopt = widget.layoutOptions || LayoutOptions.DEFAULT;
+                let w = maxWidth;
+                let h = maxHeight;
+                let wmd = widthMode;
+                let hmd = heightMode;
+                if (lopt.width <= LayoutOptions.MAX_DIMEN) {
+                    w = lopt.width;
+                    wmd = EXACTLY;
+                    widthFixedLowerBound = Math.max(widthFixedLowerBound, w);
+                }
+                if (lopt.height <= LayoutOptions.MAX_DIMEN) {
+                    h = lopt.height;
+                    hmd = EXACTLY;
+                    heightFixedLowerBound = Math.max(heightFixedLowerBound, h);
+                }
+                widget.measure(w, h, wmd, hmd);
+                width = Math.max(width, widget.getMeasuredWidth());
+                height = Math.max(height, widget.getMeasuredHeight());
+            }
+            return [width, height, widthFixedLowerBound, heightFixedLowerBound];
+        }
+        /**
+         * Ensures all widgets in the list measured their dimensions below the region
+         * width & height. Widgets that are too large are remeasured in the those
+         * limits (using `MeasureMode.AT_MOST`).
+         *
+         * This will handle widgets that have "FILL_PARENT" width or height.
+         *
+         * @param {PUXI.Widget[]} list
+         * @param {number} measuredRegionWidth
+         * @param {number} measuredRegionHeight
+         */
+        fitChildren(list, measuredRegionWidth, measuredRegionHeight) {
+            var _a, _b, _c, _d;
+            for (let i = 0, j = list.length; i < j; i++) {
+                const widget = list[i];
+                if (widget.getMeasuredWidth() <= measuredRegionWidth
+                    && widget.getMeasuredHeight() <= measuredRegionHeight
+                    && widget.getMeasuredWidth() > 0
+                    && widget.getMeasuredHeight() > 0
+                    && ((_a = widget.layoutOptions) === null || _a === void 0 ? void 0 : _a.width) !== FILL_PARENT
+                    && ((_b = widget.layoutOptions) === null || _b === void 0 ? void 0 : _b.height) !== FILL_PARENT) {
+                    continue;
+                }
+                if (measuredRegionWidth > 0 && measuredRegionHeight > 0) {
+                    const wm = ((_c = widget.layoutOptions) === null || _c === void 0 ? void 0 : _c.width) === FILL_PARENT ? EXACTLY : AT_MOST;
+                    const hm = ((_d = widget.layoutOptions) === null || _d === void 0 ? void 0 : _d.height) === FILL_PARENT ? EXACTLY : AT_MOST;
+                    widget.measure(measuredRegionWidth, measuredRegionHeight, wm, hm);
+                }
+            }
+        }
+        /**
+         * Indexes the list of left, top, right, bottom, and center widget lists.
+         */
+        indexRegions() {
+            this.clearRegions();
+            const { widgetChildren: children } = this.host;
+            for (let i = 0, j = children.length; i < j; i++) {
+                const widget = children[i];
+                const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+                const region = lopt.region || REGION_CENTER;
+                switch (region) {
+                    case REGION_LEFT:
+                        this.leftWidgets.push(widget);
+                        break;
+                    case REGION_TOP:
+                        this.topWidgets.push(widget);
+                        break;
+                    case REGION_RIGHT:
+                        this.rightWidgets.push(widget);
+                        break;
+                    case REGION_BOTTOM:
+                        this.bottomWidgets.push(widget);
+                        break;
+                    default: this.centerWidgets.push(widget);
+                }
+            }
+        }
+        /**
+         * Clears the left, top, right, bottom, and center widget lists.
+         */
+        clearRegions() {
+            this.leftWidgets.length = 0;
+            this.topWidgets.length = 0;
+            this.rightWidgets.length = 0;
+            this.bottomWidgets.length = 0;
+        }
+        /**
+         * Zeros the measured dimensions.
+         */
+        clearMeasureCache() {
+            this.measuredLeftWidth = 0;
+            this.measuredRightWidth = 0;
+            this.measuredCenterWidth = 0;
+            this.measuredTopHeight = 0;
+            this.measuredBottomHeight = 0;
+            this.measuredCenterHeight = 0;
+        }
+        getMeasuredWidth() {
+            return this.measuredWidth;
+        }
+        getMeasuredHeight() {
+            return this.measuredHeight;
+        }
+    }
+
     /**
      * `ScrollWidget` masks its contents to its layout bounds and translates
      * its children when scrolling. It uses the anchor layout.
@@ -3503,10 +3880,19 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
              */
             this.targetPosition = new pixi_js.Point();
             this.lastPosition = new pixi_js.Point();
-            this.useLayout(new AnchorLayout());
+            this.useLayout(new BorderLayout());
             this.animating = false;
             this.scrolling = false;
             this._scrollBars = [];
+            if (this.scrollY) {
+                super.addChild(new ScrollBar({
+                    orientation: ScrollBar.VERTICAL,
+                    scrollingContainer: this,
+                })
+                    .setLayoutOptions(new BorderLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.FILL_PARENT, BorderLayoutOptions.REGION_RIGHT, exports.ALIGN.RIGHT, exports.ALIGN.CENTER))
+                    .setBackground(0xff)
+                    .setBackgroundAlpha(0.8));
+            }
             this.boundCached = performance.now() - 1000;
             this.initScrolling();
         }
@@ -5230,7 +5616,7 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
 
     /*!
      * @puxi/tween - v1.0.0
-     * Compiled Thu, 19 Mar 2020 21:22:23 UTC
+     * Compiled Fri, 20 Mar 2020 19:29:35 UTC
      *
      * @puxi/tween is licensed under the MIT License.
      * http://www.opensource.org/licenses/mit-license
@@ -5618,6 +6004,8 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
 
     exports.AnchorLayout = AnchorLayout;
     exports.AnchorLayoutOptions = AnchorLayoutOptions;
+    exports.BorderLayout = BorderLayout;
+    exports.BorderLayoutOptions = BorderLayoutOptions;
     exports.Button = Button;
     exports.CheckBox = CheckBox;
     exports.ClickManager = ClickManager;

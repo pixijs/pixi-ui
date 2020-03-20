@@ -6,9 +6,9 @@ import { ScrollManager } from './event/ScrollManager';
 import * as PIXI from 'pixi.js';
 import { Widget } from './Widget';
 import { WidgetGroup } from './WidgetGroup';
-import { AnchorLayout } from './layout-manager';
+import { BorderLayout } from './layout-manager';
 import { ScrollBar } from './ScrollBar';
-import { AnchorLayoutOptions } from './layout-options';
+import { ALIGN, BorderLayoutOptions, LayoutOptions } from './layout-options';
 
 /**
  * @namespace PUXI
@@ -37,7 +37,7 @@ interface IScrollingContainerOptions
 export class ScrollWidget extends InteractiveGroup
 {
     private mask: PIXI.Graphics;
-    private innerContainer: WidgetGroup;
+    public readonly innerContainer: WidgetGroup;
     private innerBounds: PIXI.Rectangle;
 
     scrollX: boolean;
@@ -113,11 +113,32 @@ export class ScrollWidget extends InteractiveGroup
         this.targetPosition = new PIXI.Point();
         this.lastPosition = new PIXI.Point();
 
-        this.useLayout(new AnchorLayout());
+        this.useLayout(new BorderLayout());
 
         this.animating = false;
         this.scrolling = false;
         this._scrollBars = [];
+
+        if (this.scrollY)
+        {
+            super.addChild(
+                new ScrollBar({
+                    orientation: ScrollBar.VERTICAL,
+                    scrollingContainer: this,
+                })
+                    .setLayoutOptions(
+                        new BorderLayoutOptions(
+                            LayoutOptions.WRAP_CONTENT,
+                            LayoutOptions.FILL_PARENT,
+                            BorderLayoutOptions.REGION_RIGHT,
+                            ALIGN.RIGHT,
+                            ALIGN.CENTER,
+                        ),
+                    )
+                    .setBackground(0xff)
+                    .setBackgroundAlpha(0.8),
+            );
+        }
 
         this.boundCached = performance.now() - 1000;
         this.initScrolling();
