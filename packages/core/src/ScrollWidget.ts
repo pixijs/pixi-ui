@@ -1,6 +1,5 @@
 import { InteractiveGroup } from './InteractiveGroup';
 import { Helpers }  from './Helpers';
-import { Ticker } from './Ticker';
 import { DragManager } from './event/DragManager';
 import { ScrollManager } from './event/ScrollManager';
 import * as PIXI from 'pixi.js';
@@ -9,6 +8,7 @@ import { WidgetGroup } from './WidgetGroup';
 import { BorderLayout } from './layout-manager';
 import { ScrollBar } from './ScrollBar';
 import { ALIGN, BorderLayoutOptions, LayoutOptions } from './layout-options';
+import { Slider } from './Slider';
 
 /**
  * @namespace PUXI
@@ -24,6 +24,7 @@ interface IScrollingContainerOptions
     expandMask?: number;
     overflowY?: number;
     overflowX?: number;
+    scrollBars?: boolean;
 }
 
 /**
@@ -52,16 +53,16 @@ export class ScrollWidget extends InteractiveGroup
     animating: boolean;
     scrolling: boolean;
 
-    _scrollBars: any[];
-    private boundCached: number;
-    private lastWidth: number;
-    private lastHeight: number;
-
+    protected scrollBars: ScrollBar[];
     protected scrollPosition: PIXI.Point;
     protected scrollVelocity: PIXI.Point;
     protected targetPosition: PIXI.Point;
     protected lastPosition: PIXI.Point;
     protected stop: boolean;
+
+    private boundCached: number;
+    private lastWidth: number;
+    private lastHeight: number;
 
     /**
      * @param {PUXI.IScrollingContainerOptions} options
@@ -117,31 +118,56 @@ export class ScrollWidget extends InteractiveGroup
 
         this.animating = false;
         this.scrolling = false;
-        this._scrollBars = [];
+        this.scrollBars = [];
 
-        if (this.scrollY)
+        if (options.scrollBars && this.scrollX)
         {
-            super.addChild(
-                new ScrollBar({
-                    orientation: ScrollBar.VERTICAL,
-                    scrollingContainer: this,
-                })
-                    .setLayoutOptions(
-                        new BorderLayoutOptions(
-                            LayoutOptions.WRAP_CONTENT,
-                            LayoutOptions.FILL_PARENT,
-                            BorderLayoutOptions.REGION_RIGHT,
-                            ALIGN.RIGHT,
-                            ALIGN.CENTER,
-                        ),
-                    )
-                    .setBackground(0xff)
-                    .setBackgroundAlpha(0.8),
-            );
+            const horizontalScrollBar: ScrollBar = new ScrollBar({
+                orientation: ScrollBar.HORIZONTAL,
+                scrollingContainer: this,
+                minValue: 0,
+                maxValue: 1,
+            })
+                .setLayoutOptions(
+                    new BorderLayoutOptions(
+                        LayoutOptions.FILL_PARENT,
+                        LayoutOptions.WRAP_CONTENT,
+                        BorderLayoutOptions.REGION_BOTTOM,
+                        ALIGN.CENTER,
+                        ALIGN.BOTTOM,
+                    ),
+                )
+                .setBackground(0xff)
+                .setBackgroundAlpha(0.8) as ScrollBar;
+
+            super.addChild(horizontalScrollBar);
+            this.scrollBars.push(horizontalScrollBar);
+        }
+        if (options.scrollBars && this.scrollY)
+        {
+            const verticalScrollBar: ScrollBar = new ScrollBar({
+                orientation: ScrollBar.VERTICAL,
+                scrollingContainer: this,
+                minValue: 0,
+                maxValue: 1,
+            })
+                .setLayoutOptions(
+                    new BorderLayoutOptions(
+                        LayoutOptions.WRAP_CONTENT,
+                        LayoutOptions.FILL_PARENT,
+                        BorderLayoutOptions.REGION_RIGHT,
+                        ALIGN.RIGHT,
+                        ALIGN.CENTER,
+                    ),
+                )
+                .setBackground(0xff)
+                .setBackgroundAlpha(0.8) as ScrollBar;
+
+            super.addChild(verticalScrollBar);
+            this.scrollBars.push(verticalScrollBar);
         }
 
-        this.boundCached = performance.now() - 1000;
-        this.initScrolling();
+        this.boundCached = 0;
     }
 
     /**
@@ -175,8 +201,21 @@ export class ScrollWidget extends InteractiveGroup
             this.lastWidth = this.width;
             this.lastHeight = this.height;
         }
+    }
 
-        this.setScrollPosition();
+    /**
+     * Adds this scrollbar. It is expected that the given scrollbar has been
+     * given proper border-layout options.
+     *
+     * @todo This only works for TOP, LEFT scrollbars as BOTTOM, RIGHT are occupied.
+     * @param {PUXI.ScrollBar} scrollBar
+     */
+    addScrollBar(scrollBar: ScrollBar): ScrollWidget
+    {
+        super.addChild(scrollBar);
+        this.scrollBars.push(scrollBar);
+
+        return this;
     }
 
     /**
@@ -195,11 +234,27 @@ export class ScrollWidget extends InteractiveGroup
         return this;
     }
 
+    /**
+     * Updates the scroll bar values, and should be called when scrolled.
+     */
     updateScrollBars(): void
     {
-        for (let i = 0; i < this._scrollBars.length; i++)
+        for (let i = 0, j = this.scrollBars.length; i < j; i++)
         {
-            this._scrollBars[i].alignToContainer();
+            const scrollBar = this.scrollBars[i];
+
+            if (scrollBar.orientation === Slider.HORIZONTAL)
+            {
+                const x = this.getPercentPosition('x');
+
+                scrollBar.value = x;
+            }
+            else if (scrollBar.orientation === Slider.VERTICAL)
+            {
+                const y = this.getPercentPosition('y');
+
+                scrollBar.value = y;
+            }
         }
     }
 
@@ -209,9 +264,9 @@ export class ScrollWidget extends InteractiveGroup
         if (force || performance.now() - this.boundCached > 1000)
         {
             this.innerContainer.insetContainer.getLocalBounds(this.innerBounds);
-            this.innerContainer.insetContainer.getLocalBounds(this.innerBounds);
-            this.innerBounds.height = this.innerBounds.y + this.innerContainer.height;
-            this.innerBounds.width = this.innerBounds.x + this.innerContainer.width;
+
+            this.innerBounds.height = this.innerBounds.y + this.innerContainer.height || 0;
+            this.innerBounds.width = this.innerBounds.x + this.innerContainer.width || 0;
             this.boundCached = performance.now();
         }
 
@@ -268,6 +323,8 @@ export class ScrollWidget extends InteractiveGroup
                 {
                     targetPosition.y = realPosition.y + offset.y;
                 }
+
+                this.setScrollPosition();
             };
 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -292,6 +349,28 @@ export class ScrollWidget extends InteractiveGroup
         };
 
         this.updateScrollBars();
+    }
+
+    /**
+     * @param {string} direction - `'x'` or `'y'`
+     * @returns {number} a value between 0 and 1 indicating how scrolling
+     *      has occured in that direction (called percent position).
+     */
+    getPercentPosition(direction: 'x' | 'y'): number
+    {
+        const bounds = this.getInnerBounds();
+        const container = this.innerContainer.insetContainer;
+
+        if (direction === 'x')
+        {
+            return container.x / (this.width - bounds.width);
+        }
+        else if (direction === 'y')
+        {
+            return container.y / (this.height - bounds.height);
+        }
+
+        return 0;
     }
 
     forcePctPosition = (direction: string, pct: number): void =>
@@ -371,11 +450,10 @@ export class ScrollWidget extends InteractiveGroup
         if (!this.animating)
         {
             this.animating = true;
-
             this.lastPosition.copyFrom(container.position);
             this.targetPosition.copyFrom(container.position);
 
-            Ticker.on('update', this.updateScrollPosition, this);
+            PIXI.Ticker.shared.add(this.updateScrollPosition);
         }
     };
 
@@ -396,11 +474,13 @@ export class ScrollWidget extends InteractiveGroup
             this.updateDirection('y', delta);
         }
 
-        if (stop)
+        if (this.stop)
         {
-            Ticker.removeListener('update', this.updateScrollPosition);
+            PIXI.Ticker.shared.remove(this.updateScrollPosition);
             this.animating = false;
         }
+
+        this.updateScrollBars();
     };
 
     /**
@@ -487,7 +567,6 @@ export class ScrollWidget extends InteractiveGroup
         }
 
         container.position[direction] = Math.round(scrollPosition[direction]);
-        this.updateScrollBars();
     };
 
     /**

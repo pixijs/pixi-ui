@@ -109,6 +109,8 @@ window.onload = function onload()
     // Showcase scrolling widget
     const mockScroll = new PUXI.ScrollWidget({
         scrollY: true,
+        scrollX: true,
+        scrollBars: true,
     }).setLayoutOptions(
         new PUXI.FastLayoutOptions(
             0.5,

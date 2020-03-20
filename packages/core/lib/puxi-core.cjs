@@ -1,6 +1,6 @@
 /*!
  * @puxi/core - v1.0.0
- * Compiled Fri, 20 Mar 2020 19:29:35 UTC
+ * Compiled Fri, 20 Mar 2020 22:33:38 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2424,14 +2424,18 @@ class Slider extends Widget {
      */
     constructor(options) {
         super();
-        this._value = 0;
+        /**
+         * The value expressed as a percentage from min. to max. This will always
+         * be between 0 and 1.
+         *
+         * The actual value is: `this.minValue + this.percentValue * (this.maxValue - this.minValue`).
+         *
+         * @member {number}
+         */
+        this.percentValue = 0;
         this._disabled = false;
-        // set options
-        this.track = Widget.fromContent(options.track || Slider.DEFAULT_TRACK.clone());
-        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE.clone());
-        this.addChild(this.track, this.handle); // initialize(), update() usage
         this.fill = options.fill || null;
-        this._value = this._minValue;
+        this.percentValue = this._minValue;
         this._minValue = options.minValue || 0;
         this._maxValue = options.maxValue || 100;
         this.decimals = options.decimals || 0;
@@ -2439,13 +2443,18 @@ class Slider extends Widget {
         this.onValueChange = options.onValueChange || null;
         this.onValueChanging = options.onValueChanging || null;
         this.value = options.value || 50;
-        this.handle.pivot = 0.5;
+        // set options
+        this.track = Widget.fromContent(options.track
+            || (this.orientation === Slider.HORIZONTAL
+                ? Slider.DEFAULT_HORIZONTAL_TRACK.clone()
+                : Slider.DEFAULT_VERTICAL_TRACK.clone()));
+        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE.clone());
+        this.addChild(this.track, this.handle); // initialize(), update() usage
         this._localCursor = new PIXI.Point();
         this.handle.contentContainer.buttonMode = true;
     }
     initialize() {
         super.initialize();
-        const localMousePosition = new PIXI.Point();
         let startValue = 0;
         let trackSize;
         const triggerValueChange = () => {
@@ -2467,23 +2476,23 @@ class Slider extends Widget {
             }
         };
         const updatePositionToMouse = (mousePosition, soft) => {
-            this._value = this.getValueAtPhysicalPosition(mousePosition);
+            this.percentValue = this.getValueAtPhysicalPosition(mousePosition);
             this.layoutHandle();
             triggerValueChanging();
         };
-        // //Handle dragging
+        // Handles dragging
         const handleDrag = this.handle.eventBroker.dnd;
         handleDrag.onPress = (event) => {
             event.stopPropagation();
         };
         handleDrag.onDragStart = () => {
-            startValue = this._value;
+            startValue = this.percentValue;
             trackSize = this.orientation === Slider.HORIZONTAL
                 ? this.track.width
                 : this.track.height;
         };
         handleDrag.onDragMove = (event, offset) => {
-            this._value = Math.max(0, Math.min(1, startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / trackSize)));
+            this.percentValue = Math.max(0, Math.min(1, startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / trackSize)));
             triggerValueChanging();
             this.layoutHandle();
         };
@@ -2505,19 +2514,28 @@ class Slider extends Widget {
         trackDrag.onDragEnd = () => {
             triggerValueChange();
         };
+        this.layoutHandle();
     }
     get value() {
-        return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this._value), this.decimals);
+        return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this.percentValue), this.decimals);
     }
     set value(val) {
-        this._value = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
+        if (val === this.value) {
+            return;
+        }
+        if (isNaN(val)) {
+            throw new Error('Cannot use NaN as a value');
+        }
+        this.percentValue = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
         if (typeof this.onValueChange === 'function') {
             this.onValueChange(this.value);
         }
         if (typeof this.onValueChanging === 'function') {
             this.onValueChanging(this.value);
         }
-        this.update();
+        if (this.handle && this.initialized) {
+            this.layoutHandle();
+        }
     }
     get minValue() {
         return this._minValue;
@@ -2591,12 +2609,12 @@ class Slider extends Widget {
         if (this.orientation === Slider.HORIZONTAL) {
             width -= handleWidth;
             handleY = (height - handleHeight) / 2;
-            handleX = (width * this._value);
+            handleX = (width * this.percentValue);
         }
         else {
             height -= handleHeight;
             handleX = (width - handleWidth) / 2;
-            handleY = (height * this._value);
+            handleY = (height * this.percentValue);
         }
         handle.layout(handleX, handleY, handleX + handleWidth, handleY + handleHeight);
     }
@@ -2667,15 +2685,27 @@ class Slider extends Widget {
     }
 }
 /**
+ * The default track for horizontally oriented sliders.
  * @static
  */
-Slider.DEFAULT_TRACK = new PIXI.Graphics()
+Slider.DEFAULT_HORIZONTAL_TRACK = new PIXI.Graphics()
     .beginFill(0xffffff, 1)
     .drawRect(0, 0, 16, 16) // natural width & height = 16
     .endFill()
     .lineStyle(1, 0x000000, 0.7, 1, true) // draw line in middle
     .moveTo(1, 8)
     .lineTo(15, 8);
+/**
+ * The default track for vertically oriented sliders.
+ * @static
+ */
+Slider.DEFAULT_VERTICAL_TRACK = new PIXI.Graphics()
+    .beginFill(0xffffff, 1)
+    .drawRect(0, 0, 16, 16) // natural width & height = 16
+    .endFill()
+    .lineStyle(1, 0x000000, 0.7, 1, true) // draw line in middle
+    .moveTo(8, 1)
+    .lineTo(8, 15);
 /**
  * @static
  */
@@ -3055,10 +3085,12 @@ const Tween = {
 class ScrollBar extends Slider {
     constructor(options) {
         super({
-            track: options.track,
-            handle: options.handle,
+            track: options.track || ScrollBar.DEFAULT_TRACK.clone(),
+            handle: options.handle || ScrollBar.DEFAULT_HANDLE.clone(),
             fill: null,
             orientation: options.orientation,
+            minValue: 0,
+            maxValue: 1,
         });
         this.scrollingContainer = options.scrollingContainer;
         this.autohide = options.autohide;
@@ -3068,56 +3100,12 @@ class ScrollBar extends Slider {
         super.initialize();
         this.decimals = 3; // up decimals to trigger ValueChanging more often
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        this.onValueChanging = (val) => {
-            const sizeAmt = this.scrollingContainer.height / this.scrollingContainer.innerContainer.height || 0.001;
-            if (sizeAmt < 1) {
-                this.scrollingContainer.forcePctPosition(this.vertical ? 'y' : 'x', this._amt);
-            }
-        };
-    }
-    alignToContainer() {
-        let newPos;
-        let size;
-        const xY = this.vertical ? 'y' : 'x';
-        const widthHeight = this.vertical ? 'height' : 'width';
-        const topLeft = this.vertical ? 'top' : 'left';
-        const _posAmt = !this.scrollingContainer.innerContainer[widthHeight]
-            ? 0
-            : -(this.scrollingContainer.innerContainer[xY] / this.scrollingContainer.innerContainer[widthHeight]);
-        const sizeAmt = !this.scrollingContainer.innerContainer[widthHeight]
-            ? 1
-            : this.scrollingContainer[`_${widthHeight}`] / this.scrollingContainer.innerContainer[widthHeight];
-        // update amt
-        const diff = this.scrollingContainer.innerContainer[widthHeight] - this.scrollingContainer[`_${widthHeight}`];
-        this._amt = !this.scrollingContainer[`_${widthHeight}`] || !diff
-            ? 0
-            : -(this.scrollingContainer.innerContainer[xY] / diff);
-        if (sizeAmt >= 1) {
-            size = this[`_${widthHeight}`];
-            this.handle[topLeft] = size * 0.5;
-            this.toggleHidden(true);
-        }
-        else {
-            size = this[`_${widthHeight}`] * sizeAmt;
-            if (this._amt > 1) {
-                size -= (this[`_${widthHeight}`] - size) * (this._amt - 1);
-            }
-            else if (this._amt < 0) {
-                size -= (this[`_${widthHeight}`] - size) * -this._amt;
-            }
-            if (this._amt < 0) {
-                newPos = size * 0.5;
-            }
-            else if (this._amt > 1) {
-                newPos = this[`_${widthHeight}`] - (size * 0.5);
-            }
-            else {
-                newPos = (_posAmt * this.scrollingContainer[`_${widthHeight}`]) + (size * 0.5);
-            }
-            this.handle[topLeft] = newPos;
-            this.toggleHidden(false);
-        }
-        this.handle[widthHeight] = size;
+        this.on('changing', () => {
+            this.scrollingContainer.forcePctPosition(this.orientation === Slider.HORIZONTAL ? 'x' : 'y', this.percentValue);
+        });
+        this.on('change', () => {
+            this.scrollingContainer.setScrollPosition();
+        });
     }
     toggleHidden(hidden) {
         if (this.autohide) {
@@ -3132,68 +3120,23 @@ class ScrollBar extends Slider {
         }
     }
 }
-
 /**
- * This ticker is an event-emitter that can be used for running periodic tasks
- * in the rendering loop. It emits the `update` event every animation frame.
- *
- * @memberof PUXI
- * @class
- * @extends PIXI.utils.EventEmitter
+ * @static
  */
-class Ticker extends PIXI.utils.EventEmitter {
-    constructor(autoStart) {
-        super();
-        this._disabled = true;
-        this._now = 0;
-        this.DeltaTime = 0;
-        this.Time = performance.now();
-        this.Ms = 0;
-        if (autoStart) {
-            this.disabled = false;
-        }
-        Ticker.shared = this;
-    }
-    get disabled() {
-        return this._disabled;
-    }
-    set disabled(val) {
-        if (!this._disabled) {
-            this._disabled = true;
-        }
-        else {
-            this._disabled = false;
-            Ticker.shared = this;
-            this.update(performance.now(), true);
-        }
-    }
-    /**
-     * Updates the text
-     *
-     * @private
-     */
-    update(time) {
-        Ticker.shared._now = time;
-        Ticker.shared.Ms = Ticker.shared._now - Ticker.shared.Time;
-        Ticker.shared.Time = Ticker.shared._now;
-        Ticker.shared.DeltaTime = Ticker.shared.Ms * 0.001;
-        Ticker.shared.emit('update', Ticker.shared.DeltaTime);
-        Tween._update(Ticker.shared.DeltaTime);
-        if (!Ticker.shared._disabled) {
-            requestAnimationFrame(Ticker.shared.update);
-        }
-    }
-    static on(event, fn, context) {
-        Ticker.shared.on(event, fn, context);
-    }
-    static once(event, fn, context) {
-        Ticker.shared.once(event, fn, context);
-    }
-    static removeListener(event, fn) {
-        Ticker.shared.removeListener(event, fn);
-    }
-}
-Ticker.shared = new Ticker(true);
+ScrollBar.DEFAULT_TRACK = new PIXI.Graphics()
+    .beginFill(0xffffff)
+    .drawRect(0, 0, 8, 8)
+    .endFill();
+/**
+ * @static
+ */
+ScrollBar.DEFAULT_HANDLE = new PIXI.Graphics()
+    .beginFill(0x000000)
+    .drawCircle(8, 8, 4)
+    .endFill()
+    .beginFill(0x000000, 0.5)
+    .drawCircle(8, 8, 8)
+    .endFill();
 
 /**
  * `AnchorLayout` is used in conjunction with `AnchorLayoutOptions`.
@@ -3771,7 +3714,7 @@ class ScrollWidget extends InteractiveGroup {
                 this.animating = true;
                 this.lastPosition.copyFrom(container.position);
                 this.targetPosition.copyFrom(container.position);
-                Ticker.on('update', this.updateScrollPosition, this);
+                PIXI.Ticker.shared.add(this.updateScrollPosition);
             }
         };
         /**
@@ -3786,10 +3729,11 @@ class ScrollWidget extends InteractiveGroup {
             if (this.scrollY) {
                 this.updateDirection('y', delta);
             }
-            if (stop) {
-                Ticker.removeListener('update', this.updateScrollPosition);
+            if (this.stop) {
+                PIXI.Ticker.shared.remove(this.updateScrollPosition);
                 this.animating = false;
             }
+            this.updateScrollBars();
         };
         /**
          * @param {'x' | 'y'} direction
@@ -3844,7 +3788,6 @@ class ScrollWidget extends InteractiveGroup {
                 this.stop = false;
             }
             container.position[direction] = Math.round(scrollPosition[direction]);
-            this.updateScrollBars();
         };
         this.mask = new PIXI.Graphics();
         this.innerContainer = new InteractiveGroup();
@@ -3877,18 +3820,34 @@ class ScrollWidget extends InteractiveGroup {
         this.useLayout(new BorderLayout());
         this.animating = false;
         this.scrolling = false;
-        this._scrollBars = [];
-        if (this.scrollY) {
-            super.addChild(new ScrollBar({
+        this.scrollBars = [];
+        if (options.scrollBars && this.scrollX) {
+            const horizontalScrollBar = new ScrollBar({
+                orientation: ScrollBar.HORIZONTAL,
+                scrollingContainer: this,
+                minValue: 0,
+                maxValue: 1,
+            })
+                .setLayoutOptions(new BorderLayoutOptions(LayoutOptions.FILL_PARENT, LayoutOptions.WRAP_CONTENT, BorderLayoutOptions.REGION_BOTTOM, exports.ALIGN.CENTER, exports.ALIGN.BOTTOM))
+                .setBackground(0xff)
+                .setBackgroundAlpha(0.8);
+            super.addChild(horizontalScrollBar);
+            this.scrollBars.push(horizontalScrollBar);
+        }
+        if (options.scrollBars && this.scrollY) {
+            const verticalScrollBar = new ScrollBar({
                 orientation: ScrollBar.VERTICAL,
                 scrollingContainer: this,
+                minValue: 0,
+                maxValue: 1,
             })
                 .setLayoutOptions(new BorderLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.FILL_PARENT, BorderLayoutOptions.REGION_RIGHT, exports.ALIGN.RIGHT, exports.ALIGN.CENTER))
                 .setBackground(0xff)
-                .setBackgroundAlpha(0.8));
+                .setBackgroundAlpha(0.8);
+            super.addChild(verticalScrollBar);
+            this.scrollBars.push(verticalScrollBar);
         }
-        this.boundCached = performance.now() - 1000;
-        this.initScrolling();
+        this.boundCached = 0;
     }
     /**
      * Updates the mask and scroll position before rendering.
@@ -3912,7 +3871,18 @@ class ScrollWidget extends InteractiveGroup {
             this.lastWidth = this.width;
             this.lastHeight = this.height;
         }
-        this.setScrollPosition();
+    }
+    /**
+     * Adds this scrollbar. It is expected that the given scrollbar has been
+     * given proper border-layout options.
+     *
+     * @todo This only works for TOP, LEFT scrollbars as BOTTOM, RIGHT are occupied.
+     * @param {PUXI.ScrollBar} scrollBar
+     */
+    addScrollBar(scrollBar) {
+        super.addChild(scrollBar);
+        this.scrollBars.push(scrollBar);
+        return this;
     }
     /**
      * @param {PUXI.Widget[]} newChildren
@@ -3925,18 +3895,28 @@ class ScrollWidget extends InteractiveGroup {
         this.getInnerBounds(true); // make sure bounds is updated instantly when a child is added
         return this;
     }
+    /**
+     * Updates the scroll bar values, and should be called when scrolled.
+     */
     updateScrollBars() {
-        for (let i = 0; i < this._scrollBars.length; i++) {
-            this._scrollBars[i].alignToContainer();
+        for (let i = 0, j = this.scrollBars.length; i < j; i++) {
+            const scrollBar = this.scrollBars[i];
+            if (scrollBar.orientation === Slider.HORIZONTAL) {
+                const x = this.getPercentPosition('x');
+                scrollBar.value = x;
+            }
+            else if (scrollBar.orientation === Slider.VERTICAL) {
+                const y = this.getPercentPosition('y');
+                scrollBar.value = y;
+            }
         }
     }
     getInnerBounds(force) {
         // this is a temporary fix, because we cant rely on innercontainer height if the children is positioned > 0 y.
         if (force || performance.now() - this.boundCached > 1000) {
             this.innerContainer.insetContainer.getLocalBounds(this.innerBounds);
-            this.innerContainer.insetContainer.getLocalBounds(this.innerBounds);
-            this.innerBounds.height = this.innerBounds.y + this.innerContainer.height;
-            this.innerBounds.width = this.innerBounds.x + this.innerContainer.width;
+            this.innerBounds.height = this.innerBounds.y + this.innerContainer.height || 0;
+            this.innerBounds.width = this.innerBounds.x + this.innerContainer.width || 0;
             this.boundCached = performance.now();
         }
         return this.innerBounds;
@@ -3973,6 +3953,7 @@ class ScrollWidget extends InteractiveGroup {
                 if (this.scrollY) {
                     targetPosition.y = realPosition.y + offset.y;
                 }
+                this.setScrollPosition();
             };
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             drag.onDragEnd = (e) => {
@@ -3990,6 +3971,22 @@ class ScrollWidget extends InteractiveGroup {
             this.setScrollPosition(scrollSpeed);
         };
         this.updateScrollBars();
+    }
+    /**
+     * @param {string} direction - `'x'` or `'y'`
+     * @returns {number} a value between 0 and 1 indicating how scrolling
+     *      has occured in that direction (called percent position).
+     */
+    getPercentPosition(direction) {
+        const bounds = this.getInnerBounds();
+        const container = this.innerContainer.insetContainer;
+        if (direction === 'x') {
+            return container.x / (this.width - bounds.width);
+        }
+        else if (direction === 'y') {
+            return container.y / (this.height - bounds.height);
+        }
+        return 0;
     }
 }
 
@@ -5607,6 +5604,68 @@ class TilingSprite extends Widget {
         this.sprite.tileScale = val;
     }
 }
+
+/**
+ * This ticker is an event-emitter that can be used for running periodic tasks
+ * in the rendering loop. It emits the `update` event every animation frame.
+ *
+ * @memberof PUXI
+ * @class
+ * @extends PIXI.utils.EventEmitter
+ */
+class Ticker extends PIXI.utils.EventEmitter {
+    constructor(autoStart) {
+        super();
+        this._disabled = true;
+        this._now = 0;
+        this.DeltaTime = 0;
+        this.Time = performance.now();
+        this.Ms = 0;
+        if (autoStart) {
+            this.disabled = false;
+        }
+        Ticker.shared = this;
+    }
+    get disabled() {
+        return this._disabled;
+    }
+    set disabled(val) {
+        if (!this._disabled) {
+            this._disabled = true;
+        }
+        else {
+            this._disabled = false;
+            Ticker.shared = this;
+            this.update(performance.now(), true);
+        }
+    }
+    /**
+     * Updates the text
+     *
+     * @private
+     */
+    update(time) {
+        Ticker.shared._now = time;
+        Ticker.shared.Ms = Ticker.shared._now - Ticker.shared.Time;
+        Ticker.shared.Time = Ticker.shared._now;
+        Ticker.shared.DeltaTime = Ticker.shared.Ms * 0.001;
+        Ticker.shared.emit('update', Ticker.shared.DeltaTime);
+        Tween._update(Ticker.shared.DeltaTime);
+        if (!Ticker.shared._disabled) {
+            requestAnimationFrame(Ticker.shared.update);
+        }
+    }
+    static on(event, fn, context) {
+        Ticker.shared.on(event, fn, context);
+    }
+    static once(event, fn, context) {
+        Ticker.shared.once(event, fn, context);
+    }
+    static removeListener(event, fn) {
+        Ticker.shared.removeListener(event, fn);
+    }
+}
+Ticker.shared = new Ticker(true);
 
 exports.AnchorLayout = AnchorLayout;
 exports.AnchorLayoutOptions = AnchorLayoutOptions;

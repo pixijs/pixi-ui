@@ -2,6 +2,7 @@ import { Slider, ISliderOptions } from './Slider';
 import { Tween } from './Tween';
 import { Sprite } from './Sprite';
 import { ScrollWidget } from './ScrollWidget';
+import * as PIXI from 'pixi.js';
 
 interface IScrollBarOptions extends ISliderOptions
 {
@@ -41,10 +42,12 @@ export class ScrollBar extends Slider
     constructor(options: IScrollBarOptions)
     {
         super({
-            track: options.track,
-            handle: options.handle,
+            track: options.track || ScrollBar.DEFAULT_TRACK.clone(),
+            handle: options.handle || ScrollBar.DEFAULT_HANDLE.clone(),
             fill: null,
             orientation: options.orientation,
+            minValue: 0,
+            maxValue: 1,
         });
 
         this.scrollingContainer = options.scrollingContainer;
@@ -58,73 +61,17 @@ export class ScrollBar extends Slider
         this.decimals = 3; // up decimals to trigger ValueChanging more often
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        this.onValueChanging = (val): void =>
+        this.on('changing', (): void =>
         {
-            const sizeAmt = this.scrollingContainer.height / this.scrollingContainer.innerContainer.height || 0.001;
+            this.scrollingContainer.forcePctPosition(
+                this.orientation === Slider.HORIZONTAL ? 'x' : 'y',
+                this.percentValue);
+        });
 
-            if (sizeAmt < 1)
-            {
-                this.scrollingContainer.forcePctPosition(this.vertical ? 'y' : 'x', this._amt);
-            }
-        };
-    }
-
-    alignToContainer(): void
-    {
-        let newPos;
-        let size;
-        const xY = this.vertical ? 'y' : 'x';
-        const widthHeight = this.vertical ? 'height' : 'width';
-        const topLeft = this.vertical ? 'top' : 'left';
-        const _posAmt = !this.scrollingContainer.innerContainer[widthHeight]
-            ? 0
-            : -(this.scrollingContainer.innerContainer[xY] / this.scrollingContainer.innerContainer[widthHeight]);
-        const sizeAmt = !this.scrollingContainer.innerContainer[widthHeight]
-            ? 1
-            : this.scrollingContainer[`_${widthHeight}`] / this.scrollingContainer.innerContainer[widthHeight];
-
-        // update amt
-        const diff = this.scrollingContainer.innerContainer[widthHeight] - this.scrollingContainer[`_${widthHeight}`];
-
-        this._amt = !this.scrollingContainer[`_${widthHeight}`] || !diff
-            ? 0
-            : -(this.scrollingContainer.innerContainer[xY] / diff);
-
-        if (sizeAmt >= 1)
+        this.on('change', (): void =>
         {
-            size = this[`_${widthHeight}`];
-            this.handle[topLeft] = size * 0.5;
-            this.toggleHidden(true);
-        }
-        else
-        {
-            size = this[`_${widthHeight}`] * sizeAmt;
-            if (this._amt > 1)
-            {
-                size -= (this[`_${widthHeight}`] - size) * (this._amt - 1);
-            }
-            else if (this._amt < 0)
-            {
-                size -= (this[`_${widthHeight}`] - size) * -this._amt;
-            }
-
-            if (this._amt < 0)
-            {
-                newPos = size * 0.5;
-            }
-            else if (this._amt > 1)
-            {
-                newPos = this[`_${widthHeight}`] - (size * 0.5);
-            }
-            else
-            {
-                newPos = (_posAmt * this.scrollingContainer[`_${widthHeight}`]) + (size * 0.5);
-            }
-
-            this.handle[topLeft] = newPos;
-            this.toggleHidden(false);
-        }
-        this.handle[widthHeight] = size;
+            this.scrollingContainer.setScrollPosition();
+        });
     }
 
     toggleHidden(hidden: boolean): void
@@ -143,5 +90,24 @@ export class ScrollBar extends Slider
             }
         }
     }
+
+    /**
+     * @static
+     */
+    static DEFAULT_TRACK = new PIXI.Graphics()
+        .beginFill(0xffffff)
+        .drawRect(0, 0, 8, 8)
+        .endFill();
+
+    /**
+     * @static
+     */
+    static DEFAULT_HANDLE: PIXI.Graphics = new PIXI.Graphics()
+        .beginFill(0x000000)
+        .drawCircle(8, 8, 4)
+        .endFill()
+        .beginFill(0x000000, 0.5)
+        .drawCircle(8, 8, 8)
+        .endFill();
 }
 

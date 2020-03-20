@@ -62,7 +62,7 @@ export class Slider extends Widget
 
     public readonly orientation: number;
 
-    protected _value: number;
+    protected percentValue: number;
     protected _minValue: number;
     protected _maxValue: number;
 
@@ -94,17 +94,19 @@ export class Slider extends Widget
     {
         super();
 
-        this._value = 0;
+        /**
+         * The value expressed as a percentage from min. to max. This will always
+         * be between 0 and 1.
+         *
+         * The actual value is: `this.minValue + this.percentValue * (this.maxValue - this.minValue`).
+         *
+         * @member {number}
+         */
+        this.percentValue = 0;
         this._disabled = false;
 
-        // set options
-        this.track = Widget.fromContent(options.track || Slider.DEFAULT_TRACK.clone());
-        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE.clone());
-
-        this.addChild(this.track, this.handle);// initialize(), update() usage
-
         this.fill = options.fill || null;
-        this._value = this._minValue;
+        this.percentValue = this._minValue;
         this._minValue = options.minValue || 0;
         this._maxValue = options.maxValue || 100;
         this.decimals = options.decimals || 0;
@@ -112,10 +114,17 @@ export class Slider extends Widget
         this.onValueChange = options.onValueChange || null;
         this.onValueChanging = options.onValueChanging || null;
         this.value = options.value || 50;
-        this.handle.pivot = 0.5;
+
+        // set options
+        this.track = Widget.fromContent(options.track
+            || (this.orientation === Slider.HORIZONTAL
+                ? Slider.DEFAULT_HORIZONTAL_TRACK.clone()
+                : Slider.DEFAULT_VERTICAL_TRACK.clone()));
+        this.handle = Widget.fromContent(options.handle || Slider.DEFAULT_HANDLE.clone());
+
+        this.addChild(this.track, this.handle);// initialize(), update() usage
 
         this._localCursor = new PIXI.Point();
-
         this.handle.contentContainer.buttonMode = true;
     }
 
@@ -123,7 +132,6 @@ export class Slider extends Widget
     {
         super.initialize();
 
-        const localMousePosition = new PIXI.Point();
         let startValue = 0;
         let trackSize;
 
@@ -159,12 +167,12 @@ export class Slider extends Widget
 
         const updatePositionToMouse = (mousePosition, soft): void =>
         {
-            this._value = this.getValueAtPhysicalPosition(mousePosition);
+            this.percentValue = this.getValueAtPhysicalPosition(mousePosition);
             this.layoutHandle();
             triggerValueChanging();
         };
 
-        // //Handle dragging
+        // Handles dragging
         const handleDrag: DragManager = this.handle.eventBroker.dnd as DragManager;
 
         handleDrag.onPress = (event: PIXI.interaction.InteractionEvent): void =>
@@ -174,7 +182,7 @@ export class Slider extends Widget
 
         handleDrag.onDragStart = (): void =>
         {
-            startValue = this._value;
+            startValue = this.percentValue;
             trackSize = this.orientation === Slider.HORIZONTAL
                 ? this.track.width
                 : this.track.height;
@@ -182,7 +190,7 @@ export class Slider extends Widget
 
         handleDrag.onDragMove = (event, offset: PIXI.Point): void =>
         {
-            this._value = Math.max(0, Math.min(
+            this.percentValue = Math.max(0, Math.min(
                 1,
                 startValue + ((this.orientation === Slider.HORIZONTAL ? offset.x : offset.y) / trackSize
                 )));
@@ -219,15 +227,26 @@ export class Slider extends Widget
         {
             triggerValueChange();
         };
+
+        this.layoutHandle();
     }
 
     get value(): number
     {
-        return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this._value), this.decimals);
+        return Helpers.Round(Helpers.Lerp(this._minValue, this._maxValue, this.percentValue), this.decimals);
     }
     set value(val: number)
     {
-        this._value = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
+        if (val === this.value)
+        {
+            return;
+        }
+        if (isNaN(val))
+        {
+            throw new Error('Cannot use NaN as a value');
+        }
+
+        this.percentValue = (Math.max(this._minValue, Math.min(this._maxValue, val)) - this._minValue) / (this._maxValue - this._minValue);
 
         if (typeof this.onValueChange === 'function')
         {
@@ -238,7 +257,10 @@ export class Slider extends Widget
             this.onValueChanging(this.value);
         }
 
-        this.update();
+        if (this.handle && this.initialized)
+        {
+            this.layoutHandle();
+        }
     }
 
     get minValue(): number
@@ -340,14 +362,14 @@ export class Slider extends Widget
             width -= handleWidth;
 
             handleY = (height - handleHeight) / 2;
-            handleX = (width * this._value);
+            handleX = (width * this.percentValue);
         }
         else
         {
             height -= handleHeight;
 
             handleX = (width - handleWidth) / 2;
-            handleY = (height * this._value);
+            handleY = (height * this.percentValue);
         }
 
         handle.layout(handleX, handleY, handleX + handleWidth, handleY + handleHeight);
@@ -431,15 +453,28 @@ export class Slider extends Widget
     }
 
     /**
+     * The default track for horizontally oriented sliders.
      * @static
      */
-    static DEFAULT_TRACK: PIXI.Graphics = new PIXI.Graphics()
+    static DEFAULT_HORIZONTAL_TRACK: PIXI.Graphics = new PIXI.Graphics()
         .beginFill(0xffffff, 1)
         .drawRect(0, 0, 16, 16) // natural width & height = 16
         .endFill()
         .lineStyle(1, 0x000000, 0.7, 1, true) // draw line in middle
         .moveTo(1, 8)
         .lineTo(15, 8);
+
+    /**
+     * The default track for vertically oriented sliders.
+     * @static
+     */
+    static DEFAULT_VERTICAL_TRACK: PIXI.Graphics = new PIXI.Graphics()
+        .beginFill(0xffffff, 1)
+        .drawRect(0, 0, 16, 16) // natural width & height = 16
+        .endFill()
+        .lineStyle(1, 0x000000, 0.7, 1, true) // draw line in middle
+        .moveTo(8, 1)
+        .lineTo(8, 15);
 
     /**
      * @static
