@@ -29,7 +29,7 @@ import { FastLayout } from './layout-manager/FastLayout';
  * )
  * ```
  */
-export abstract class WidgetGroup extends Widget
+export class WidgetGroup extends Widget
 {
     public layoutMgr: ILayoutManager;// lazily initialized (via useLayout(), useDefaultLayout())
 
@@ -38,7 +38,7 @@ export abstract class WidgetGroup extends Widget
      *
      * @param {PUXI.ILayoutManager} layoutMgr
      */
-    useLayout(layoutMgr: ILayoutManager): void
+    useLayout(layoutMgr: ILayoutManager): WidgetGroup
     {
         if (this.layoutMgr)
         {
@@ -51,6 +51,8 @@ export abstract class WidgetGroup extends Widget
         {
             this.layoutMgr.onAttach(this);
         }
+
+        return this;
     }
 
     /**

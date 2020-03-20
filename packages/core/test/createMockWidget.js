@@ -3,16 +3,15 @@ const PIXI = require('pixi.js');
 
 function createMockWidget(content)
 {
-    const mock = new PUXI.Widget(content.width, content.height);
+    const mock = new PUXI.Widget();
 
-    mock.contentContainer.addChild(content);
-
-    mock.update = () => {};
+    if (content)
+    { mock.contentContainer.addChild(content); }
 
     return mock;
 }
 
-function createMockWidgetRectangle(width, height)
+function createMockWidgetRectangle(width = 0, height = 0)
 {
     const rect = new PIXI.Graphics();
 

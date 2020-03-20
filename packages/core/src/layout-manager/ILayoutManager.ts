@@ -35,6 +35,10 @@ export interface ILayoutManager extends IMeasurable
 /**
  * Lays out the children of the layout's host. It assumes that the layout is attached.
  *
+ * Contract: Between an `onMeasure` and `onLayout` call, it is expected that the children
+ * of the widget-group have _not changed_. This prevents the layout's cache (if any)
+ * from becoming invalidated.
+ *
  * @memberof PUXI.ILayoutManager#
  * @method onLayout
  */
