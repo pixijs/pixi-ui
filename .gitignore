@@ -24,12 +24,18 @@ npm-debug.log
 !.gitkeep
 *__temp
 node_modules
-docs/
 /Web.config
 /_references.js
 
 # jetBrains IDE ignores
 .idea
+docs
 
 
 /menu
+
+lerna-debug.log
+npm-debug.log
+
+compiled
+compiled.map

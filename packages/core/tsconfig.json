@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig",
+  "compilerOptions": {
+    "outDir": "compiled",
+  },
+  "include": [
+    "./src"
+  ],
+  "exclude": [
+    "./bin",
+    "./example",
+    "rollup.config.js"
+  ]
+}

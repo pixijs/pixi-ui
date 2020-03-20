@@ -1,0 +1,4 @@
+{
+  "bail": false,
+  "spec": "packages/*/test/**/*.test.js"
+}
