@@ -8,7 +8,7 @@ PixiJS application. It allows you to render your scene graph _with your user int
 This project is work-in-progress and is not yet published. The following instructions are draft-only.
 
 ```js
-npm install @puxi/core
+npm install puxi.js
 ```
 
 ```js
