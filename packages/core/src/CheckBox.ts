@@ -66,12 +66,13 @@ export class CheckBox extends FocusableWidget
         this.checkmark = new InteractiveGroup();
         this.checkmark.contentContainer.addChild(options.checkmark);
         this.checkmark.setLayoutOptions(
-            new FastLayoutOptions(
-                LayoutOptions.WRAP_CONTENT,
-                LayoutOptions.WRAP_CONTENT,
-                0.5,
-                0.5,
-                FastLayoutOptions.CENTER_ANCHOR),
+            new FastLayoutOptions({
+                width: LayoutOptions.WRAP_CONTENT,
+                height: LayoutOptions.WRAP_CONTENT,
+                x: 0.5,
+                y: 0.5,
+                anchor: FastLayoutOptions.CENTER_ANCHOR,
+            }),
         );
         this.checkmark.alpha = this._checked ? 1 : 0;
         this.addChild(this.checkmark);

@@ -129,13 +129,13 @@ export class ScrollWidget extends InteractiveGroup
                 maxValue: 1,
             })
                 .setLayoutOptions(
-                    new BorderLayoutOptions(
-                        LayoutOptions.FILL_PARENT,
-                        LayoutOptions.WRAP_CONTENT,
-                        BorderLayoutOptions.REGION_BOTTOM,
-                        ALIGN.CENTER,
-                        ALIGN.BOTTOM,
-                    ),
+                    new BorderLayoutOptions({
+                        width: LayoutOptions.FILL_PARENT,
+                        height: LayoutOptions.WRAP_CONTENT,
+                        region: BorderLayoutOptions.REGION_BOTTOM,
+                        horizontalAlign: ALIGN.CENTER,
+                        verticalAlign: ALIGN.BOTTOM,
+                    }),
                 )
                 .setBackground(0xff)
                 .setBackgroundAlpha(0.8) as ScrollBar;
@@ -152,13 +152,13 @@ export class ScrollWidget extends InteractiveGroup
                 maxValue: 1,
             })
                 .setLayoutOptions(
-                    new BorderLayoutOptions(
-                        LayoutOptions.WRAP_CONTENT,
-                        LayoutOptions.FILL_PARENT,
-                        BorderLayoutOptions.REGION_RIGHT,
-                        ALIGN.RIGHT,
-                        ALIGN.CENTER,
-                    ),
+                    new BorderLayoutOptions({
+                        width: LayoutOptions.WRAP_CONTENT,
+                        height: LayoutOptions.FILL_PARENT,
+                        region: BorderLayoutOptions.REGION_RIGHT,
+                        horizontalAlign: ALIGN.RIGHT,
+                        verticalAlign: ALIGN.CENTER,
+                    }),
                 )
                 .setBackground(0xff)
                 .setBackgroundAlpha(0.8) as ScrollBar;

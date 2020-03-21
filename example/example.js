@@ -63,13 +63,13 @@ window.onload = function onload()
         text: 'Drag me!',
         background: 0xffaabb,
     })
-        .setLayoutOptions(new PUXI.FastLayoutOptions(
-            PUXI.LayoutOptions.WRAP_CONTENT,
-            PUXI.LayoutOptions.WRAP_CONTENT,
-            0.5,
-            0.5,
-            PUXI.FastLayoutOptions.CENTER_ANCHOR,
-        ))
+        .setLayoutOptions(new PUXI.FastLayoutOptions({
+            width: PUXI.LayoutOptions.WRAP_CONTENT,
+            height: PUXI.LayoutOptions.WRAP_CONTENT,
+            x: 0.5,
+            y: 0.5,
+            anchor: PUXI.FastLayoutOptions.CENTER_ANCHOR,
+        }))
     // .setElevation(2) heats up my cpu
         .makeDraggable();
 
@@ -83,22 +83,22 @@ window.onload = function onload()
         background: 0xfabcdf,
         style: new PIXI.TextStyle({ height: 12, lineHeight: 20 }),
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(
-            0.999999, // FILL_PARENT :(, 0.999999 :>
-            0.05,
-            0,
-            0.95,
-        ),
+        new PUXI.FastLayoutOptions({
+            width: 0.999999, // FILL_PARENT :(, 0.999999 :>
+            height: 0.05,
+            x: 0,
+            y: 0.95,
+        }),
     );
 
     mockInput.addChild(
         new PUXI.TextWidget('Type something!').setLayoutOptions(
-            new PUXI.FastLayoutOptions(
-                0.1,
-                1,
-                0.5,
-                0,
-            ),
+            new PUXI.FastLayoutOptions({
+                width: 0.1,
+                height: 1,
+                x: 0.5,
+                y: 0,
+            }),
         ),
     );
 
@@ -112,18 +112,18 @@ window.onload = function onload()
         scrollX: true,
         scrollBars: true,
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(
-            0.5,
-            0.25,
-            0.5,
-            0.7,
-            PUXI.FastLayoutOptions.CENTER_ANCHOR,
-        ),
+        new PUXI.FastLayoutOptions({
+            width: 0.5,
+            height: 0.25,
+            x: 0.5,
+            y: 0.7,
+            anchor: PUXI.FastLayoutOptions.CENTER_ANCHOR,
+        }),
     ).setBackground(0xffaabb)
         .setBackgroundAlpha(0.5)
         .addChild(new PUXI.Button({ text: 'Button 1' }).setBackground(0xff))
         .addChild(new PUXI.Button({ text: 'Button 2' })
-            .setLayoutOptions(new PUXI.FastLayoutOptions(undefined, undefined, 0, 50))
+            .setLayoutOptions(new PUXI.FastLayoutOptions({ x: 0, y: 50 }))
             .setBackground(0xff));
     // .setElevation(4); heats up my cpu :(
 
@@ -134,7 +134,7 @@ window.onload = function onload()
         background: checkBoxBackground.clone(),
         checkmark: checkGraphic.clone(),
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(32, 32, 0.9, 0),
+        new PUXI.FastLayoutOptions({ width: 32, height: 32, x: 0.9, y: 0 }),
     );
 
     const mockCheckbox2 = new PUXI.CheckBox({
@@ -143,7 +143,7 @@ window.onload = function onload()
         background: checkBoxBackground.clone(),
         checkmark: checkGraphic.clone(),
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(32, 32, 0.8, 0),
+        new PUXI.FastLayoutOptions({ width: 32, height: 32, x: 0.8, y: 0 }),
     );
 
     const mockCheckbox3 = new PUXI.CheckBox({
@@ -152,7 +152,7 @@ window.onload = function onload()
         background: checkBoxBackground.clone(),
         checkmark: checkGraphic.clone(),
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(32, 32, 0.7, 0),
+        new PUXI.FastLayoutOptions({ width: 32, height: 32, x: 0.7, y: 0 }),
     );
 
     mockCheckbox.on('hover', () => { console.log('Checkbox hovered!'); });
@@ -164,12 +164,12 @@ window.onload = function onload()
         minValue: 0,
         maxValue: 100,
     }).setLayoutOptions(
-        new PUXI.FastLayoutOptions(
-            0.9999,
-            PUXI.LayoutOptions.WRAP_CONTENT,
-            0,
-            0.25,
-        ),
+        new PUXI.FastLayoutOptions({
+            width: 0.9999,
+            height: PUXI.LayoutOptions.WRAP_CONTENT,
+            x: 0,
+            y: 0.25,
+        }),
     ).setPadding(8, 8, 8, 8)
         .setBackground(0xff);
 

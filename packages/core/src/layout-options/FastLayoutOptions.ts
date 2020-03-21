@@ -1,6 +1,25 @@
 import { LayoutOptions } from './LayoutOptions';
 import * as PIXI from 'pixi.js';
 
+export interface IFastLayoutParams
+{
+    width?: number;
+    height?: number;
+    x?: number;
+    y?: number;
+    anchor?: PIXI.Point;
+}
+
+/**
+ * @memberof PUXI
+ * @interface
+ * @property {number} width
+ * @property {number} height
+ * @property {number} x
+ * @property {number} y
+ * @property {PIXI.Point} anchor
+ */
+
 /**
  * `PUXI.FastLayoutOptions` is an extension to `PUXI.LayoutOptions` that also
  * defines the x & y coordinates. It is accepted by the stage and `PUXI.FastLayout`.
@@ -21,25 +40,27 @@ export class FastLayoutOptions extends LayoutOptions
     y: number;
     anchor: PIXI.Point;
 
-    constructor(width: number, height: number, x = 0, y = 0, anchor?: PIXI.Point)
+    constructor(options: IFastLayoutParams)
     {
-        super(width, height);
+        super(options.width, options.height);
 
         /**
          * X-coordinate of the widget in its parent's reference frame. If it is
          * absolutely less than 1, then it will be interpreted as a percent of
          * the parent's width.
          * @member {number}
+         * @default 0
          */
-        this.x = x;
+        this.x = options.x || 0;
 
         /**
          * Y-coordinate of the widget in its parent's reference frame. If it is
          * absolutely less than 1, then it will be interpreted as a percent of
          * the parent's height.
          * @member {number}
+         * @default 0
          */
-        this.y = y;
+        this.y = options.y || 0;
 
         /**
          * The anchor is a normalized point telling where the (x,y) position of the
@@ -50,6 +71,6 @@ export class FastLayoutOptions extends LayoutOptions
          * @member {PIXI.Point}
          * @default PUXI.FastLayoutOptions.DEFAULT_ANCHOR
          */
-        this.anchor = anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
+        this.anchor = options.anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
     }
 }

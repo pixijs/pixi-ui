@@ -862,4 +862,24 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 
         return widget;
     }
+
+    /**
+     * Easy utility to resolve measured dimension.
+     * @param {number} natural - your widget's natural dimension
+     * @param {number} limit - width/height limit passed by parent
+     * @param {PUXI.MeasureMode} mode - measurement mode passed by parent
+     */
+    static resolveMeasuredDimen(natural: number, limit: number, mode: MeasureMode): number
+    {
+        if (mode === MeasureMode.EXACTLY)
+        {
+            return limit;
+        }
+        else if (mode === MeasureMode.AT_MOST)
+        {
+            return Math.min(limit, natural);
+        }
+
+        return natural;
+    }
 }

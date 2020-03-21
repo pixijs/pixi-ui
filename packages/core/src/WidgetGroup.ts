@@ -18,13 +18,13 @@ import { FastLayout } from './layout-manager/FastLayout';
  *
  * group.addChild(new PUXI.Button({ text: "Hey" })
  *  .setLayoutOptions(
- *      new PUXI.AnchorLayoutOptions(
- *             100,
- *             300,
- *             .4,
- *             500,
- *             PUXI.ALIGN.CENTER
- *      )
+ *      new PUXI.AnchorLayoutOptions({
+ *             anchorLeft: 100,
+ *             anchorTop: 300,
+ *             anchorRight: .4,
+ *             anchorBottom: 500,
+ *             horizontalAlign: PUXI.ALIGN.CENTER
+ *      })
  *  )
  * )
  * ```

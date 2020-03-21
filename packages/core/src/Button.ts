@@ -52,12 +52,13 @@ export class Button extends FocusableWidget
         }
 
         this.textWidget = options.text.setLayoutOptions(
-            new FastLayoutOptions(
-                LayoutOptions.WRAP_CONTENT,
-                LayoutOptions.WRAP_CONTENT,
-                0.5, 0.5,
-                FastLayoutOptions.CENTER_ANCHOR,
-            ),
+            new FastLayoutOptions({
+                width: LayoutOptions.WRAP_CONTENT,
+                height: LayoutOptions.WRAP_CONTENT,
+                x: 0.5,
+                y: 0.5,
+                anchor: FastLayoutOptions.CENTER_ANCHOR,
+            }),
         ) as TextWidget;
 
         if (this.textWidget)

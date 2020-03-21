@@ -1,6 +1,6 @@
 /*!
  * puxi.js - v0.0.0
- * Compiled Fri, 20 Mar 2020 22:33:38 UTC
+ * Compiled Sat, 21 Mar 2020 01:04:10 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,7 @@ import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 
 /*!
  * @puxi/core - v1.0.0
- * Compiled Fri, 20 Mar 2020 22:33:38 UTC
+ * Compiled Sat, 21 Mar 2020 01:04:10 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -1222,6 +1222,21 @@ class Widget extends utils.EventEmitter {
         widget.contentContainer.addChild(content);
         return widget;
     }
+    /**
+     * Easy utility to resolve measured dimension.
+     * @param {number} natural - your widget's natural dimension
+     * @param {number} limit - width/height limit passed by parent
+     * @param {PUXI.MeasureMode} mode - measurement mode passed by parent
+     */
+    static resolveMeasuredDimen(natural, limit, mode) {
+        if (mode === MeasureMode.EXACTLY) {
+            return limit;
+        }
+        else if (mode === MeasureMode.AT_MOST) {
+            return Math.min(limit, natural);
+        }
+        return natural;
+    }
 }
 
 /**
@@ -1343,51 +1358,61 @@ LayoutOptions.MAX_DIMEN = 0xfffffff0;
 LayoutOptions.DEFAULT = new LayoutOptions();
 
 /**
- * Anchored layout-options specify the left, top, right, and bottom offsets of a
- * widget in pixels. If an offset is between -1px and 1px, then it is interpreted
- * as a percentage of the parent's dimensions.
+ * @memberof PUXI
+ * @interface IAnchorLayoutParams
+ * @property {number} anchorLeft - distance from parent's left inset to child's left edge
+ * @property {number} anchorTop - distance from parent's top inset to child's top edge
+ * @property {number} anchorRight - distance from parent's right inset to child's right edge
+ * @property {number} anchorBottom - distance from parent's bottom insets to child's bottom edge
+ * @property {PUXI.ALIGN} horizontalAlign - horizontal alignment of child in anchor region
+ * @property {PUXI.ALIGN} verticalAlign - vertical alignment of child in anchor region
+ */
+/**
+ * Anchors the edge of a widget to defined offsets from the parent's insets.
  *
- * The following example will render a widget at 80% of the parent's width and
- * 60px height.
+ * The following example will render a widget at (10px, 15%) with a width extending
+ * to the parent's center and a height extending till 40px above the parent's bottom
+ * inset.
  * ```js
- * const widget: PUXI.Widget = new Widget();
- * const anchorPane: PUXI.Widget = new Widget();
- *
- * widget.layoutOptions = new PUXI.AnchoredLayoutOptions(
- *      .10,
- *      .90,
- *      20,
- *      80
- * );
- *
- * // Prevent child from requesting natural bounds.
- * widget.layoutOptions.width = 0;
- * widget.layoutOptions.height = 0;
+ * new PUXI.AnchoredLayoutOptions({
+ *      anchorLeft: 10,
+ *      anchorTop: .15,
+ *      anchorRight: .5,
+ *      anchorBottom: 40
+ * });
  * ```
  *
- * ### Intra-anchor region constraints
+ * You can specify how the widget should be aligned in the anchor region using the
+ * `horizontalAlign` and `verticalAlign` properties.
  *
- * If the offsets given provide a region larger than the widget's dimensions, then
- * the widget will be aligned accordingly. However, if the width or height of the
- * child is set to 0, then that child will be scaled to fit in the entire region
- * in that dimension.
+ * The width & height of widgets must be `WRAP_CONTENT` or `FILL_PARENT`. Using the latter
+ * would make the child fill the anchor region.
  *
  * @memberof PUXI
  * @extends PUXI.LayoutOptions
  * @class
  */
 class AnchorLayoutOptions extends LayoutOptions {
-    constructor(anchorLeft, anchorTop, anchorRight, anchorBottom, horizontalAlign = ALIGN.NONE, verticalAlign = ALIGN.NONE) {
+    constructor(options) {
         super(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT);
-        this.anchorLeft = anchorLeft;
-        this.anchorTop = anchorTop;
-        this.anchorBottom = anchorBottom;
-        this.anchorRight = anchorRight;
-        this.horizontalAlign = horizontalAlign;
-        this.verticalAlign = verticalAlign;
+        this.anchorLeft = options.anchorLeft || 0;
+        this.anchorTop = options.anchorTop || 0;
+        this.anchorBottom = options.anchorBottom || 0;
+        this.anchorRight = options.anchorRight || 0;
+        this.horizontalAlign = options.horizontalAlign || ALIGN.LEFT;
+        this.verticalAlign = options.verticalAlign || ALIGN.CENTER;
     }
 }
 
+/**
+ * @memberof PUXI
+ * @interface
+ * @property {number} width
+ * @property {number} height
+ * @property {number} x
+ * @property {number} y
+ * @property {PIXI.Point} anchor
+ */
 /**
  * `PUXI.FastLayoutOptions` is an extension to `PUXI.LayoutOptions` that also
  * defines the x & y coordinates. It is accepted by the stage and `PUXI.FastLayout`.
@@ -1400,22 +1425,24 @@ class AnchorLayoutOptions extends LayoutOptions {
  * @class
  */
 class FastLayoutOptions extends LayoutOptions {
-    constructor(width, height, x = 0, y = 0, anchor) {
-        super(width, height);
+    constructor(options) {
+        super(options.width, options.height);
         /**
          * X-coordinate of the widget in its parent's reference frame. If it is
          * absolutely less than 1, then it will be interpreted as a percent of
          * the parent's width.
          * @member {number}
+         * @default 0
          */
-        this.x = x;
+        this.x = options.x || 0;
         /**
          * Y-coordinate of the widget in its parent's reference frame. If it is
          * absolutely less than 1, then it will be interpreted as a percent of
          * the parent's height.
          * @member {number}
+         * @default 0
          */
-        this.y = y;
+        this.y = options.y || 0;
         /**
          * The anchor is a normalized point telling where the (x,y) position of the
          * widget lies inside of it. By default, it is (0, 0), which means that the
@@ -1425,12 +1452,21 @@ class FastLayoutOptions extends LayoutOptions {
          * @member {PIXI.Point}
          * @default PUXI.FastLayoutOptions.DEFAULT_ANCHOR
          */
-        this.anchor = anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
+        this.anchor = options.anchor || FastLayoutOptions.DEFAULT_ANCHOR.clone();
     }
 }
 FastLayoutOptions.DEFAULT_ANCHOR = new Point(0, 0);
 FastLayoutOptions.CENTER_ANCHOR = new Point(0.5, 0.5); // fragile, shouldn't be modified
 
+/**
+ * @memberof PUXI
+ * @interface IBorderLayoutParams
+ * @property {number} width
+ * @property {number} height
+ * @property {number} region
+ * @property {number} horizontalAlign
+ * @property {number} verticalAlign
+ */
 /**
  * `PUXI.BorderLayoutOptions` defines a simple layout with five regions - the center and
  * four regions along each border. The top and bottom regions span the full width of
@@ -1461,24 +1497,27 @@ FastLayoutOptions.CENTER_ANCHOR = new Point(0.5, 0.5); // fragile, shouldn't be 
  * @extends PUXI.LayoutOptions
  */
 class BorderLayoutOptions extends LayoutOptions {
-    constructor(width, height, region, horizontalAlign, verticalAlign) {
-        super(width, height);
+    constructor(options) {
+        super(options.width, options.height);
         /**
          * The border along which the widget is to be placed. This can be one of `POS_LEFT`,
          * `POS_TOP`, `POS_RIGHT`, `POS_BOTTOM`.
          * @member {number}
+         * @default {PUXI.BorderLayoutOptions#REGION_CENTER}
          */
-        this.region = region;
+        this.region = options.region || BorderLayoutOptions.REGION_CENTER;
         /**
          * Alignment of the widget horizontally in its region.
-         * @member {PUXI.Align}
+         * @member {PUXI.ALIGN}
+         * @default {PUXI.ALIGN.LEFT}
          */
-        this.horizontalAlign = horizontalAlign;
+        this.horizontalAlign = options.horizontalAlign || ALIGN.LEFT;
         /**
          * Alignment of the widget vertically in its region.
-         * @member {PUXI.Align}
+         * @member {PUXI.ALIGN}
+         * @default {PUXI.ALIGN.TOP}
          */
-        this.verticalAlign = verticalAlign;
+        this.verticalAlign = options.verticalAlign || ALIGN.TOP;
     }
 }
 /**
@@ -1658,13 +1697,13 @@ class FastLayout {
  *
  * group.addChild(new PUXI.Button({ text: "Hey" })
  *  .setLayoutOptions(
- *      new PUXI.AnchorLayoutOptions(
- *             100,
- *             300,
- *             .4,
- *             500,
- *             PUXI.ALIGN.CENTER
- *      )
+ *      new PUXI.AnchorLayoutOptions({
+ *             anchorLeft: 100,
+ *             anchorTop: 300,
+ *             anchorRight: .4,
+ *             anchorBottom: 500,
+ *             horizontalAlign: PUXI.ALIGN.CENTER
+ *      })
  *  )
  * )
  * ```
@@ -1915,7 +1954,13 @@ class Button extends FocusableWidget {
         if (typeof options.text === 'string') {
             options.text = new TextWidget(options.text, new TextStyle());
         }
-        this.textWidget = options.text.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
+        this.textWidget = options.text.setLayoutOptions(new FastLayoutOptions({
+            width: LayoutOptions.WRAP_CONTENT,
+            height: LayoutOptions.WRAP_CONTENT,
+            x: 0.5,
+            y: 0.5,
+            anchor: FastLayoutOptions.CENTER_ANCHOR,
+        }));
         if (this.textWidget) {
             this.addChild(this.textWidget);
         }
@@ -2046,7 +2091,13 @@ class CheckBox extends FocusableWidget {
         this.checkGroup = options.checkGroup || null;
         this.checkmark = new InteractiveGroup();
         this.checkmark.contentContainer.addChild(options.checkmark);
-        this.checkmark.setLayoutOptions(new FastLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT, 0.5, 0.5, FastLayoutOptions.CENTER_ANCHOR));
+        this.checkmark.setLayoutOptions(new FastLayoutOptions({
+            width: LayoutOptions.WRAP_CONTENT,
+            height: LayoutOptions.WRAP_CONTENT,
+            x: 0.5,
+            y: 0.5,
+            anchor: FastLayoutOptions.CENTER_ANCHOR,
+        }));
         this.checkmark.alpha = this._checked ? 1 : 0;
         this.addChild(this.checkmark);
         this.contentContainer.buttonMode = true;
@@ -3155,157 +3206,26 @@ ScrollBar.DEFAULT_HANDLE = new Graphics()
  * ```
  */
 class AnchorLayout {
-    constructor() {
-        this.noPercents = false;
-    }
     onAttach(host) {
         this.host = host;
     }
     onDetach() {
         this.host = null;
     }
-    measureChild(child, maxParentWidth, maxParentHeight, widthMode, heightMode) {
-        const lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
-        const anchorLeft = lopt.anchorLeft || 0;
-        const anchorTop = lopt.anchorTop || 0;
-        const anchorRight = lopt.anchorRight || 0;
-        const anchorBottom = lopt.anchorBottom || 0;
-        let maxWidgetWidth = 0;
-        let maxWidgetHeight = 0;
-        let widgetWidthMode;
-        let widgetHeightMode;
-        // Widget width measurement
-        if (this.noPercents || (Math.abs(anchorLeft) > 1 && Math.abs(anchorRight) > 1)) {
-            maxWidgetWidth = Math.ceil(anchorRight) - Math.floor(anchorLeft);
-            widgetWidthMode = MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorLeft) < 1 && Math.abs(anchorRight) < 1) {
-            maxWidgetWidth = maxParentWidth * (anchorRight - anchorLeft);
-            widgetWidthMode = (widthMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorLeft) < 1) {
-            maxWidgetWidth = anchorRight;
-            widgetWidthMode = MeasureMode.AT_MOST;
-        }
-        else {
-            maxWidgetWidth = (maxParentWidth * anchorRight) - anchorLeft;
-            widgetWidthMode = (widthMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-        // Widget height measurement
-        if (this.noPercents || (Math.abs(anchorTop) > 1 && Math.abs(anchorBottom) > 1)) {
-            maxWidgetHeight = Math.ceil(anchorBottom) - Math.floor(anchorTop);
-            widgetHeightMode = MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorTop) < 1 && Math.abs(anchorBottom) < 1) {
-            maxWidgetHeight = maxParentHeight * (anchorBottom - anchorTop);
-            widgetHeightMode = (heightMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorTop) < 1) {
-            maxWidgetHeight = anchorBottom;
-            widgetHeightMode = MeasureMode.AT_MOST;
-        }
-        else {
-            maxWidgetHeight = (maxParentHeight * anchorBottom) - anchorTop;
-            widgetHeightMode = (heightMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-        child.measure(maxWidgetWidth, maxWidgetHeight, widgetWidthMode, widgetHeightMode);
-    }
-    measureStretch(lowerAnchor, upperAnchor, childDimen) {
-        if (this.noPercents || (Math.abs(upperAnchor) > 1 && Math.abs(lowerAnchor) > 1)) {
-            return Math.max(lowerAnchor, upperAnchor);
-        }
-        else if (Math.abs(lowerAnchor) < 1 && Math.abs(upperAnchor) < 1) {
-            return childDimen / (upperAnchor - lowerAnchor);
-        }
-        else if (Math.abs(lowerAnchor) < 1) {
-            return upperAnchor;
-        }
-        return (childDimen + lowerAnchor) / upperAnchor;
-    }
-    measureChildren(maxParentWidth, maxParentHeight, widthMode, heightMode) {
-        const children = this.host.widgetChildren;
-        for (let i = 0, j = children.length; i < j; i++) {
-            this.measureChild(children[i], maxParentWidth, maxParentHeight, widthMode, heightMode);
-        }
-    }
-    onMeasure(maxWidth, maxHeight, widthMode, heightMode) {
-        if (widthMode === MeasureMode.EXACTLY && heightMode === MeasureMode.EXACTLY) {
-            this.measuredWidth = maxWidth;
-            this.measuredHeight = maxHeight;
-            this.measureChildren(this.measuredWidth, this.measuredHeight, MeasureMode.EXACTLY, MeasureMode.EXACTLY);
-        }
-        let maxX = 0;
-        let maxY = 0;
-        const children = this.host.widgetChildren;
-        this.measureChildren(maxWidth, maxHeight, widthMode, heightMode);
-        for (let i = 0, j = children.length; i < j; i++) {
-            const child = children[i];
-            const lopt = (child.layoutOptions || LayoutOptions.DEFAULT);
-            const anchorLeft = lopt.anchorLeft || 0;
-            const anchorTop = lopt.anchorTop || 0;
-            const anchorRight = lopt.anchorRight || 0;
-            const anchorBottom = lopt.anchorBottom || 0;
-            maxX = Math.max(maxX, this.measureStretch(anchorLeft, anchorRight, child.getMeasuredWidth()));
-            maxY = Math.max(maxY, this.measureStretch(anchorTop, anchorBottom, child.getMeasuredHeight()));
-        }
-        if (widthMode === MeasureMode.EXACTLY) {
-            this.measuredWidth = maxWidth;
-        }
-        else if (widthMode === MeasureMode.AT_MOST) {
-            this.measuredWidth = Math.min(maxX, maxWidth);
-        }
-        else {
-            this.measuredWidth = maxX;
-        }
-        if (heightMode === MeasureMode.EXACTLY) {
-            this.measuredHeight = maxHeight;
-        }
-        else if (heightMode === MeasureMode.AT_MOST) {
-            this.measuredHeight = Math.min(maxY, maxHeight);
-        }
-        else {
-            this.measuredHeight = maxY;
-        }
-        this.measureChildren(this.measuredWidth, this.measuredHeight, MeasureMode.EXACTLY, MeasureMode.EXACTLY);
-    }
-    getMeasuredWidth() {
-        return this.measuredWidth;
-    }
-    getMeasuredHeight() {
-        return this.measuredHeight;
-    }
     onLayout() {
         const parent = this.host;
         const { widgetChildren } = parent;
+        const parentWidth = parent.getMeasuredWidth();
+        const parentHeight = parent.getMeasuredHeight();
         for (let i = 0; i < widgetChildren.length; i++) {
             const child = widgetChildren[i];
             const layoutOptions = (child.layoutOptions || {});
-            let childWidth = child.measuredWidth;
-            let childHeight = child.measuredHeight;
-            let anchorLeft = layoutOptions.anchorLeft || 0;
-            let anchorTop = layoutOptions.anchorTop || 0;
-            let anchorRight = layoutOptions.anchorRight || 0;
-            let anchorBottom = layoutOptions.anchorBottom || 0;
-            if (anchorLeft > -1 && anchorLeft <= 1) {
-                anchorLeft *= parent.width;
-            }
-            if (anchorTop > -1 && anchorTop <= 1) {
-                anchorTop *= parent.height;
-            }
-            if (anchorRight > -1 && anchorRight <= 1) {
-                anchorRight *= parent.width;
-            }
-            if (anchorBottom > -1 && anchorBottom <= 1) {
-                anchorBottom *= parent.height;
-            }
+            let childWidth = child.getMeasuredWidth();
+            let childHeight = child.getMeasuredHeight();
+            const anchorLeft = this.calculateAnchor(layoutOptions.anchorLeft || 0, parentWidth, false);
+            const anchorTop = this.calculateAnchor(layoutOptions.anchorTop || 0, parentHeight, false);
+            const anchorRight = this.calculateAnchor(layoutOptions.anchorRight || 0, parentWidth, true);
+            const anchorBottom = this.calculateAnchor(layoutOptions.anchorBottom || 0, parentHeight, true);
             let x = 0;
             let y = 0;
             if (childWidth !== 0) {
@@ -3344,6 +3264,92 @@ class AnchorLayout {
             }
             child.layout(x, y, x + childWidth, y + childHeight);
         }
+    }
+    onMeasure(widthLimit, heightLimit, widthMode, heightMode) {
+        const children = this.host.widgetChildren;
+        let naturalWidth = 0;
+        let naturalHeight = 0;
+        const baseWidthMode = widthMode === MeasureMode.EXACTLY ? MeasureMode.AT_MOST : widthMode;
+        const baseHeightMode = heightMode === MeasureMode.EXACTLY ? MeasureMode.AT_MOST : heightMode;
+        let hasFillers = false;
+        // First pass: measure children and find our natural width/height. If we have a upper
+        // limit, then pass that on.
+        for (let i = 0, j = children.length; i < j; i++) {
+            const widget = children[i];
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+            const anchorLeft = this.calculateAnchor(lopt.anchorLeft || 0, widthLimit, false);
+            const anchorTop = this.calculateAnchor(lopt.anchorTop || 0, heightLimit, false);
+            const anchorRight = this.calculateAnchor(lopt.anchorRight || 0, widthLimit, true);
+            const anchorBottom = this.calculateAnchor(lopt.anchorBottom || 0, heightLimit, true);
+            // Does child have a pre-determined width or height?
+            const widthFill = lopt.width === LayoutOptions.FILL_PARENT && widthMode === MeasureMode.EXACTLY;
+            const heightFill = lopt.height === LayoutOptions.FILL_PARENT && heightMode === MeasureMode.EXACTLY;
+            // Fillers need to be remeasured using EXACTLY.
+            hasFillers = hasFillers || lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT;
+            widget.measure(anchorRight - anchorLeft, anchorBottom - anchorTop, widthFill ? MeasureMode.EXACTLY : baseWidthMode, heightFill ? MeasureMode.EXACTLY : baseHeightMode);
+            const horizontalReach = this.calculateReach(lopt.anchorLeft || 0, lopt.anchorRight || 0, widget.getMeasuredWidth());
+            const verticalReach = this.calculateReach(lopt.anchorTop || 0, lopt.anchorBottom || 0, widget.getMeasuredHeight());
+            naturalWidth = Math.max(naturalWidth, horizontalReach);
+            naturalHeight = Math.max(naturalHeight, verticalReach);
+        }
+        this.measuredWidth = Widget.resolveMeasuredDimen(naturalWidth, widthLimit, widthMode);
+        this.measuredHeight = Widget.resolveMeasuredDimen(naturalHeight, heightLimit, heightMode);
+        if (!hasFillers) {
+            return;
+        }
+        // Handle fillers.
+        for (let i = 0, j = children.length; i < j; i++) {
+            const widget = children[i];
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT);
+            const anchorLeft = this.calculateAnchor(lopt.anchorLeft || 0, this.measuredWidth, false);
+            const anchorTop = this.calculateAnchor(lopt.anchorTop || 0, this.measuredHeight, false);
+            const anchorRight = this.calculateAnchor(lopt.anchorRight || 0, this.measuredWidth, true);
+            const anchorBottom = this.calculateAnchor(lopt.anchorBottom || 0, this.measuredHeight, true);
+            if (lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT) {
+                widget.measure(anchorRight - anchorLeft, anchorBottom - anchorTop, lopt.width === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST, lopt.height === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST);
+            }
+        }
+    }
+    getMeasuredWidth() {
+        return this.measuredWidth;
+    }
+    getMeasuredHeight() {
+        return this.measuredHeight;
+    }
+    /**
+     * Calculates the actual value of the anchor, given the parent's dimension.
+     *
+     * @param {number} anchor - anchor as given in layout options
+     * @param {number} limit - parent's dimension
+     * @param {boolean} limitSubtract - true of right/bottom anchors, false for left/top
+     */
+    calculateAnchor(anchor, limit, limitSubtract) {
+        const offset = Math.abs(anchor) < 1 ? anchor * limit : anchor;
+        return limitSubtract ? limit - offset : offset;
+    }
+    /**
+     * Calculates the "reach" of a child widget, which is the minimum dimension of
+     * the parent required to fully fit the child.
+     *
+     * @param {number} minAnchor - left or top anchor as given in layout options
+     * @param {number} maxAnchor - right or bottom anchor as given in layout options
+     * @param {number} dimen - measured dimension of the widget (width or height)
+     */
+    calculateReach(minAnchor, maxAnchor, dimen) {
+        if (Math.abs(minAnchor) > 1) {
+            if (Math.abs(maxAnchor) > 1) {
+                return maxAnchor;
+            }
+            // Resolved max-anchor minus min-anchor should atleast be dimen.
+            return minAnchor + dimen / maxAnchor;
+        }
+        else if (Math.abs(maxAnchor) > 1) {
+            // Having a constant max-anchor and % min-anchor actually creates an upper
+            // limit for the layout. This isn't respected as we already are trying to
+            // be as small as possible.
+            return maxAnchor;
+        }
+        return dimen / (maxAnchor - minAnchor);
     }
 }
 
@@ -3834,7 +3840,13 @@ class ScrollWidget extends InteractiveGroup {
                 minValue: 0,
                 maxValue: 1,
             })
-                .setLayoutOptions(new BorderLayoutOptions(LayoutOptions.FILL_PARENT, LayoutOptions.WRAP_CONTENT, BorderLayoutOptions.REGION_BOTTOM, ALIGN.CENTER, ALIGN.BOTTOM))
+                .setLayoutOptions(new BorderLayoutOptions({
+                width: LayoutOptions.FILL_PARENT,
+                height: LayoutOptions.WRAP_CONTENT,
+                region: BorderLayoutOptions.REGION_BOTTOM,
+                horizontalAlign: ALIGN.CENTER,
+                verticalAlign: ALIGN.BOTTOM,
+            }))
                 .setBackground(0xff)
                 .setBackgroundAlpha(0.8);
             super.addChild(horizontalScrollBar);
@@ -3847,7 +3859,13 @@ class ScrollWidget extends InteractiveGroup {
                 minValue: 0,
                 maxValue: 1,
             })
-                .setLayoutOptions(new BorderLayoutOptions(LayoutOptions.WRAP_CONTENT, LayoutOptions.FILL_PARENT, BorderLayoutOptions.REGION_RIGHT, ALIGN.RIGHT, ALIGN.CENTER))
+                .setLayoutOptions(new BorderLayoutOptions({
+                width: LayoutOptions.WRAP_CONTENT,
+                height: LayoutOptions.FILL_PARENT,
+                region: BorderLayoutOptions.REGION_RIGHT,
+                horizontalAlign: ALIGN.RIGHT,
+                verticalAlign: ALIGN.CENTER,
+            }))
                 .setBackground(0xff)
                 .setBackgroundAlpha(0.8);
             super.addChild(verticalScrollBar);
@@ -5675,7 +5693,7 @@ Ticker.shared = new Ticker(true);
 
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Fri, 20 Mar 2020 22:33:38 UTC
+ * Compiled Sat, 21 Mar 2020 01:04:10 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
