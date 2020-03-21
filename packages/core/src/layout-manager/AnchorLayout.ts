@@ -205,30 +205,25 @@ export class AnchorLayout implements ILayoutManager
      * Calculates the "reach" of a child widget, which is the minimum dimension of
      * the parent required to fully fit the child.
      *
-     * @param {number} minAnchor - left or top anchor as given in layout options
-     * @param {number} maxAnchor - right or bottom anchor as given in layout options
+     * @param {number} startAnchor - left or top anchor as given in layout options
+     * @param {number} endAnchor - right or bottom anchor as given in layout options
      * @param {number} dimen - measured dimension of the widget (width or height)
      */
-    protected calculateReach(minAnchor: number, maxAnchor: number, dimen: number): number
+    protected calculateReach(startAnchor: number, endAnchor: number, dimen: number): number
     {
-        if (Math.abs(minAnchor) > 1)
+        if (Math.abs(startAnchor) < 1 && Math.abs(endAnchor) < 1)
         {
-            if (Math.abs(maxAnchor) > 1)
-            {
-                return maxAnchor;
-            }
-
-            // Resolved max-anchor minus min-anchor should atleast be dimen.
-            return minAnchor + dimen / maxAnchor;
+            return dimen / (1 - endAnchor - startAnchor);
         }
-        else if (Math.abs(maxAnchor) > 1)
+        else if (Math.abs(startAnchor) < 1)
         {
-            // Having a constant max-anchor and % min-anchor actually creates an upper
-            // limit for the layout. This isn't respected as we already are trying to
-            // be as small as possible.
-            return maxAnchor;
+            return (endAnchor + dimen) / (1 - startAnchor);
+        }
+        else if (Math.abs(endAnchor) < 1)
+        {
+            return (startAnchor + dimen) / (1 - endAnchor);
         }
 
-        return dimen / (maxAnchor - minAnchor);
+        return startAnchor + dimen + endAnchor;
     }
 }

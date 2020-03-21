@@ -1,6 +1,6 @@
 /*!
  * puxi.js - v0.0.0
- * Compiled Sat, 21 Mar 2020 01:04:10 UTC
+ * Compiled Sat, 21 Mar 2020 02:10:49 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,7 @@ import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 
 /*!
  * @puxi/core - v1.0.0
- * Compiled Sat, 21 Mar 2020 01:04:10 UTC
+ * Compiled Sat, 21 Mar 2020 02:10:49 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -3331,25 +3331,21 @@ class AnchorLayout {
      * Calculates the "reach" of a child widget, which is the minimum dimension of
      * the parent required to fully fit the child.
      *
-     * @param {number} minAnchor - left or top anchor as given in layout options
-     * @param {number} maxAnchor - right or bottom anchor as given in layout options
+     * @param {number} startAnchor - left or top anchor as given in layout options
+     * @param {number} endAnchor - right or bottom anchor as given in layout options
      * @param {number} dimen - measured dimension of the widget (width or height)
      */
-    calculateReach(minAnchor, maxAnchor, dimen) {
-        if (Math.abs(minAnchor) > 1) {
-            if (Math.abs(maxAnchor) > 1) {
-                return maxAnchor;
-            }
-            // Resolved max-anchor minus min-anchor should atleast be dimen.
-            return minAnchor + dimen / maxAnchor;
+    calculateReach(startAnchor, endAnchor, dimen) {
+        if (Math.abs(startAnchor) < 1 && Math.abs(endAnchor) < 1) {
+            return dimen / (1 - endAnchor - startAnchor);
         }
-        else if (Math.abs(maxAnchor) > 1) {
-            // Having a constant max-anchor and % min-anchor actually creates an upper
-            // limit for the layout. This isn't respected as we already are trying to
-            // be as small as possible.
-            return maxAnchor;
+        else if (Math.abs(startAnchor) < 1) {
+            return (endAnchor + dimen) / (1 - startAnchor);
         }
-        return dimen / (maxAnchor - minAnchor);
+        else if (Math.abs(endAnchor) < 1) {
+            return (startAnchor + dimen) / (1 - endAnchor);
+        }
+        return startAnchor + dimen + endAnchor;
     }
 }
 
@@ -5693,7 +5689,7 @@ Ticker.shared = new Ticker(true);
 
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Sat, 21 Mar 2020 01:04:10 UTC
+ * Compiled Sat, 21 Mar 2020 02:10:49 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license

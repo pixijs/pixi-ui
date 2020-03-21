@@ -15,9 +15,9 @@ describe('BorderLayout', () =>
         const mockParent = new PUXI.WidgetGroup().useLayout(mockLayout);
 
         const leftWidget = createMockWidget().setLayoutOptions(
-            new PUXI.BorderLayoutOptions(32, 96, REGION_LEFT));
+            new PUXI.BorderLayoutOptions({ width: 32, height: 96, region: REGION_LEFT }));
         const bottomWidget = createMockWidget().setLayoutOptions(
-            new PUXI.BorderLayoutOptions(96, 32, REGION_BOTTOM));
+            new PUXI.BorderLayoutOptions({ width: 96, height: 32, region: REGION_BOTTOM }));
         const centerWidget = createMockWidgetRectangle(128, 128);
 
         mockParent.addChild(leftWidget, bottomWidget, centerWidget);

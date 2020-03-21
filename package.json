@@ -22,7 +22,9 @@
     "compile:example": "npm run compile && cp bundles/puxi.js/dist/puxi.js example/puxi.js && cp bundles/puxi.js/dist/puxi.js.map example/puxi.js.map",
     "docs": "rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;",
     "prepublishOnly": "npm run bundle && npm run docs",
-    "test": "mocha -r jsdom-global/register --exit"
+    "test": "mocha -r jsdom-global/register --exit",
+    "predocs-live": "npm run compile && npm run docs",
+    "docs-live": "gh-pages -d dist/docs"
   },
   "files": [
     "bin/",
@@ -52,6 +54,7 @@
     "emoji-regex": "6.4.2",
     "eslint": "^6.8.0",
     "eslint-config-pixi": "^1.0.1",
+    "gh-pages": "^2.2.0",
     "jaguarjs-jsdoc": "^1.0.1",
     "jsdoc": "^3.4.0",
     "jsdom": "^16.2.1",

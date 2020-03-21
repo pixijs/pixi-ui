@@ -10,19 +10,19 @@ describe('Stage', () =>
 
         const mockRects = [
             createMockWidgetRectangle(128, 128)
-                .setLayoutOptions(new PUXI.FastLayoutOptions(
-                    PUXI.LayoutOptions.WRAP_CONTENT,
-                    PUXI.LayoutOptions.WRAP_CONTENT,
-                    64,
-                    64,
-                )),
+                .setLayoutOptions(new PUXI.FastLayoutOptions({
+                    width: PUXI.LayoutOptions.WRAP_CONTENT,
+                    height: PUXI.LayoutOptions.WRAP_CONTENT,
+                    x: 64,
+                    y: 64,
+                })),
             createMockWidgetRectangle(256, 256)
-                .setLayoutOptions(new PUXI.FastLayoutOptions(
-                    0.5,
-                    PUXI.LayoutOptions.WRAP_CONTENT,
-                    128,
-                    0.5,
-                )),
+                .setLayoutOptions(new PUXI.FastLayoutOptions({
+                    width: 0.5,
+                    height: PUXI.LayoutOptions.WRAP_CONTENT,
+                    x: 128,
+                    y: 0.5,
+                })),
         ];
 
         mockStage.addChild(...mockRects);

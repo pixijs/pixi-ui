@@ -15,8 +15,8 @@ describe('AnchorLayout', () =>
             createMockWidgetRectangle(300, 300).setLayoutOptions(new PUXI.AnchorLayoutOptions({
                 anchorLeft: 200,
                 anchorTop: 200,
-                anchorRight: 500,
-                anchorBottom: 700,
+                anchorRight: 100,
+                anchorBottom: 200,
                 horizontalAlign: PUXI.ALIGN.CENTER,
                 verticalAlign: PUXI.ALIGN.TOP,
             })));
@@ -24,8 +24,8 @@ describe('AnchorLayout', () =>
             createMockWidgetRectangle(150, 150).setLayoutOptions(new PUXI.AnchorLayoutOptions({
                 anchorLeft: 0.50,
                 anchorTop: 100,
-                anchorRight: 0.75,
-                anchorBottom: 300,
+                anchorRight: 0.25,
+                anchorBottom: 50,
                 horizontalAlign: PUXI.ALIGN.NONE,
                 verticalAlign: PUXI.ALIGN.CENTER,
             })));
