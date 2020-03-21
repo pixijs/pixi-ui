@@ -31,7 +31,7 @@ uxStage.addChild(new PUXI.Text({
   new PUXI.FastLayoutOptions({
      width: PUXI.LayoutOptions.WRAP_CONTENT, // width
      height: 60, // height
-     x; .5, y: .5, // x, y (center)
+     x: .5, y: .5, // x, y (center)
      anchor: PUXI.FastLayoutOptions.CENTER_ANCHOR // properly center
   })
 }).setPadding(4, 6) // horizontal/vertical padding
