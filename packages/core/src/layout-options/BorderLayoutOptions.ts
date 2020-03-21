@@ -1,4 +1,24 @@
 import { LayoutOptions } from './LayoutOptions';
+import { ALIGN } from './Align';
+
+export interface IBorderLayoutParams
+{
+    width?: number;
+    height?: number;
+    region?: number;
+    horizontalAlign?: ALIGN;
+    verticalAlign?: ALIGN;
+}
+
+/**
+ * @memberof PUXI
+ * @interface IBorderLayoutParams
+ * @property {number} width
+ * @property {number} height
+ * @property {number} region
+ * @property {number} horizontalAlign
+ * @property {number} verticalAlign
+ */
 
 /**
  * `PUXI.BorderLayoutOptions` defines a simple layout with five regions - the center and
@@ -71,27 +91,30 @@ export class BorderLayoutOptions extends LayoutOptions
     horizontalAlign: number;
     verticalAlign: number;
 
-    constructor(width: number, height: number, region: number, horizontalAlign: number, verticalAlign: number)
+    constructor(options: IBorderLayoutParams)
     {
-        super(width, height);
+        super(options.width, options.height);
 
         /**
          * The border along which the widget is to be placed. This can be one of `POS_LEFT`,
          * `POS_TOP`, `POS_RIGHT`, `POS_BOTTOM`.
          * @member {number}
+         * @default {PUXI.BorderLayoutOptions#REGION_CENTER}
          */
-        this.region = region;
+        this.region = options.region || BorderLayoutOptions.REGION_CENTER;
 
         /**
          * Alignment of the widget horizontally in its region.
-         * @member {PUXI.Align}
+         * @member {PUXI.ALIGN}
+         * @default {PUXI.ALIGN.LEFT}
          */
-        this.horizontalAlign = horizontalAlign;
+        this.horizontalAlign = options.horizontalAlign || ALIGN.LEFT;
 
         /**
          * Alignment of the widget vertically in its region.
-         * @member {PUXI.Align}
+         * @member {PUXI.ALIGN}
+         * @default {PUXI.ALIGN.TOP}
          */
-        this.verticalAlign = verticalAlign;
+        this.verticalAlign = options.verticalAlign || ALIGN.TOP;
     }
 }

@@ -20,12 +20,6 @@ export class AnchorLayout implements ILayoutManager
     private measuredHeight: number;
 
     private host: WidgetGroup;
-    protected noPercents: boolean;
-
-    constructor()
-    {
-        this.noPercents = false;
-    }
 
     onAttach(host: WidgetGroup): void
     {
@@ -37,225 +31,26 @@ export class AnchorLayout implements ILayoutManager
         this.host = null;
     }
 
-    private measureChild(child: Widget,
-        maxParentWidth: number,
-        maxParentHeight: number,
-        widthMode: MeasureMode,
-        heightMode: MeasureMode): void
-    {
-        const lopt = (child.layoutOptions || LayoutOptions.DEFAULT) as AnchorLayoutOptions;
-
-        const anchorLeft = lopt.anchorLeft || 0;
-        const anchorTop = lopt.anchorTop || 0;
-        const anchorRight = lopt.anchorRight || 0;
-        const anchorBottom = lopt.anchorBottom || 0;
-
-        let maxWidgetWidth = 0;
-        let maxWidgetHeight = 0;
-        let widgetWidthMode: number;
-        let widgetHeightMode: number;
-
-        // Widget width measurement
-        if (this.noPercents || (Math.abs(anchorLeft) > 1 && Math.abs(anchorRight) > 1))
-        {
-            maxWidgetWidth = Math.ceil(anchorRight) - Math.floor(anchorLeft);
-            widgetWidthMode = MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorLeft) < 1 && Math.abs(anchorRight) < 1)
-        {
-            maxWidgetWidth = maxParentWidth * (anchorRight - anchorLeft);
-            widgetWidthMode = (widthMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorLeft) < 1)
-        {
-            maxWidgetWidth = anchorRight;
-            widgetWidthMode = MeasureMode.AT_MOST;
-        }
-        else
-        {
-            maxWidgetWidth = (maxParentWidth * anchorRight) - anchorLeft;
-            widgetWidthMode = (widthMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-
-        // Widget height measurement
-        if (this.noPercents || (Math.abs(anchorTop) > 1 && Math.abs(anchorBottom) > 1))
-        {
-            maxWidgetHeight = Math.ceil(anchorBottom) - Math.floor(anchorTop);
-            widgetHeightMode = MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorTop) < 1 && Math.abs(anchorBottom) < 1)
-        {
-            maxWidgetHeight = maxParentHeight * (anchorBottom - anchorTop);
-            widgetHeightMode = (heightMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-        else if (Math.abs(anchorTop) < 1)
-        {
-            maxWidgetHeight = anchorBottom;
-            widgetHeightMode = MeasureMode.AT_MOST;
-        }
-        else
-        {
-            maxWidgetHeight = (maxParentHeight * anchorBottom) - anchorTop;
-            widgetHeightMode = (heightMode === MeasureMode.UNBOUNDED)
-                ? MeasureMode.UNBOUNDED
-                : MeasureMode.AT_MOST;
-        }
-
-        child.measure(
-            maxWidgetWidth,
-            maxWidgetHeight,
-            widgetWidthMode,
-            widgetHeightMode,
-        );
-    }
-
-    measureStretch(lowerAnchor: number,
-        upperAnchor: number,
-        childDimen: number): number
-    {
-        if (this.noPercents || (Math.abs(upperAnchor) > 1 && Math.abs(lowerAnchor) > 1))
-        {
-            return Math.max(lowerAnchor, upperAnchor);
-        }
-        else if (Math.abs(lowerAnchor) < 1 && Math.abs(upperAnchor) < 1)
-        {
-            return childDimen / (upperAnchor - lowerAnchor);
-        }
-        else if (Math.abs(lowerAnchor) < 1)
-        {
-            return upperAnchor;
-        }
-
-        return (childDimen + lowerAnchor) / upperAnchor;
-    }
-
-    measureChildren(maxParentWidth: number,
-        maxParentHeight: number,
-        widthMode: MeasureMode,
-        heightMode: MeasureMode): void
-    {
-        const children = this.host.widgetChildren;
-
-        for (let i = 0, j = children.length; i < j; i++)
-        {
-            this.measureChild(children[i], maxParentWidth, maxParentHeight, widthMode, heightMode);
-        }
-    }
-
-    onMeasure(maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): void
-    {
-        if (widthMode === MeasureMode.EXACTLY && heightMode === MeasureMode.EXACTLY)
-        {
-            this.measuredWidth = maxWidth;
-            this.measuredHeight = maxHeight;
-            this.measureChildren(this.measuredWidth, this.measuredHeight,
-                MeasureMode.EXACTLY,
-                MeasureMode.EXACTLY);
-        }
-
-        let maxX = 0;
-        let maxY = 0;
-
-        const children = this.host.widgetChildren;
-
-        this.measureChildren(maxWidth, maxHeight, widthMode, heightMode);
-
-        for (let i = 0, j = children.length; i < j; i++)
-        {
-            const child = children[i];
-            const lopt = (child.layoutOptions || LayoutOptions.DEFAULT) as AnchorLayoutOptions;
-
-            const anchorLeft = lopt.anchorLeft || 0;
-            const anchorTop = lopt.anchorTop || 0;
-            const anchorRight = lopt.anchorRight || 0;
-            const anchorBottom = lopt.anchorBottom || 0;
-
-            maxX = Math.max(maxX, this.measureStretch(anchorLeft, anchorRight, child.getMeasuredWidth()));
-            maxY = Math.max(maxY, this.measureStretch(anchorTop, anchorBottom, child.getMeasuredHeight()));
-        }
-
-        if (widthMode === MeasureMode.EXACTLY)
-        {
-            this.measuredWidth = maxWidth;
-        }
-        else if (widthMode === MeasureMode.AT_MOST)
-        {
-            this.measuredWidth = Math.min(maxX, maxWidth);
-        }
-        else
-        {
-            this.measuredWidth = maxX;
-        }
-
-        if (heightMode === MeasureMode.EXACTLY)
-        {
-            this.measuredHeight = maxHeight;
-        }
-        else if (heightMode === MeasureMode.AT_MOST)
-        {
-            this.measuredHeight = Math.min(maxY, maxHeight);
-        }
-        else
-        {
-            this.measuredHeight = maxY;
-        }
-
-        this.measureChildren(this.measuredWidth, this.measuredHeight,
-            MeasureMode.EXACTLY,
-            MeasureMode.EXACTLY);
-    }
-
-    getMeasuredWidth(): number
-    {
-        return this.measuredWidth;
-    }
-
-    getMeasuredHeight(): number
-    {
-        return this.measuredHeight;
-    }
-
     onLayout(): void
     {
         const parent = this.host;
         const { widgetChildren } = parent;
+
+        const parentWidth = parent.getMeasuredWidth();
+        const parentHeight = parent.getMeasuredHeight();
 
         for (let i = 0; i < widgetChildren.length; i++)
         {
             const child = widgetChildren[i];
             const layoutOptions = (child.layoutOptions || {}) as AnchorLayoutOptions;
 
-            let childWidth = child.measuredWidth;
-            let childHeight = child.measuredHeight;
+            let childWidth = child.getMeasuredWidth();
+            let childHeight = child.getMeasuredHeight();
 
-            let anchorLeft = layoutOptions.anchorLeft || 0;
-            let anchorTop = layoutOptions.anchorTop || 0;
-            let anchorRight = layoutOptions.anchorRight || 0;
-            let anchorBottom = layoutOptions.anchorBottom || 0;
-
-            if (anchorLeft > -1 && anchorLeft <= 1)
-            {
-                anchorLeft *= parent.width;
-            }
-            if (anchorTop > -1 && anchorTop <= 1)
-            {
-                anchorTop *= parent.height;
-            }
-            if (anchorRight > -1 && anchorRight <= 1)
-            {
-                anchorRight *= parent.width;
-            }
-            if (anchorBottom > -1 && anchorBottom <= 1)
-            {
-                anchorBottom *= parent.height;
-            }
-
+            const anchorLeft = this.calculateAnchor(layoutOptions.anchorLeft || 0, parentWidth, false);
+            const anchorTop = this.calculateAnchor(layoutOptions.anchorTop || 0, parentHeight, false);
+            const anchorRight = this.calculateAnchor(layoutOptions.anchorRight || 0, parentWidth, true);
+            const anchorBottom = this.calculateAnchor(layoutOptions.anchorBottom || 0, parentHeight, true);
             let x = 0;
             let y = 0;
 
@@ -303,5 +98,137 @@ export class AnchorLayout implements ILayoutManager
 
             child.layout(x, y, x + childWidth, y + childHeight);
         }
+    }
+
+    onMeasure(widthLimit: number, heightLimit: number, widthMode: MeasureMode, heightMode: MeasureMode): void
+    {
+        const children = this.host.widgetChildren;
+
+        let naturalWidth = 0;
+        let naturalHeight = 0;
+
+        const baseWidthMode = widthMode === MeasureMode.EXACTLY ? MeasureMode.AT_MOST : widthMode;
+        const baseHeightMode = heightMode === MeasureMode.EXACTLY ? MeasureMode.AT_MOST : heightMode;
+
+        let hasFillers = false;
+
+        // First pass: measure children and find our natural width/height. If we have a upper
+        // limit, then pass that on.
+        for (let i = 0, j = children.length; i < j; i++)
+        {
+            const widget = children[i];
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as AnchorLayoutOptions;
+
+            const anchorLeft = this.calculateAnchor(lopt.anchorLeft || 0, widthLimit, false);
+            const anchorTop = this.calculateAnchor(lopt.anchorTop || 0, heightLimit, false);
+            const anchorRight = this.calculateAnchor(lopt.anchorRight || 0, widthLimit, true);
+            const anchorBottom = this.calculateAnchor(lopt.anchorBottom || 0, heightLimit, true);
+
+            // Does child have a pre-determined width or height?
+            const widthFill = lopt.width === LayoutOptions.FILL_PARENT && widthMode === MeasureMode.EXACTLY;
+            const heightFill = lopt.height === LayoutOptions.FILL_PARENT && heightMode === MeasureMode.EXACTLY;
+
+            // Fillers need to be remeasured using EXACTLY.
+            hasFillers = hasFillers || lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT;
+
+            widget.measure(
+                anchorRight - anchorLeft,
+                anchorBottom - anchorTop,
+                widthFill ? MeasureMode.EXACTLY : baseWidthMode,
+                heightFill ? MeasureMode.EXACTLY : baseHeightMode);
+
+            const horizontalReach = this.calculateReach(
+                lopt.anchorLeft || 0, lopt.anchorRight || 0, widget.getMeasuredWidth());
+            const verticalReach = this.calculateReach(
+                lopt.anchorTop || 0, lopt.anchorBottom || 0, widget.getMeasuredHeight());
+
+            naturalWidth = Math.max(naturalWidth, horizontalReach);
+            naturalHeight = Math.max(naturalHeight, verticalReach);
+        }
+
+        this.measuredWidth = Widget.resolveMeasuredDimen(naturalWidth, widthLimit, widthMode);
+        this.measuredHeight = Widget.resolveMeasuredDimen(naturalHeight, heightLimit, heightMode);
+
+        if (!hasFillers)
+        {
+            return;
+        }
+
+        // Handle fillers.
+        for (let i = 0, j = children.length; i < j; i++)
+        {
+            const widget = children[i];
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as AnchorLayoutOptions;
+
+            const anchorLeft = this.calculateAnchor(lopt.anchorLeft || 0, this.measuredWidth, false);
+            const anchorTop = this.calculateAnchor(lopt.anchorTop || 0, this.measuredHeight, false);
+            const anchorRight = this.calculateAnchor(lopt.anchorRight || 0, this.measuredWidth, true);
+            const anchorBottom = this.calculateAnchor(lopt.anchorBottom || 0, this.measuredHeight, true);
+
+            if (lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT)
+            {
+                widget.measure(
+                    anchorRight - anchorLeft,
+                    anchorBottom - anchorTop,
+                    lopt.width === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST,
+                    lopt.height === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST,
+                );
+            }
+        }
+    }
+
+    getMeasuredWidth(): number
+    {
+        return this.measuredWidth;
+    }
+
+    getMeasuredHeight(): number
+    {
+        return this.measuredHeight;
+    }
+
+    /**
+     * Calculates the actual value of the anchor, given the parent's dimension.
+     *
+     * @param {number} anchor - anchor as given in layout options
+     * @param {number} limit - parent's dimension
+     * @param {boolean} limitSubtract - true of right/bottom anchors, false for left/top
+     */
+    protected calculateAnchor(anchor: number, limit: number, limitSubtract: boolean): number
+    {
+        const offset = Math.abs(anchor) < 1 ? anchor * limit : anchor;
+
+        return limitSubtract ? limit - offset : offset;
+    }
+
+    /**
+     * Calculates the "reach" of a child widget, which is the minimum dimension of
+     * the parent required to fully fit the child.
+     *
+     * @param {number} minAnchor - left or top anchor as given in layout options
+     * @param {number} maxAnchor - right or bottom anchor as given in layout options
+     * @param {number} dimen - measured dimension of the widget (width or height)
+     */
+    protected calculateReach(minAnchor: number, maxAnchor: number, dimen: number): number
+    {
+        if (Math.abs(minAnchor) > 1)
+        {
+            if (Math.abs(maxAnchor) > 1)
+            {
+                return maxAnchor;
+            }
+
+            // Resolved max-anchor minus min-anchor should atleast be dimen.
+            return minAnchor + dimen / maxAnchor;
+        }
+        else if (Math.abs(maxAnchor) > 1)
+        {
+            // Having a constant max-anchor and % min-anchor actually creates an upper
+            // limit for the layout. This isn't respected as we already are trying to
+            // be as small as possible.
+            return maxAnchor;
+        }
+
+        return dimen / (maxAnchor - minAnchor);
     }
 }

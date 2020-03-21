@@ -12,26 +12,23 @@ describe('AnchorLayout', () =>
         mockParent.useLayout(mockLayout);
 
         mockParent.addChild(
-            createMockWidgetRectangle(300, 300)
-                .setLayoutOptions(new PUXI.AnchorLayoutOptions(
-                    200,
-                    200,
-                    500,
-                    700,
-                    PUXI.ALIGN.CENTER,
-                    PUXI.ALIGN.TOP,
-                )));
-
+            createMockWidgetRectangle(300, 300).setLayoutOptions(new PUXI.AnchorLayoutOptions({
+                anchorLeft: 200,
+                anchorTop: 200,
+                anchorRight: 500,
+                anchorBottom: 700,
+                horizontalAlign: PUXI.ALIGN.CENTER,
+                verticalAlign: PUXI.ALIGN.TOP,
+            })));
         mockParent.addChild(
-            createMockWidgetRectangle(150, 150)
-                .setLayoutOptions(new PUXI.AnchorLayoutOptions(
-                    0.50,
-                    100,
-                    0.75,
-                    300,
-                    PUXI.ALIGN.NONE,
-                    PUXI.ALIGN.CENTER,
-                )));
+            createMockWidgetRectangle(150, 150).setLayoutOptions(new PUXI.AnchorLayoutOptions({
+                anchorLeft: 0.50,
+                anchorTop: 100,
+                anchorRight: 0.75,
+                anchorBottom: 300,
+                horizontalAlign: PUXI.ALIGN.NONE,
+                verticalAlign: PUXI.ALIGN.CENTER,
+            })));
 
         mockParent.measure(0, 0, PUXI.MeasureMode.UNBOUNDED, PUXI.MeasureMode.UNBOUNDED);
 

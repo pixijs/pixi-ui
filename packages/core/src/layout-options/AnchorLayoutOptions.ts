@@ -1,35 +1,47 @@
 import { ALIGN } from './Align';
 import { LayoutOptions } from './LayoutOptions';
 
+interface IAnchorLayoutParams
+{
+    anchorLeft?: number;
+    anchorTop?: number;
+    anchorRight?: number;
+    anchorBottom?: number;
+    horizontalAlign?: ALIGN;
+    verticalAlign?: ALIGN;
+}
+
 /**
- * Anchored layout-options specify the left, top, right, and bottom offsets of a
- * widget in pixels. If an offset is between -1px and 1px, then it is interpreted
- * as a percentage of the parent's dimensions.
+ * @memberof PUXI
+ * @interface IAnchorLayoutParams
+ * @property {number} anchorLeft - distance from parent's left inset to child's left edge
+ * @property {number} anchorTop - distance from parent's top inset to child's top edge
+ * @property {number} anchorRight - distance from parent's right inset to child's right edge
+ * @property {number} anchorBottom - distance from parent's bottom insets to child's bottom edge
+ * @property {PUXI.ALIGN} horizontalAlign - horizontal alignment of child in anchor region
+ * @property {PUXI.ALIGN} verticalAlign - vertical alignment of child in anchor region
+ */
+
+/**
+ * Anchors the edge of a widget to defined offsets from the parent's insets.
  *
- * The following example will render a widget at 80% of the parent's width and
- * 60px height.
+ * The following example will render a widget at (10px, 15%) with a width extending
+ * to the parent's center and a height extending till 40px above the parent's bottom
+ * inset.
  * ```js
- * const widget: PUXI.Widget = new Widget();
- * const anchorPane: PUXI.Widget = new Widget();
- *
- * widget.layoutOptions = new PUXI.AnchoredLayoutOptions(
- *      .10,
- *      .90,
- *      20,
- *      80
- * );
- *
- * // Prevent child from requesting natural bounds.
- * widget.layoutOptions.width = 0;
- * widget.layoutOptions.height = 0;
+ * new PUXI.AnchoredLayoutOptions({
+ *      anchorLeft: 10,
+ *      anchorTop: .15,
+ *      anchorRight: .5,
+ *      anchorBottom: 40
+ * });
  * ```
  *
- * ### Intra-anchor region constraints
+ * You can specify how the widget should be aligned in the anchor region using the
+ * `horizontalAlign` and `verticalAlign` properties.
  *
- * If the offsets given provide a region larger than the widget's dimensions, then
- * the widget will be aligned accordingly. However, if the width or height of the
- * child is set to 0, then that child will be scaled to fit in the entire region
- * in that dimension.
+ * The width & height of widgets must be `WRAP_CONTENT` or `FILL_PARENT`. Using the latter
+ * would make the child fill the anchor region.
  *
  * @memberof PUXI
  * @extends PUXI.LayoutOptions
@@ -45,22 +57,16 @@ export class AnchorLayoutOptions extends LayoutOptions
     public horizontalAlign: ALIGN;
     public verticalAlign: ALIGN;
 
-    constructor(
-        anchorLeft: number,
-        anchorTop: number,
-        anchorRight: number,
-        anchorBottom: number,
-        horizontalAlign = ALIGN.NONE,
-        verticalAlign = ALIGN.NONE)
+    constructor(options: IAnchorLayoutParams)
     {
         super(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT);
 
-        this.anchorLeft = anchorLeft;
-        this.anchorTop = anchorTop;
-        this.anchorBottom = anchorBottom;
-        this.anchorRight = anchorRight;
+        this.anchorLeft = options.anchorLeft || 0;
+        this.anchorTop = options.anchorTop || 0;
+        this.anchorBottom = options.anchorBottom || 0;
+        this.anchorRight = options.anchorRight || 0;
 
-        this.horizontalAlign = horizontalAlign;
-        this.verticalAlign = verticalAlign;
+        this.horizontalAlign = options.horizontalAlign || ALIGN.LEFT;
+        this.verticalAlign = options.verticalAlign || ALIGN.CENTER;
     }
 }
