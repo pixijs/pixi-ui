@@ -31,6 +31,39 @@ export class FastLayout implements ILayoutManager
         this.host = null;
     }
 
+    onLayout(): void
+    {
+        const parent = this.host;
+        const { contentWidth: width, contentHeight: height, widgetChildren: children } = parent;
+
+        for (let i = 0, j = children.length; i < j; i++)
+        {
+            const widget = children[i];
+            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
+
+            let x = lopt.x ? lopt.x : 0;
+            let y = lopt.y ? lopt.y : 0;
+
+            if (Math.abs(x) < 1)
+            {
+                x *= width;
+            }
+            if (Math.abs(y) < 1)
+            {
+                y *= height;
+            }
+
+            const anchor = lopt.anchor || FastLayoutOptions.DEFAULT_ANCHOR;
+
+            const l = x - (anchor.x * widget.getMeasuredWidth());
+            const t = y - (anchor.y * widget.getMeasuredHeight());
+
+            widget.layout(l, t,
+                l + widget.getMeasuredWidth(),
+                t + widget.getMeasuredHeight());
+        }
+    }
+
     onMeasure(maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): void
     {
         // TODO: Passthrough optimization pass, if there is only one child with FILL_PARENT width or height
@@ -47,16 +80,12 @@ export class FastLayout implements ILayoutManager
             const widget = children[i];
             const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
 
-            const widthMeasureMode = this.getChildMeasureMode(lopt.width, widthMode);
-            const heightMeasureMode = this.getChildMeasureMode(lopt.height, heightMode);
             const loptWidth = (Math.abs(lopt.width) < 1) ? lopt.width * maxWidth : lopt.width;
             const loptHeight = (Math.abs(lopt.height) < 1) ? lopt.height * maxHeight : lopt.height;
+            const widthMeasureMode = this.getChildMeasureMode(lopt.width, widthMode);
+            const heightMeasureMode = this.getChildMeasureMode(lopt.height, heightMode);
 
-            widget.measure(
-                widthMeasureMode === MeasureMode.EXACTLY ? loptWidth : maxWidth,
-                heightMeasureMode === MeasureMode.EXACTLY ? loptHeight : maxHeight,
-                widthMeasureMode,
-                heightMeasureMode);
+            widget.measure(loptWidth, loptHeight, widthMeasureMode, heightMeasureMode);
         }
 
         this._measuredWidth = this.measureWidthReach(maxWidth, widthMode);
@@ -67,16 +96,13 @@ export class FastLayout implements ILayoutManager
 
     private getChildMeasureMode(dimen: number, parentMeasureMode: MeasureMode): MeasureMode
     {
-        if (parentMeasureMode === MeasureMode.UNBOUNDED)
+        if (dimen === LayoutOptions.WRAP_CONTENT)
         {
-            return MeasureMode.UNBOUNDED;
-        }
-        if (dimen === LayoutOptions.FILL_PARENT || dimen === LayoutOptions.WRAP_CONTENT)
-        {
-            return MeasureMode.AT_MOST;
+            // No MeasureMode.EXACTLY!
+            return parentMeasureMode === MeasureMode.UNBOUNDED ? MeasureMode.UNBOUNDED : MeasureMode.AT_MOST;
         }
 
-        return MeasureMode.EXACTLY;
+        return parentMeasureMode;
     }
 
     private measureWidthReach(parentWidthLimit: number, widthMode: MeasureMode): number
@@ -99,7 +125,7 @@ export class FastLayout implements ILayoutManager
 
             // If lopt.x is %, then (1 - lopt.x)% of parent width should be as large
             // as (1 - anchor.x)% child's width.
-            const minr = (Math.abs(x) < 1 ? (1 - anchor.x) * childWidth / (1 - x) : x);
+            const minr = (Math.abs(x) < 1 ? (1 - anchor.x) * childWidth / (1 - x) : x + childWidth);
 
             measuredWidth = Math.max(measuredWidth, minr);
         }
@@ -130,7 +156,7 @@ export class FastLayout implements ILayoutManager
             const y = lopt.y ? lopt.y : 0;
             const anchor = lopt.anchor ? lopt.anchor : FastLayoutOptions.DEFAULT_ANCHOR;
 
-            const minb = (Math.abs(y) < 1 ? (1 - anchor.y) * childHeight / (1 - y) : y);
+            const minb = (Math.abs(y) < 1 ? (1 - anchor.y) * childHeight / (1 - y) : y + childHeight);
 
             measuredHeight = Math.max(measuredHeight, minb);
         }
@@ -151,52 +177,27 @@ export class FastLayout implements ILayoutManager
         {
             const widget = children[i];
             const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
+            let loptWidth = (Math.abs(lopt.width) < 1) ? lopt.width * this._measuredWidth : lopt.width;
+            let loptHeight = (Math.abs(lopt.height) < 1) ? lopt.height * this._measuredHeight : lopt.height;
+
+            if (loptWidth === LayoutOptions.WRAP_CONTENT)
+            {
+                loptWidth = widget.getMeasuredWidth();
+            }
+            if (loptHeight === LayoutOptions.WRAP_CONTENT)
+            {
+                loptHeight = widget.getMeasuredHeight();
+            }
 
             if (lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT)
             {
-                const widthMode = lopt.width === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST;
-                const heightMode = lopt.height === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST;
-
                 widget.measure(
-                    this._measuredWidth,
-                    this._measuredHeight,
-                    widthMode,
-                    heightMode,
+                    lopt.width === LayoutOptions.FILL_PARENT ? this._measuredWidth : loptWidth,
+                    lopt.height === LayoutOptions.FILL_PARENT ? this._measuredHeight : loptHeight,
+                    MeasureMode.EXACTLY,
+                    MeasureMode.EXACTLY,
                 );
             }
-        }
-    }
-
-    onLayout(): void
-    {
-        const parent = this.host;
-        const { width, height, widgetChildren: children } = parent;
-
-        for (let i = 0, j = children.length; i < j; i++)
-        {
-            const widget = children[i];
-            const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as FastLayoutOptions;
-
-            let x = lopt.x ? lopt.x : 0;
-            let y = lopt.y ? lopt.y : 0;
-
-            if (Math.abs(x) < 1)
-            {
-                x *= width;
-            }
-            if (Math.abs(y) < 1)
-            {
-                y *= height;
-            }
-
-            const anchor = lopt.anchor || FastLayoutOptions.DEFAULT_ANCHOR;
-
-            const l = x - (anchor.x * widget.getMeasuredWidth());
-            const t = y - (anchor.y * widget.getMeasuredHeight());
-
-            widget.layout(l, t,
-                l + widget.getMeasuredWidth(),
-                t + widget.getMeasuredHeight());
         }
     }
 

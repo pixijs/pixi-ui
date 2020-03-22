@@ -1,6 +1,6 @@
 /*!
  * @puxi/tween - v1.0.0
- * Compiled Sat, 21 Mar 2020 02:10:49 UTC
+ * Compiled Sun, 22 Mar 2020 22:05:27 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license

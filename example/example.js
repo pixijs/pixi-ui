@@ -40,7 +40,7 @@ window.onload = function onload()
 
     const app = new PIXI.Application({
         view: document.getElementById('app-cvs'),
-        backgroundColor: 0xff00ff,
+        backgroundColor: 0xffffff,
         width,
         height,
         resolution: 2,
@@ -54,14 +54,13 @@ window.onload = function onload()
     const mockTitle = new PUXI.TextWidget('PUXI Expo')
         .setBackground(new this.PIXI.Graphics()
             .beginFill(0xabcdef)
-            .drawRect(0, 0, 20, 10)
+            .drawRoundedRect(0, 0, 20, 10, 2)
             .endFill())
         .setPadding(8, 8, 8, 8);
 
     // Add rounded button in center
     const mockButton = new PUXI.Button({
         text: 'Drag me!',
-        background: 0xffaabb,
     })
         .setLayoutOptions(new PUXI.FastLayoutOptions({
             width: PUXI.LayoutOptions.WRAP_CONTENT,
@@ -70,8 +69,14 @@ window.onload = function onload()
             y: 0.5,
             anchor: PUXI.FastLayoutOptions.CENTER_ANCHOR,
         }))
-    // .setElevation(2) heats up my cpu
+        .setPadding(8)
+        .setElevation(4)
         .makeDraggable();
+
+    const bbg = new PIXI.Graphics().beginFill(0x00ffff).drawRoundedRect(0, 0, 115, 38, 4).endFill();
+
+    // bbg.cacheAsBitmap = true;
+    mockButton.setBackground(bbg);
 
     mockButton.on('draggablestart', () => { console.log('Button drag started'); });
     mockButton.on('draggablemove', () => { console.log('Button drag moved.'); });

@@ -77,7 +77,7 @@ export class WidgetGroup extends Widget
             this.useDefaultLayout();
         }
 
-        this.layoutMgr.onMeasure(width, height, widthMode, heightMode);
+        this.layoutMgr.onMeasure(width - this.paddingHorizontal, height - this.paddingVertical, widthMode, heightMode);
 
         this._measuredWidth = Math.max(this.measuredWidth, this.layoutMgr.getMeasuredWidth());
         this._measuredHeight = Math.max(this.measuredHeight, this.layoutMgr.getMeasuredHeight());

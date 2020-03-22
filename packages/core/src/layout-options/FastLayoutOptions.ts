@@ -3,8 +3,8 @@ import * as PIXI from 'pixi.js';
 
 export interface IFastLayoutParams
 {
-    width?: number;
-    height?: number;
+    width?: number | string;
+    height?: number | string;
     x?: number;
     y?: number;
     anchor?: PIXI.Point;

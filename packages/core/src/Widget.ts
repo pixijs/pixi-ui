@@ -532,6 +532,16 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
             this.insetContainer.addChildAt(bg, 0);
         }
 
+        if (bg && this._elevation && this._dropShadow)
+        {
+            if (!this.background.filters)
+            {
+                this.background.filters = [];
+            }
+
+            this.background.filters.push(this._dropShadow);
+        }
+
         return this;
     }
 
@@ -582,24 +592,33 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 
         if (val === 0 && this._dropShadow)
         {
-            const i = this.insetContainer.filters.indexOf(this._dropShadow);
+            if (!this.background)
+            {
+                return this;
+            }
+
+            const i = this.background.filters.indexOf(this._dropShadow);
 
             if (i > 0)
             {
-                this.insetContainer.filters.splice(i, 1);
+                this.background.filters.splice(i, 1);
             }
         }
         else if (val > 0)
         {
             if (!this._dropShadow)
             {
-                if (!this.insetContainer.filters)
+                if (this.background && !this.background.filters)
                 {
-                    this.insetContainer.filters = [];
+                    this.background.filters = [];
                 }
 
                 this._dropShadow = new DropShadowFilter({ distance: val });
-                this.insetContainer.filters.push(this._dropShadow);
+
+                if (this.background)
+                {
+                    this.background.filters.push(this._dropShadow);
+                }
             }
 
             this._dropShadow.distance = val;

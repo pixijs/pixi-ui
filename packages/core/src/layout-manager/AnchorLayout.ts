@@ -4,6 +4,10 @@ import { AnchorLayoutOptions, ALIGN, LayoutOptions } from '../layout-options';
 import { MeasureMode } from '../IMeasurable';
 import { WidgetGroup } from '../WidgetGroup';
 
+interface IAnchorCache {
+    remeasure: boolean;
+}
+
 /**
  * `AnchorLayout` is used in conjunction with `AnchorLayoutOptions`.
  *
@@ -36,64 +40,42 @@ export class AnchorLayout implements ILayoutManager
         const parent = this.host;
         const { widgetChildren } = parent;
 
-        const parentWidth = parent.getMeasuredWidth();
-        const parentHeight = parent.getMeasuredHeight();
+        const parentWidth = parent.contentWidth;
+        const parentHeight = parent.contentHeight;
 
         for (let i = 0; i < widgetChildren.length; i++)
         {
             const child = widgetChildren[i];
             const layoutOptions = (child.layoutOptions || {}) as AnchorLayoutOptions;
 
-            let childWidth = child.getMeasuredWidth();
-            let childHeight = child.getMeasuredHeight();
-
+            const childWidth = child.getMeasuredWidth();
+            const childHeight = child.getMeasuredHeight();
             const anchorLeft = this.calculateAnchor(layoutOptions.anchorLeft || 0, parentWidth, false);
             const anchorTop = this.calculateAnchor(layoutOptions.anchorTop || 0, parentHeight, false);
             const anchorRight = this.calculateAnchor(layoutOptions.anchorRight || 0, parentWidth, true);
             const anchorBottom = this.calculateAnchor(layoutOptions.anchorBottom || 0, parentHeight, true);
-            let x = 0;
-            let y = 0;
 
-            if (childWidth !== 0)
+            let x = anchorLeft;
+            let y = anchorTop;
+
+            switch (layoutOptions.horizontalAlign)
             {
-                switch (layoutOptions.horizontalAlign || ALIGN.NONE as ALIGN)
-                {
-                    case ALIGN.LEFT:
-                        x = anchorLeft;
-                        break;
-                    case ALIGN.MIDDLE:
-                        x = (anchorRight - anchorLeft - childWidth) / 2;
-                        break;
-                    case ALIGN.RIGHT:
-                        x = anchorRight - childWidth;
-                        break;
-                }
-            }
-            else
-            {
-                x = anchorLeft;
-                childWidth = anchorRight - anchorLeft;
+                case ALIGN.MIDDLE:
+                    x = (anchorRight + anchorLeft - childWidth) / 2;
+                    break;
+                case ALIGN.RIGHT:
+                    x = anchorRight - childWidth;
+                    break;
             }
 
-            if (childHeight !== 0)
+            switch (layoutOptions.verticalAlign)
             {
-                switch (layoutOptions.verticalAlign || ALIGN.NONE as ALIGN)
-                {
-                    case ALIGN.TOP:
-                        y = anchorTop;
-                        break;
-                    case ALIGN.MIDDLE:
-                        y = (anchorBottom - anchorTop - childHeight) / 2;
-                        break;
-                    case ALIGN.RIGHT:
-                        y = anchorBottom - childWidth;
-                        break;
-                }
-            }
-            else
-            {
-                y = anchorRight;
-                childHeight = anchorBottom - anchorTop;
+                case ALIGN.MIDDLE:
+                    y = (anchorBottom + anchorTop - childHeight) / 2;
+                    break;
+                case ALIGN.BOTTOM:
+                    y = anchorBottom - childHeight;
+                    break;
             }
 
             child.layout(x, y, x + childWidth, y + childHeight);
@@ -119,23 +101,33 @@ export class AnchorLayout implements ILayoutManager
             const widget = children[i];
             const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as AnchorLayoutOptions;
 
+            if (lopt.width === LayoutOptions.FILL_PARENT)
+            {
+                throw new Error('AnchorLayout does not support width = FILL_PARENT. Use anchorLeft = 0 & anchorRight = 0');
+            }
+            if (lopt.height === LayoutOptions.FILL_PARENT)
+            {
+                throw new Error('AnchorLayout does not support height = FILL_PARENT. Use anchorTop = 0 & anchorBottom = 0');
+            }
+
             const anchorLeft = this.calculateAnchor(lopt.anchorLeft || 0, widthLimit, false);
             const anchorTop = this.calculateAnchor(lopt.anchorTop || 0, heightLimit, false);
             const anchorRight = this.calculateAnchor(lopt.anchorRight || 0, widthLimit, true);
             const anchorBottom = this.calculateAnchor(lopt.anchorBottom || 0, heightLimit, true);
 
             // Does child have a pre-determined width or height?
-            const widthFill = lopt.width === LayoutOptions.FILL_PARENT && widthMode === MeasureMode.EXACTLY;
-            const heightFill = lopt.height === LayoutOptions.FILL_PARENT && heightMode === MeasureMode.EXACTLY;
+            const widthConst = lopt.isWidthPredefined;
+            const heightConst = lopt.isHeightPredefined;
+            const widgetWidthLimit = widthConst ? lopt.width : anchorRight - anchorLeft;
+            const widgetHeightLimit = heightConst ? lopt.height : anchorBottom - anchorTop;
+
+            const widgetWidthMode = widthConst ? MeasureMode.EXACTLY : baseWidthMode;
+            const widgetHeightMode = heightConst ? MeasureMode.EXACTLY : baseHeightMode;
 
             // Fillers need to be remeasured using EXACTLY.
-            hasFillers = hasFillers || lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT;
+            hasFillers = hasFillers || lopt.width === 0 || lopt.height === 0;
 
-            widget.measure(
-                anchorRight - anchorLeft,
-                anchorBottom - anchorTop,
-                widthFill ? MeasureMode.EXACTLY : baseWidthMode,
-                heightFill ? MeasureMode.EXACTLY : baseHeightMode);
+            widget.measure(widgetWidthLimit, widgetHeightLimit, widgetWidthMode, widgetHeightMode);
 
             const horizontalReach = this.calculateReach(
                 lopt.anchorLeft || 0, lopt.anchorRight || 0, widget.getMeasuredWidth());
@@ -160,18 +152,18 @@ export class AnchorLayout implements ILayoutManager
             const widget = children[i];
             const lopt = (widget.layoutOptions || LayoutOptions.DEFAULT) as AnchorLayoutOptions;
 
-            const anchorLeft = this.calculateAnchor(lopt.anchorLeft || 0, this.measuredWidth, false);
-            const anchorTop = this.calculateAnchor(lopt.anchorTop || 0, this.measuredHeight, false);
-            const anchorRight = this.calculateAnchor(lopt.anchorRight || 0, this.measuredWidth, true);
-            const anchorBottom = this.calculateAnchor(lopt.anchorBottom || 0, this.measuredHeight, true);
-
-            if (lopt.width === LayoutOptions.FILL_PARENT || lopt.height === LayoutOptions.FILL_PARENT)
+            if (lopt.width === 0 || lopt.height === 0)
             {
+                const anchorLeft = this.calculateAnchor(lopt.anchorLeft || 0, this.measuredWidth, false);
+                const anchorTop = this.calculateAnchor(lopt.anchorTop || 0, this.measuredHeight, false);
+                const anchorRight = this.calculateAnchor(lopt.anchorRight || 0, this.measuredWidth, true);
+                const anchorBottom = this.calculateAnchor(lopt.anchorBottom || 0, this.measuredHeight, true);
+
                 widget.measure(
-                    anchorRight - anchorLeft,
-                    anchorBottom - anchorTop,
-                    lopt.width === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST,
-                    lopt.height === LayoutOptions.FILL_PARENT ? MeasureMode.EXACTLY : MeasureMode.AT_MOST,
+                    lopt.isWidthPredefined ? lopt.width : anchorRight - anchorLeft,
+                    lopt.isHeightPredefined ? lopt.height : anchorBottom - anchorTop,
+                    lopt.width === 0 || lopt.isWidthPredefined ? MeasureMode.EXACTLY : MeasureMode.AT_MOST,
+                    lopt.height === 0 || lopt.isHeightPredefined ? MeasureMode.EXACTLY : MeasureMode.AT_MOST,
                 );
             }
         }
@@ -192,7 +184,7 @@ export class AnchorLayout implements ILayoutManager
      *
      * @param {number} anchor - anchor as given in layout options
      * @param {number} limit - parent's dimension
-     * @param {boolean} limitSubtract - true of right/bottom anchors, false for left/top
+     * @param {boolean} limitSubtract - true for right/bottom anchors, false for left/top
      */
     protected calculateAnchor(anchor: number, limit: number, limitSubtract: boolean): number
     {

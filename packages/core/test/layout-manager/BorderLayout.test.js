@@ -1,28 +1,35 @@
-const PUXI = require('../../lib/puxi-core.cjs');
+const {
+    WidgetGroup,
+    BorderLayout,
+    BorderLayoutOptions,
+    MeasureMode,
+} = require('../../lib/puxi-core.cjs');
 const { createMockWidget, createMockWidgetRectangle } = require('../createMockWidget');
+const { cloneWidgetSubtree } = require('../cloneWidgetSubtree');
 const expect = require('chai').expect;
 
 const {
     REGION_LEFT,
     REGION_BOTTOM,
-} = PUXI.BorderLayoutOptions;
+} = BorderLayoutOptions;
 
 describe('BorderLayout', () =>
 {
+    const mockReferenceLayout = new WidgetGroup().useLayout(new BorderLayout());
+
+    mockReferenceLayout.addChild(
+        createMockWidget().setLayoutOptions(
+            new BorderLayoutOptions({ width: 32, height: 96, region: REGION_LEFT })),
+        createMockWidget().setLayoutOptions(
+            new BorderLayoutOptions({ width: 96, height: 32, region: REGION_BOTTOM })),
+        createMockWidgetRectangle(128, 128));
+
     it('Does not downscale border widgets with pre-defined dimensions', () =>
     {
-        const mockLayout = new PUXI.BorderLayout();
-        const mockParent = new PUXI.WidgetGroup().useLayout(mockLayout);
+        const mockParent = cloneWidgetSubtree(mockReferenceLayout);
+        const [leftWidget, bottomWidget, centerWidget] = mockParent.widgetChildren;
 
-        const leftWidget = createMockWidget().setLayoutOptions(
-            new PUXI.BorderLayoutOptions({ width: 32, height: 96, region: REGION_LEFT }));
-        const bottomWidget = createMockWidget().setLayoutOptions(
-            new PUXI.BorderLayoutOptions({ width: 96, height: 32, region: REGION_BOTTOM }));
-        const centerWidget = createMockWidgetRectangle(128, 128);
-
-        mockParent.addChild(leftWidget, bottomWidget, centerWidget);
-
-        mockParent.measure(128 + 16, 128 + 16, PUXI.MeasureMode.AT_MOST, PUXI.MeasureMode.AT_MOST);
+        mockParent.measure(128 + 16, 128 + 16, MeasureMode.AT_MOST, MeasureMode.AT_MOST);
 
         expect(leftWidget.getMeasuredWidth()).to.equal(32);
         expect(leftWidget.getMeasuredHeight()).to.equal(96);
@@ -32,7 +39,7 @@ describe('BorderLayout', () =>
         expect(bottomWidget.getMeasuredHeight()).to.equal(32);
         expect(centerWidget.getMeasuredHeight()).to.equal(128 - 16);
 
-        expect(mockLayout.measuredLeftWidth).to.equal(32);
-        expect(mockLayout.measuredBottomHeight).to.equal(32);
+        expect(mockParent.layoutMgr.measuredLeftWidth).to.equal(32);
+        expect(mockParent.layoutMgr.measuredBottomHeight).to.equal(32);
     });
 });

@@ -9,6 +9,8 @@ interface IAnchorLayoutParams
     anchorBottom?: number;
     horizontalAlign?: ALIGN;
     verticalAlign?: ALIGN;
+    width: number | string;
+    height: number | string;
 }
 
 /**
@@ -20,6 +22,8 @@ interface IAnchorLayoutParams
  * @property {number} anchorBottom - distance from parent's bottom insets to child's bottom edge
  * @property {PUXI.ALIGN} horizontalAlign - horizontal alignment of child in anchor region
  * @property {PUXI.ALIGN} verticalAlign - vertical alignment of child in anchor region
+ * @property {number | string} width - requested width of widget (default is `WRAP_CONTENT`)
+ * @property {number | string} height - requested height of widget (default is `WRAP_CONTENT`)
  */
 
 /**
@@ -37,11 +41,16 @@ interface IAnchorLayoutParams
  * });
  * ```
  *
- * You can specify how the widget should be aligned in the anchor region using the
+ * ### Intra-anchor region alignment
+ *
+ * You can specify how the widget should be aligned in the intra-anchor region using the
  * `horizontalAlign` and `verticalAlign` properties.
  *
- * The width & height of widgets must be `WRAP_CONTENT` or `FILL_PARENT`. Using the latter
- * would make the child fill the anchor region.
+ * ### Support for FILL_PARENT and percentage-of-parent dimensions
+ *
+ * Anchor layout does not support a width/height that is `LayoutOptions.FILL_PARENT`
+ * or a percentage of the parent's width/height. Instead, you can define anchors that
+ * result in the equivalent behaviour.
  *
  * @memberof PUXI
  * @extends PUXI.LayoutOptions
@@ -59,7 +68,7 @@ export class AnchorLayoutOptions extends LayoutOptions
 
     constructor(options: IAnchorLayoutParams)
     {
-        super(LayoutOptions.WRAP_CONTENT, LayoutOptions.WRAP_CONTENT);
+        super(options.width, options.height);
 
         this.anchorLeft = options.anchorLeft || 0;
         this.anchorTop = options.anchorTop || 0;

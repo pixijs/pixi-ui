@@ -31,7 +31,7 @@ export class LayoutOptions
 
     public width: number;
     public height: number;
-    public markers: any;
+    public cache: any;
 
     private _marginLeft: number;
     private _marginTop: number;
@@ -42,7 +42,54 @@ export class LayoutOptions
      * @param {number}[width = LayoutOptions.WRAP_CONTENT]
      * @param {number}[height = LayoutOptions.WRAP_CONTENT]
      */
-    constructor(width = LayoutOptions.WRAP_CONTENT, height = LayoutOptions.WRAP_CONTENT)
+    constructor(width: number | string = LayoutOptions.WRAP_CONTENT, height: number | string = LayoutOptions.WRAP_CONTENT)
+    {
+        this.setWidth(width);
+        this.setHeight(height);
+
+        /**
+         * Used by the layout manager to cache calculations.
+         * @member {object}
+         */
+        this.cache = {};
+    }
+
+    /**
+     * Utility method to store width that converts strings to their number format.
+     *
+     * @param {number | string} val
+     * @example
+     * ```
+     * lopt.setWidth('68.7%');// 68.7% of parent's width
+     * lopt.setWidth('96px');// 96px
+     * lopt.setWidth(34);// 34px
+     * lopt.setWidth(.45);// 45% of parent's width
+     * ```
+     */
+    setWidth(val: number | string): void
+    {
+        /**
+         * Preferred height of the widget in pixels. If its value is between -1 and 1, it
+         * is interpreted as a percentage of the parent's height.
+         * @member {number}
+         * @default {PUXI.LayoutOptions.WRAP_CONTENT}
+         */
+        this.width = LayoutOptions.parseDimen(val);
+    }
+
+    /**
+     * Utility method to store height that converts strings to their number format.
+     *
+     * @param {number | string} val
+     * @example
+     * ```
+     * lopt.setHeight('68.7%');// 68.7% of parent's height
+     * lopt.setHeight('96px');// 96px
+     * lopt.setHeight(34);// 34px
+     * lopt.setHeight(.45);// 45% of parent's height
+     * ```
+     */
+    setHeight(val: number | string): void
     {
         /**
          * Preferred width of the widget in pixels. If its value is between -1 and 1, it
@@ -50,17 +97,25 @@ export class LayoutOptions
          * @member {number}
          * @default {PUXI.LayoutOptions.WRAP_CONTENT}
          */
-        this.width = width;
+        this.height = LayoutOptions.parseDimen(val);
+    }
 
-        /**
-         * Preferred height of the widget in pixels. If its value is between -1 and 1, it
-         * is interpreted as a percentage of the parent's height.
-         * @member {number}
-         * @default {PUXI.LayoutOptions.WRAP_CONTENT}
-         */
-        this.height = height;
+    /**
+     * @member {boolean} - whether the specified width is a constant
+     *      (not a percentage, `WRAP_CONTENT`, or `FILL_PARENT`)
+     */
+    get isWidthPredefined(): boolean
+    {
+        return this.width > 1 && this.width <= LayoutOptions.MAX_DIMEN;
+    }
 
-        this.markers = {};
+    /**
+     * @member {boolean} - whether the specified height is a constant
+     *      (not a percentage, `WRAP_CONTENT`, or `FILL_PARENT`)
+     */
+    get isHeightPredefined(): boolean
+    {
+        return this.height > 1 && this.height <= LayoutOptions.MAX_DIMEN;
     }
 
     /**
@@ -119,11 +174,39 @@ export class LayoutOptions
         this._marginBottom = val;
     }
 
+    /**
+     * @param left
+     * @param top
+     * @param right
+     * @param bottom
+     */
     setMargin(left: number, top: number, right: number, bottom: number): void
     {
         this._marginLeft = left;
         this._marginTop = top;
         this._marginRight = right;
         this._marginBottom = bottom;
+    }
+
+    static parseDimen(val: number | string): number
+    {
+        if (typeof val === 'string')
+        {
+            if (val.endsWith('%'))
+            {
+                val = parseFloat(val.replace('%', '')) / 100;
+            }
+            else if (val.endsWith('px'))
+            {
+                val = parseFloat(val.replace('px', ''));
+            }
+
+            if (typeof val === 'string' || isNaN(val))
+            {
+                throw new Error('Width could not be parsed!');
+            }
+        }
+
+        return val;
     }
 }

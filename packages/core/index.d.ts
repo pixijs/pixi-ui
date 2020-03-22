@@ -32,48 +32,68 @@ export declare class AnchorLayout implements ILayoutManager {
     private measuredWidth;
     private measuredHeight;
     private host;
-    protected noPercents: boolean;
-    constructor();
     onAttach(host: WidgetGroup): void;
     onDetach(): void;
-    private measureChild;
-    measureStretch(lowerAnchor: number, upperAnchor: number, childDimen: number): number;
-    measureChildren(maxParentWidth: number, maxParentHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
-    onMeasure(maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
+    onLayout(): void;
+    onMeasure(widthLimit: number, heightLimit: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
     getMeasuredWidth(): number;
     getMeasuredHeight(): number;
-    onLayout(): void;
+    /**
+     * Calculates the actual value of the anchor, given the parent's dimension.
+     *
+     * @param {number} anchor - anchor as given in layout options
+     * @param {number} limit - parent's dimension
+     * @param {boolean} limitSubtract - true for right/bottom anchors, false for left/top
+     */
+    protected calculateAnchor(anchor: number, limit: number, limitSubtract: boolean): number;
+    /**
+     * Calculates the "reach" of a child widget, which is the minimum dimension of
+     * the parent required to fully fit the child.
+     *
+     * @param {number} startAnchor - left or top anchor as given in layout options
+     * @param {number} endAnchor - right or bottom anchor as given in layout options
+     * @param {number} dimen - measured dimension of the widget (width or height)
+     */
+    protected calculateReach(startAnchor: number, endAnchor: number, dimen: number): number;
 }
 
 /**
- * Anchored layout-options specify the left, top, right, and bottom offsets of a
- * widget in pixels. If an offset is between -1px and 1px, then it is interpreted
- * as a percentage of the parent's dimensions.
+ * @memberof PUXI
+ * @interface IAnchorLayoutParams
+ * @property {number} anchorLeft - distance from parent's left inset to child's left edge
+ * @property {number} anchorTop - distance from parent's top inset to child's top edge
+ * @property {number} anchorRight - distance from parent's right inset to child's right edge
+ * @property {number} anchorBottom - distance from parent's bottom insets to child's bottom edge
+ * @property {PUXI.ALIGN} horizontalAlign - horizontal alignment of child in anchor region
+ * @property {PUXI.ALIGN} verticalAlign - vertical alignment of child in anchor region
+ * @property {number | string} width - requested width of widget (default is `WRAP_CONTENT`)
+ * @property {number | string} height - requested height of widget (default is `WRAP_CONTENT`)
+ */
+/**
+ * Anchors the edge of a widget to defined offsets from the parent's insets.
  *
- * The following example will render a widget at 80% of the parent's width and
- * 60px height.
+ * The following example will render a widget at (10px, 15%) with a width extending
+ * to the parent's center and a height extending till 40px above the parent's bottom
+ * inset.
  * ```js
- * const widget: PUXI.Widget = new Widget();
- * const anchorPane: PUXI.Widget = new Widget();
- *
- * widget.layoutOptions = new PUXI.AnchoredLayoutOptions(
- *      .10,
- *      .90,
- *      20,
- *      80
- * );
- *
- * // Prevent child from requesting natural bounds.
- * widget.layoutOptions.width = 0;
- * widget.layoutOptions.height = 0;
+ * new PUXI.AnchoredLayoutOptions({
+ *      anchorLeft: 10,
+ *      anchorTop: .15,
+ *      anchorRight: .5,
+ *      anchorBottom: 40
+ * });
  * ```
  *
- * ### Intra-anchor region constraints
+ * ### Intra-anchor region alignment
  *
- * If the offsets given provide a region larger than the widget's dimensions, then
- * the widget will be aligned accordingly. However, if the width or height of the
- * child is set to 0, then that child will be scaled to fit in the entire region
- * in that dimension.
+ * You can specify how the widget should be aligned in the intra-anchor region using the
+ * `horizontalAlign` and `verticalAlign` properties.
+ *
+ * ### Support for FILL_PARENT and percentage-of-parent dimensions
+ *
+ * Anchor layout does not support a width/height that is `LayoutOptions.FILL_PARENT`
+ * or a percentage of the parent's width/height. Instead, you can define anchors that
+ * result in the equivalent behaviour.
  *
  * @memberof PUXI
  * @extends PUXI.LayoutOptions
@@ -86,7 +106,165 @@ export declare class AnchorLayoutOptions extends LayoutOptions {
     anchorBottom: number;
     horizontalAlign: ALIGN;
     verticalAlign: ALIGN;
-    constructor(anchorLeft: number, anchorTop: number, anchorRight: number, anchorBottom: number, horizontalAlign?: ALIGN, verticalAlign?: ALIGN);
+    constructor(options: IAnchorLayoutParams);
+}
+
+/**
+ * `PUXI.BorderLayout` is used in conjunction with `PUXI.BorderLayoutOptions`.
+ *
+ * This layout guarantees that the "center" region will always be in the center of
+ * the widget-group.
+ *
+ * WARNING: This layout may have some bugs in edge cases that haven't been reported.
+ *
+ * @memberof PUXI
+ * @class
+ * @implements PUXI.ILayoutManager
+ */
+export declare class BorderLayout implements ILayoutManager {
+    protected host: WidgetGroup;
+    protected leftWidgets: Widget[];
+    protected topWidgets: Widget[];
+    protected rightWidgets: Widget[];
+    protected bottomWidgets: Widget[];
+    protected centerWidgets: Widget[];
+    protected measuredLeftWidth: number;
+    protected measuredRightWidth: number;
+    protected measuredCenterWidth: number;
+    protected measuredWidth: number;
+    protected measuredTopHeight: number;
+    protected measuredBottomHeight: number;
+    protected measuredCenterHeight: number;
+    protected measuredHeight: number;
+    constructor();
+    onAttach(host: WidgetGroup): void;
+    onDetach(): void;
+    onLayout(): void;
+    layoutChildren(widgets: Widget[], regionX: number, regionY: number, regionWidth: number, regionHeight: number): void;
+    /**
+     * @param {number} maxWidth
+     * @param {number} maxHeight
+     * @param {PUXI.MeasureMode} widthMode
+     * @param {PUXI.MeasureMode} heightMode
+     * @override
+     */
+    onMeasure(maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
+    /**
+     * This measures the list of widgets given the constraints. The max width and
+     * height amongst the children is returned.
+     *
+     * @param {PUXI.Widget[]} list
+     * @param {number} maxWidth
+     * @param {number} maxHeight
+     * @param {PUXI.MeasureMode} widthMode
+     * @param {PUXI.MeasureMode} heightMode
+     * @returns {number[]} - [width, height, widthFixedLowerBound, heightFixedLowerBound] -
+     *    the max. width and height amongst children. Also, the minimum required width/height
+     *    for the region (as defined in layout-options).
+     */
+    protected measureChildren(list: Widget[], maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): number[];
+    /**
+     * Ensures all widgets in the list measured their dimensions below the region
+     * width & height. Widgets that are too large are remeasured in the those
+     * limits (using `MeasureMode.AT_MOST`).
+     *
+     * This will handle widgets that have "FILL_PARENT" width or height.
+     *
+     * @param {PUXI.Widget[]} list
+     * @param {number} measuredRegionWidth
+     * @param {number} measuredRegionHeight
+     */
+    protected fitChildren(list: Widget[], measuredRegionWidth: number, measuredRegionHeight: number): void;
+    /**
+     * Indexes the list of left, top, right, bottom, and center widget lists.
+     */
+    protected indexRegions(): void;
+    /**
+     * Clears the left, top, right, bottom, and center widget lists.
+     */
+    protected clearRegions(): void;
+    /**
+     * Zeros the measured dimensions.
+     */
+    protected clearMeasureCache(): void;
+    getMeasuredWidth(): number;
+    getMeasuredHeight(): number;
+}
+
+/**
+ * @memberof PUXI
+ * @interface IBorderLayoutParams
+ * @property {number} width
+ * @property {number} height
+ * @property {number} region
+ * @property {number} horizontalAlign
+ * @property {number} verticalAlign
+ */
+/**
+ * `PUXI.BorderLayoutOptions` defines a simple layout with five regions - the center and
+ * four regions along each border. The top and bottom regions span the full width of
+ * the parent widget-group. The left and right regions span the height of the layout
+ * minus the top and bottom region heights.
+ *
+ * ```
+ * ------------------------------------------------
+ * |                 TOP REGION                   |
+ * ------------------------------------------------
+ * |        |                            |        |
+ * |  LEFT  |          CENTER            | RIGHT  |
+ * | REGION |          REGION            | REGION |
+ * |        |                            |        |
+ * ------------------------------------------------
+ * |                BOTTOM REGION                 |
+ * ------------------------------------------------
+ * ```
+ *
+ * The height of the layout is measured as the sum of the heights of the top, center, and bottom
+ * regions. Similarly, the width of the layout is measured as the width of the left, center, and
+ * right regions.
+ *
+ * As of now, border layout doesn't support percent widths and heights.
+ *
+ * @memberof PUXI
+ * @class
+ * @extends PUXI.LayoutOptions
+ */
+export declare class BorderLayoutOptions extends LayoutOptions {
+    /**
+     * Positions a widget inside the left border of the layout.
+     * @static
+     * @member {number}
+     */
+    static REGION_LEFT: number;
+    /**
+     * Positions a widget below the top border of the layout.
+     * @static
+     * @member {number}
+     */
+    static REGION_TOP: number;
+    /**
+     * Positions a widget below the right border of the layout.
+     * @static
+     * @member {number}
+     */
+    static REGION_RIGHT: number;
+    /**
+     * Positions a widget below the top border of the layout.
+     * @static
+     * @member {number}
+     */
+    static REGION_BOTTOM: number;
+    /**
+     * Positions a widget in the center of the layout. The main content of the layout
+     * should be in the center.
+     * @static
+     * @member {number}
+     */
+    static REGION_CENTER: number;
+    region: number;
+    horizontalAlign: number;
+    verticalAlign: number;
+    constructor(options: IBorderLayoutParams);
 }
 
 /**
@@ -447,16 +625,25 @@ export declare class FastLayout implements ILayoutManager {
     private _measuredHeight;
     onAttach(host: WidgetGroup): void;
     onDetach(): void;
+    onLayout(): void;
     onMeasure(maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
     private getChildMeasureMode;
     private measureWidthReach;
     private measureHeightReach;
     private measureChildFillers;
-    onLayout(): void;
     getMeasuredWidth(): number;
     getMeasuredHeight(): number;
 }
 
+/**
+ * @memberof PUXI
+ * @interface
+ * @property {number} width
+ * @property {number} height
+ * @property {number} x
+ * @property {number} y
+ * @property {PIXI.Point} anchor
+ */
 /**
  * `PUXI.FastLayoutOptions` is an extension to `PUXI.LayoutOptions` that also
  * defines the x & y coordinates. It is accepted by the stage and `PUXI.FastLayout`.
@@ -474,7 +661,7 @@ export declare class FastLayoutOptions extends LayoutOptions {
     x: number;
     y: number;
     anchor: PIXI.Point;
-    constructor(width: number, height: number, x?: number, y?: number, anchor?: PIXI.Point);
+    constructor(options: IFastLayoutParams);
 }
 
 /**
@@ -604,6 +791,25 @@ export declare const Helpers: {
     hexToRgb(hex: any): any;
 };
 
+declare interface IAnchorLayoutParams {
+    anchorLeft?: number;
+    anchorTop?: number;
+    anchorRight?: number;
+    anchorBottom?: number;
+    horizontalAlign?: ALIGN;
+    verticalAlign?: ALIGN;
+    width: number | string;
+    height: number | string;
+}
+
+export declare interface IBorderLayoutParams {
+    width?: number;
+    height?: number;
+    region?: number;
+    horizontalAlign?: ALIGN;
+    verticalAlign?: ALIGN;
+}
+
 /**
  * @memberof PUXI
  * @interface
@@ -625,6 +831,14 @@ declare interface ICheckBoxOptions extends IFocusableOptions {
     value?: string;
     tabIndex?: number;
     tabGroup?: number;
+}
+
+export declare interface IFastLayoutParams {
+    width?: number | string;
+    height?: number | string;
+    x?: number;
+    y?: number;
+    anchor?: PIXI.Point;
 }
 
 /**
@@ -680,11 +894,11 @@ export declare class InteractiveGroup extends WidgetGroup {
     layout(l: number, t: number, r: number, b: number, dirty: boolean): void;
 }
 
-declare interface IScrollBarOptions {
-    track: Sprite;
-    handle: Sprite;
+declare interface IScrollBarOptions extends ISliderOptions {
+    track?: Sprite;
+    handle?: Sprite;
     scrollingContainer: ScrollWidget;
-    vertical?: boolean;
+    orientation: number;
     autohide?: boolean;
 }
 
@@ -701,13 +915,14 @@ declare interface IScrollingContainerOptions {
     expandMask?: number;
     overflowY?: number;
     overflowX?: number;
+    scrollBars?: boolean;
 }
 
-declare interface ISliderOptions {
-    track?: Sprite;
-    handle?: Sprite;
+export declare interface ISliderOptions {
+    track?: PIXI.Container | Widget;
+    handle?: PIXI.Container | Widget;
     fill?: Sprite;
-    vertical?: boolean;
+    orientation?: number;
     value?: number;
     minValue?: number;
     maxValue?: number;
@@ -771,7 +986,7 @@ export declare class LayoutOptions {
     static DEFAULT: LayoutOptions;
     width: number;
     height: number;
-    markers: any;
+    cache: any;
     private _marginLeft;
     private _marginTop;
     private _marginRight;
@@ -780,7 +995,43 @@ export declare class LayoutOptions {
      * @param {number}[width = LayoutOptions.WRAP_CONTENT]
      * @param {number}[height = LayoutOptions.WRAP_CONTENT]
      */
-    constructor(width?: number, height?: number);
+    constructor(width?: number | string, height?: number | string);
+    /**
+     * Utility method to store width that converts strings to their number format.
+     *
+     * @param {number | string} val
+     * @example
+     * ```
+     * lopt.setWidth('68.7%');// 68.7% of parent's width
+     * lopt.setWidth('96px');// 96px
+     * lopt.setWidth(34);// 34px
+     * lopt.setWidth(.45);// 45% of parent's width
+     * ```
+     */
+    setWidth(val: number | string): void;
+    /**
+     * Utility method to store height that converts strings to their number format.
+     *
+     * @param {number | string} val
+     * @example
+     * ```
+     * lopt.setHeight('68.7%');// 68.7% of parent's height
+     * lopt.setHeight('96px');// 96px
+     * lopt.setHeight(34);// 34px
+     * lopt.setHeight(.45);// 45% of parent's height
+     * ```
+     */
+    setHeight(val: number | string): void;
+    /**
+     * @member {boolean} - whether the specified width is a constant
+     *      (not a percentage, `WRAP_CONTENT`, or `FILL_PARENT`)
+     */
+    get isWidthPredefined(): boolean;
+    /**
+     * @member {boolean} - whether the specified height is a constant
+     *      (not a percentage, `WRAP_CONTENT`, or `FILL_PARENT`)
+     */
+    get isHeightPredefined(): boolean;
     /**
      * The left margin in pixels of the widget.
      * @member {number}
@@ -809,7 +1060,14 @@ export declare class LayoutOptions {
      */
     get marginBottom(): number;
     set marginBottom(val: number);
+    /**
+     * @param left
+     * @param top
+     * @param right
+     * @param bottom
+     */
     setMargin(left: number, top: number, right: number, bottom: number): void;
+    static parseDimen(val: number | string): number;
 }
 
 /**
@@ -853,8 +1111,15 @@ export declare class ScrollBar extends Slider {
     _hidden: boolean;
     constructor(options: IScrollBarOptions);
     initialize(): void;
-    alignToContainer(): void;
     toggleHidden(hidden: boolean): void;
+    /**
+     * @static
+     */
+    static DEFAULT_TRACK: PIXI.Graphics;
+    /**
+     * @static
+     */
+    static DEFAULT_HANDLE: PIXI.Graphics;
 }
 
 /**
@@ -886,7 +1151,7 @@ export declare class ScrollManager extends EventManager {
 
 /**
  * `ScrollWidget` masks its contents to its layout bounds and translates
- * its children when scrolling.
+ * its children when scrolling. It uses the anchor layout.
  *
  * @memberof PUXI
  * @class
@@ -894,7 +1159,7 @@ export declare class ScrollManager extends EventManager {
  */
 export declare class ScrollWidget extends InteractiveGroup {
     private mask;
-    private innerContainer;
+    readonly innerContainer: WidgetGroup;
     private innerBounds;
     scrollX: boolean;
     scrollY: boolean;
@@ -906,15 +1171,15 @@ export declare class ScrollWidget extends InteractiveGroup {
     overflowX: number;
     animating: boolean;
     scrolling: boolean;
-    _scrollBars: any[];
-    private boundCached;
-    private lastWidth;
-    private lastHeight;
+    protected scrollBars: ScrollBar[];
     protected scrollPosition: PIXI.Point;
     protected scrollVelocity: PIXI.Point;
     protected targetPosition: PIXI.Point;
     protected lastPosition: PIXI.Point;
     protected stop: boolean;
+    private boundCached;
+    private lastWidth;
+    private lastHeight;
     /**
      * @param {PUXI.IScrollingContainerOptions} options
      * @param [options.scrollX=false] {Boolean} Enable horizontal scrolling
@@ -936,10 +1201,21 @@ export declare class ScrollWidget extends InteractiveGroup {
      */
     update(): void;
     /**
+     * Adds this scrollbar. It is expected that the given scrollbar has been
+     * given proper border-layout options.
+     *
+     * @todo This only works for TOP, LEFT scrollbars as BOTTOM, RIGHT are occupied.
+     * @param {PUXI.ScrollBar} scrollBar
+     */
+    addScrollBar(scrollBar: ScrollBar): ScrollWidget;
+    /**
      * @param {PUXI.Widget[]} newChildren
      * @returns {ScrollWidget} this widget
      */
     addChild(...newChildren: Widget[]): Widget;
+    /**
+     * Updates the scroll bar values, and should be called when scrolled.
+     */
     updateScrollBars(): void;
     getInnerBounds(force?: boolean): PIXI.Rectangle;
     /**
@@ -947,6 +1223,12 @@ export declare class ScrollWidget extends InteractiveGroup {
      */
     initialize(): void;
     private initScrolling;
+    /**
+     * @param {string} direction - `'x'` or `'y'`
+     * @returns {number} a value between 0 and 1 indicating how scrolling
+     *      has occured in that direction (called percent position).
+     */
+    getPercentPosition(direction: 'x' | 'y'): number;
     forcePctPosition: (direction: string, pct: number) => void;
     focusPosition: (pos: PIXI.Point) => void;
     /**
@@ -1008,6 +1290,12 @@ export declare class SliceSprite extends Widget {
 }
 
 /**
+ * @memberof PUXI
+ * @interface ISliderOptions
+ * @property {PIXI.Container}[track]
+ * @property {PIXI.Container}[handle]
+ */
+/**
  * These options are used to configure a `PUXI.Slider`.
  *
  * @memberof PUXI
@@ -1023,26 +1311,29 @@ export declare class SliceSprite extends Widget {
  * @property {Function}[onValueChanging]
  */
 /**
- * An UI Slider, the default width/height is 90%
+ * A slider is a form of input to set a variable to a value in a continuous
+ * range. It cannot have its own children.
  *
  * @memberof PUXI
  * @class
  * @extends PUXI.Widget
  */
 export declare class Slider extends Widget {
-    protected _amt: number;
     protected _disabled: boolean;
-    track: Sprite;
-    handle: Sprite;
+    track: Widget;
+    handle: Widget;
     fill: Sprite;
-    _minValue: number;
-    _maxValue: number;
+    readonly orientation: number;
+    protected percentValue: number;
+    protected _minValue: number;
+    protected _maxValue: number;
+    private _localCursor;
     decimals: number;
     vertical: boolean;
     _lastChange: number;
     _lastChanging: number;
-    onValueChange: (number: any) => void;
-    onValueChanging: (number: any) => void;
+    onValueChange: (n: number) => void;
+    onValueChanging: (n: number) => void;
     /**
      * @param options {Object} Slider settings
      * @param options.track {(PIXI.UI.SliceSprite|PIXI.UI.Sprite)}  Any type of UIOBject, will be used for the slider track
@@ -1057,7 +1348,6 @@ export declare class Slider extends Widget {
      * @param [options.onValueChanging=null] {callback} Callback while the value is changing
      */
     constructor(options: ISliderOptions);
-    update(soft?: number): void;
     initialize(): void;
     get value(): number;
     set value(val: number);
@@ -1067,6 +1357,70 @@ export declare class Slider extends Widget {
     set maxValue(val: number);
     get disabled(): boolean;
     set disabled(val: boolean);
+    /**
+     * @protected
+     * @returns the amount of the freedom that handle has in physical units, i.e. pixels. This
+     *      is the width of the track minus the handle's size.
+     */
+    protected getPhysicalRange(): number;
+    /**
+     * @protected
+     * @param {PIXI.Point} cursor
+     * @returns the value of the slider if the handle's center were (globally)
+     *      positioned at the given point.
+     */
+    protected getValueAtPhysicalPosition(cursor: PIXI.Point): number;
+    /**
+     * Re-positions the handle. This should be called after `_value` has been changed.
+     */
+    protected layoutHandle(): void;
+    /**
+     * Slider measures itself using the track's natural dimensions in its non-oriented
+     * direction. The oriented direction will be the equal the range's size times
+     * the track's resolution.
+     *
+     * @param width
+     * @param height
+     * @param widthMode
+     * @param heightMode
+     */
+    onMeasure(width: number, height: number, widthMode: number, heightMode: number): void;
+    /**
+     * `Slider` lays the track to fill all of its width and height. The handle is aligned
+     * in the middle in the non-oriented direction.
+     *
+     * @param l
+     * @param t
+     * @param r
+     * @param b
+     * @param dirty
+     * @override
+     */
+    onLayout(l: number, t: number, r: number, b: number, dirty: boolean): void;
+    /**
+     * The default track for horizontally oriented sliders.
+     * @static
+     */
+    static DEFAULT_HORIZONTAL_TRACK: PIXI.Graphics;
+    /**
+     * The default track for vertically oriented sliders.
+     * @static
+     */
+    static DEFAULT_VERTICAL_TRACK: PIXI.Graphics;
+    /**
+     * @static
+     */
+    static DEFAULT_HANDLE: PIXI.Graphics;
+    /**
+     * Horizontal orientation
+     * @static
+     */
+    static HORIZONTAL: number;
+    /**
+     * Vertical orientation
+     * @static
+     */
+    static VERTICAL: number;
 }
 
 /**
@@ -1133,7 +1487,7 @@ export declare class Stage extends PIXI.Container {
      * @param {number} height - height of the stage
      */
     constructor(width: number, height: number);
-    protected measureAndLayout(): void;
+    measureAndLayout(): void;
     getBackground(): PIXI.Container;
     setBackground(bg: PIXI.Container): void;
     private update;
@@ -1374,11 +1728,11 @@ export declare class TilingSprite extends Widget {
  * @extends PIXI.utils.EventEmitter
  * @implements PUXI.IMeasurable
  */
-export declare abstract class Widget extends PIXI.utils.EventEmitter implements IMeasurable {
-    insetContainer: PIXI.Container;
-    contentContainer: PIXI.Container;
-    widgetChildren: Widget[];
-    stage: Stage;
+export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurable {
+    readonly insetContainer: PIXI.Container;
+    readonly contentContainer: PIXI.Container;
+    readonly widgetChildren: Widget[];
+    readonly stage: Stage;
     initialized: boolean;
     protected dragInitialized: boolean;
     protected dropInitialized: boolean;
@@ -1390,8 +1744,6 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
     _oldHeight: number;
     pixelPerfect: boolean;
     parent: Widget;
-    _parentWidth: number;
-    _parentHeight: number;
     layoutMeasure: Insets;
     layoutOptions: LayoutOptions;
     protected tint: number;
@@ -1408,6 +1760,7 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
     private _height;
     private _elevation;
     private _dropShadow;
+    private _layoutDirty;
     constructor();
     /**
      * Update method that is to be overriden. This is called before a `render()`
@@ -1415,7 +1768,7 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
      *
      * @private
      */
-    abstract update(): any;
+    update(): any;
     /**
      * The measured width that is used by the parent's layout manager to place this
      * widget.
@@ -1472,6 +1825,7 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
      * @param dirty
      * @protected
      */
+    onLayout(l: number, t?: number, r?: number, b?: number, dirty?: boolean): void;
     layout(l: number, t?: number, r?: number, b?: number, dirty?: boolean): void;
     /**
      * Use this to specify how you want to layout this widget w.r.t its parent.
@@ -1534,13 +1888,27 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
     /**
      * Layout width of this widget.
      * @member {number}
+     * @readonly
      */
     get width(): number;
     /**
      * Layout height of this widget.
      * @member {number}
+     * @readonly
      */
     get height(): number;
+    /**
+     * Layout width of this widget's content, which is the width minus horizontal padding.
+     * @member {number}
+     * @readonly
+     */
+    get contentWidth(): number;
+    /**
+     * Layout height of this widget's content, which is the height minus vertical padding.
+     * @member {number}
+     * @readonly
+     */
+    get contentHeight(): number;
     /**
      * Alpha of this widget & its contents.
      * @member {number}
@@ -1602,6 +1970,10 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
      */
     setElevation(val: number): Widget;
     /**
+     * Will trigger a full layout pass next animation frame.
+     */
+    requestLayout(): void;
+    /**
      * Adds the widgets as children of this one.
      *
      * @param {PUXI.Widget[]} widgets
@@ -1647,6 +2019,20 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
      */
     clearDroppable(): void;
     private initDroppable;
+    /**
+     * Creates a widget that holds the display-object as its content. If `content` is
+     * a `PUXI.Widget`, then it will be returned.
+     * @param {PIXI.Container | Widget} content
+     * @static
+     */
+    static fromContent(content: PIXI.Container | Widget): Widget;
+    /**
+     * Easy utility to resolve measured dimension.
+     * @param {number} natural - your widget's natural dimension
+     * @param {number} limit - width/height limit passed by parent
+     * @param {PUXI.MeasureMode} mode - measurement mode passed by parent
+     */
+    static resolveMeasuredDimen(natural: number, limit: number, mode: MeasureMode): number;
 }
 
 /**
@@ -1664,32 +2050,32 @@ export declare abstract class Widget extends PIXI.utils.EventEmitter implements 
  *
  * group.addChild(new PUXI.Button({ text: "Hey" })
  *  .setLayoutOptions(
- *      new PUXI.AnchorLayoutOptions(
- *             100,
- *             300,
- *             .4,
- *             500,
- *             PUXI.ALIGN.CENTER
- *      )
+ *      new PUXI.AnchorLayoutOptions({
+ *             anchorLeft: 100,
+ *             anchorTop: 300,
+ *             anchorRight: .4,
+ *             anchorBottom: 500,
+ *             horizontalAlign: PUXI.ALIGN.CENTER
+ *      })
  *  )
  * )
  * ```
  */
-export declare abstract class WidgetGroup extends Widget {
+export declare class WidgetGroup extends Widget {
     layoutMgr: ILayoutManager;
     /**
      * Will set the given layout-manager to be used for positioning child widgets.
      *
      * @param {PUXI.ILayoutManager} layoutMgr
      */
-    useLayout(layoutMgr: ILayoutManager): void;
+    useLayout(layoutMgr: ILayoutManager): WidgetGroup;
     /**
      * Sets the widget-recommended layout manager. By default (if not overriden by widget
      * group class), this is a fast-layout.
      */
     useDefaultLayout(): void;
-    measure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
-    layout(l: number, t: number, r: number, b: number, dirty?: boolean): void;
+    onMeasure(width: number, height: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
+    onLayout(l: number, t: number, r: number, b: number, dirty?: boolean): void;
 }
 
 export declare function wrapEase(easeInFunction: any, easeOutFunction: any, easeInOutFunction: any): {
