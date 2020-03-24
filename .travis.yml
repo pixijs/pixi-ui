@@ -1,0 +1,22 @@
+language: node_js
+
+services:
+    - xvfb
+
+node_js:
+    - "10"
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+env:
+  - CXX=g++-4.8
+
+install:
+    - npm install
+    - npm install codecov -g
+
+script:
+  - npm run build:prod
+  - npm run test
