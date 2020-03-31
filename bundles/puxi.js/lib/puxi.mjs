@@ -1,6 +1,6 @@
 /*!
- * puxi.js - v0.0.0
- * Compiled Tue, 31 Mar 2020 18:05:32 UTC
+ * puxi.js - v0.0.2
+ * Compiled Tue, 31 Mar 2020 18:20:30 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -10,8 +10,8 @@ import { Point, utils, Container, BLEND_MODES, Graphics, Rectangle, Text, TextSt
 import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 
 /*!
- * @puxi/core - v1.0.0
- * Compiled Tue, 31 Mar 2020 18:05:32 UTC
+ * @puxi/core - v0.0.2
+ * Compiled Tue, 31 Mar 2020 18:20:30 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5742,8 +5742,8 @@ class Ticker extends utils.EventEmitter {
 Ticker.shared = new Ticker(true);
 
 /*!
- * @puxi/tween - v1.0.0
- * Compiled Tue, 31 Mar 2020 18:05:32 UTC
+ * @puxi/tween - v0.0.2
+ * Compiled Tue, 31 Mar 2020 18:20:30 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
