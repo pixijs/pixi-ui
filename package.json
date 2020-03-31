@@ -21,7 +21,7 @@
     "compile:prod": "cross-env NODE_ENV=production rollup -c",
     "compile:example": "npm run compile && cp bundles/puxi.js/dist/puxi.js example/puxi.js && cp bundles/puxi.js/dist/puxi.js.map example/puxi.js.map",
     "docs": "rm -rf ./dist/docs/* && jsdoc -c jsdoc.conf.json -R README.md;",
-    "prepublishOnly": "npm run bundle && npm run docs",
+    "prepublishOnly": "npm run build && npm run docs",
     "test": "mocha -r jsdom-global/register --exit",
     "predocs-live": "npm run compile && npm run docs",
     "docs-live": "gh-pages -d dist/docs"

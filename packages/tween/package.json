@@ -54,5 +54,6 @@
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-terser": "^5.3.0"
-  }
+  },
+  "gitHead": "6ab24342ae81937b7d504c52d956f866f24de2e6"
 }
