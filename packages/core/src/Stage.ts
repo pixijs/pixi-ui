@@ -213,51 +213,13 @@ export class Stage extends PIXI.Container
 
     resize(width?: number, height?: number): void
     {
-        if (!isNaN(height)) this.__height = height;
-        if (!isNaN(width)) this.__width = width;
-
-        if (this.minWidth || this.minHeight)
-        {
-            let rx = 1;
-            let ry = 1;
-
-            if (width && width < this.minWidth)
-            {
-                rx = this.minWidth / width;
-            }
-
-            if (height && height < this.minHeight)
-            {
-                ry = this.minHeight / height;
-            }
-
-            if (rx > ry && rx > 1)
-            {
-                this.scale.set(1 / rx);
-                this.__height *= rx;
-                this.__width *= rx;
-            }
-            else if (ry > 1)
-            {
-                this.scale.set(1 / ry);
-                this.__width *= ry;
-                this.__height *= ry;
-            }
-            else if (this.scale.x !== 1)
-            {
-                this.scale.set(1);
-            }
-        }
+        this.width = width;
+        this.height = height;
 
         if (this.hitArea)
         {
-            this.hitArea.width = this.__width;
-            this.hitArea.height = this.__height;
-        }
-
-        for (let i = 0; i < this.widgetChildren.length; i++)
-        {
-            this.widgetChildren[i].updatesettings(true, false);
+            (this.hitArea as PIXI.Rectangle).width = this.__width;
+            (this.hitArea as PIXI.Rectangle).height = this.__height;
         }
 
         this.measureAndLayout();

@@ -1,6 +1,6 @@
 /*!
  * puxi.js - v0.0.0
- * Compiled Sun, 22 Mar 2020 22:05:27 UTC
+ * Compiled Tue, 31 Mar 2020 18:05:32 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,7 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
 
     /*!
      * @puxi/core - v1.0.0
-     * Compiled Sun, 22 Mar 2020 22:05:27 UTC
+     * Compiled Tue, 31 Mar 2020 18:05:32 UTC
      *
      * @puxi/core is licensed under the MIT License.
      * http://www.opensource.org/licenses/mit-license
@@ -4787,39 +4787,11 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
             this.measureAndLayout();
         }
         resize(width, height) {
-            if (!isNaN(height))
-                this.__height = height;
-            if (!isNaN(width))
-                this.__width = width;
-            if (this.minWidth || this.minHeight) {
-                let rx = 1;
-                let ry = 1;
-                if (width && width < this.minWidth) {
-                    rx = this.minWidth / width;
-                }
-                if (height && height < this.minHeight) {
-                    ry = this.minHeight / height;
-                }
-                if (rx > ry && rx > 1) {
-                    this.scale.set(1 / rx);
-                    this.__height *= rx;
-                    this.__width *= rx;
-                }
-                else if (ry > 1) {
-                    this.scale.set(1 / ry);
-                    this.__width *= ry;
-                    this.__height *= ry;
-                }
-                else if (this.scale.x !== 1) {
-                    this.scale.set(1);
-                }
-            }
+            this.width = width;
+            this.height = height;
             if (this.hitArea) {
                 this.hitArea.width = this.__width;
                 this.hitArea.height = this.__height;
-            }
-            for (let i = 0; i < this.widgetChildren.length; i++) {
-                this.widgetChildren[i].updatesettings(true, false);
             }
             this.measureAndLayout();
         }
@@ -5771,7 +5743,7 @@ var puxi_js = (function (exports, pixi_js, filterDropShadow) {
 
     /*!
      * @puxi/tween - v1.0.0
-     * Compiled Sun, 22 Mar 2020 22:05:27 UTC
+     * Compiled Tue, 31 Mar 2020 18:05:32 UTC
      *
      * @puxi/tween is licensed under the MIT License.
      * http://www.opensource.org/licenses/mit-license
