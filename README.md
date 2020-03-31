@@ -1,3 +1,5 @@
+[![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lerna.js.org/)
+
 # PuxiJS
 
 This project was built to provide an user experience module that can be integrated with your
