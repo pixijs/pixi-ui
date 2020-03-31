@@ -1,6 +1,6 @@
 {
   "name": "puxi.js",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Full features of PuxiJS in one bundle!",
   "keywords": [
     "puxijs",
@@ -37,8 +37,8 @@
     "url": "https://github.com/pixijs/pixi-ui/issues"
   },
   "dependencies": {
-    "@puxi/core": "^1.0.0",
-    "@puxi/tween": "^1.0.0"
+    "@puxi/core": "^0.0.1",
+    "@puxi/tween": "^0.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^7.1.1",

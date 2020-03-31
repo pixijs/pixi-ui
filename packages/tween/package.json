@@ -1,6 +1,6 @@
 {
   "name": "@puxi/tween",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "PixiJS tweening library",
   "keywords": [
     "tween",
