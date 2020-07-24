@@ -1,6 +1,6 @@
 /*!
- * puxi.js - v0.0.3
- * Compiled Tue, 31 Mar 2020 18:25:08 UTC
+ * puxi.js - v0.0.5
+ * Compiled Fri, 24 Jul 2020 21:42:33 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,8 +14,8 @@ var pixi_js = require('pixi.js');
 var filterDropShadow = require('@pixi/filter-drop-shadow');
 
 /*!
- * @puxi/core - v0.0.3
- * Compiled Tue, 31 Mar 2020 18:25:08 UTC
+ * @puxi/core - v0.0.4
+ * Compiled Fri, 24 Jul 2020 21:42:33 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5746,8 +5746,8 @@ class Ticker extends pixi_js.utils.EventEmitter {
 Ticker.shared = new Ticker(true);
 
 /*!
- * @puxi/tween - v0.0.3
- * Compiled Tue, 31 Mar 2020 18:25:08 UTC
+ * @puxi/tween - v0.0.4
+ * Compiled Fri, 24 Jul 2020 21:42:33 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license

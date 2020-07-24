@@ -1,6 +1,6 @@
 /*!
- * @puxi/core - v0.0.3
- * Compiled Tue, 31 Mar 2020 18:25:08 UTC
+ * @puxi/core - v0.0.4
+ * Compiled Fri, 24 Jul 2020 21:42:33 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5767,4 +5767,4 @@ exports.Widget = Widget;
 exports.WidgetGroup = WidgetGroup;
 exports.create = create;
 exports.wrapEase = wrapEase;
-//# sourceMappingURL=puxi-core.cjs.map
+//# sourceMappingURL=puxi-core.js.map

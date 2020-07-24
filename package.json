@@ -34,6 +34,9 @@
     "package.json",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "glslify": "^5.0.2"
   },
