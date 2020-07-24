@@ -1,6 +1,6 @@
 {
   "name": "@puxi/kit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "GUI widget library for PuxiJS!",
   "keywords": [
     "puxi.js",
