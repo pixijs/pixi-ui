@@ -48,16 +48,20 @@
     "canvas": "^2.6.1",
     "jest": "^25.1.0",
     "jsdoc": "^3.6.3",
-    "pixi.js": "^5.2.1",
+    "pixi.js": "^5.3.1",
     "rollup": "^2.0.6",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-builtins": "^2.1.2",
-    "rollup-plugin-terser": "^5.3.0"
+    "rollup-plugin-terser": "^5.3.0",
+    "@pixi/interaction": "^5.3.0"
   },
   "dependencies": {
     "@pixi/filter-drop-shadow": "^3.1.1",
     "@pixi/jsdoc-template": "^2.5.1",
     "@puxi/tween": "^1.0.1"
   },
-  "gitHead": "0fe217a770423ae83441980ce2ddaea64cadea12"
+  "peerDependencies": {
+    "@pixi/interaction": "^5.3.0"
+  },
+  "gitHead": "e71ae86364f7b5f7cd4411b00292ba7a3ebd73db"
 }

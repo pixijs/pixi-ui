@@ -39,3 +39,5 @@ export class Sprite extends Widget
     }
 }
 
+export type ImageWidget = Sprite;
+export const ImageWidget = Sprite;

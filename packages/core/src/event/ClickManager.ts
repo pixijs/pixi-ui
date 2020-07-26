@@ -14,10 +14,10 @@ import { EventManager } from './EventManager';
  */
 export class ClickManager extends EventManager
 {
-    onHover: (event: PIXI.interaction.InteractionEvent, over: boolean) => void;
-    onPress: (event: PIXI.interaction.InteractionEvent, isPressed: boolean) => void;
-    onClick: (event: PIXI.interaction.InteractionMouseEvents) => void;
-    onMove: (event: PIXI.interaction.InteractionEvent) => void;
+    onHover: (event: PIXI.InteractionEvent, over: boolean) => void;
+    onPress: (event: PIXI.InteractionEvent, isPressed: boolean) => void;
+    onClick: (event: PIXI.InteractionMouseEvents) => void;
+    onMove: (event: PIXI.InteractionEvent) => void;
 
     protected _rightMouseButton: boolean;
     protected _includeHover: boolean;

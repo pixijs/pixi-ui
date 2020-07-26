@@ -7,6 +7,18 @@ import { MeasureMode, IMeasurable } from './IMeasurable';
 import { Stage } from './Stage';
 import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 import { EventBroker } from './event';
+import { Style } from './Style';
+
+const PADDING_PROPERTIES = ['paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom'];
+
+const PADDING_AXIS_PROPERTIES = ['paddingHorizontal', 'paddingVertical'];
+
+export const TEXT_STYLE_PROPERTIES = [
+    'fontFamily',
+    'fontSize',
+    'fontWeight',
+    'letterSpacing',
+];
 
 /**
  * A widget is a user interface control that renders content inside its prescribed
@@ -19,6 +31,11 @@ import { EventBroker } from './event';
  */
 export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 {
+    /**
+     * The minimum delay between two clicks to not consider them as a double-click.
+     */
+    public static CLICK_DELAY = 300;
+
     public readonly insetContainer: PIXI.Container;
     public readonly contentContainer: PIXI.Container;
     public readonly widgetChildren: Widget[];
@@ -57,8 +74,11 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
     private _height: number;
     private _elevation: number;
     private _dropShadow: DropShadowFilter;
-
     private _layoutDirty: boolean;
+
+    private singleClickTimeout: NodeJS.Timeout;
+    private style: Style;
+    private styleID: number;
 
     constructor()
     {
@@ -121,6 +141,18 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 
         this.draggable = false;
         this.droppable = false;
+
+        this.singleClickTimeout = null;
+        this.style = null;
+        this.styleID = -1;
+
+        // Use a separate callback function to allow this.on* methods to be reassigned.
+        this.insetContainer.on('pointerdown', (e: PIXI.InteractionEvent) => { this.onPointerPress(e); });
+        this.insetContainer.on('pointermove', (e: PIXI.InteractionEvent) => { this.onPointerMove(e); });
+        this.insetContainer.on('pointerup', (e: PIXI.InteractionEvent) => { this.onPointerRelease(e); });
+        this.insetContainer.on('pointerover', (e: PIXI.InteractionEvent) => { this.onPointerEnter(e); });
+        this.insetContainer.on('pointerout', (e: PIXI.InteractionEvent) => { this.onPointerExit(e); });
+        this.insetContainer.on('rightclick', (e: PIXI.InteractionEvent) => { this.onRightClick(e); });
     }
 
     /**
@@ -141,6 +173,12 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
                     this.stage.measureAndLayout();
                 }
             }, 0);
+        }
+
+        if (this.style && this.styleID !== this.style.dirtyID)
+        {
+            this.onStyleChange(this.style);
+            this.styleID = this.style.dirtyID;
         }
     }
 
@@ -299,6 +337,149 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
         this.layoutOptions = lopt;
 
         return this;
+    }
+
+    /**
+     * This is invoked when a style is applied on the widget. If you override it, you must pass through the superclass
+     * implementation.
+     *
+     * @param style
+     */
+    protected onStyleChange(style: Style): void
+    {
+        const styleData = style.getProperties(
+            'backgroundColor',
+            'background',
+            'padding',
+            'paddingHorizontal',
+            'paddingVertical',
+            'paddingLeft',
+            'paddingTop',
+            'paddingRight',
+            'paddingBottom',
+        );
+
+        // Set background of widget
+        if (styleData.background)
+        {
+            this.setBackground(styleData.background);
+        }
+        else if (typeof styleData.backgroundColor !== 'undefined')
+        {
+            this.setBackground(styleData.backgroundColor);
+        }
+
+        // Set _paddingLeft, _paddingTop, _paddingRight, _paddingBottom
+        PADDING_PROPERTIES.forEach((propName, i) =>
+        {
+            if (typeof styleData[propName] === 'number')
+            {
+                this[`_${propName}`] = styleData[propName];
+            }
+            else if (typeof styleData[PADDING_AXIS_PROPERTIES[i % 2]] === 'number')
+            {
+                this[`_${propName}`] = styleData[PADDING_AXIS_PROPERTIES[i % 2]];
+            }
+            else if (typeof styleData.padding === 'number')
+            {
+                this[`_${propName}`] = styleData.padding;
+            }
+        });
+
+        this.dirty = true;
+    }
+
+    /**
+     * Handles the pointer-entered event.
+     *
+     * If you override this method, you must call through to the superclass implementation.
+     *
+     * @param e - the triggering interaction event
+     */
+    onPointerEnter(e: PIXI.InteractionEvent): void
+    {
+        this.onHoverChange(e, true);
+    }
+
+    /**
+     * Handles the pointer-exited event.
+     *
+     * If you override this method, you must call through to the superclass implementation.
+     *
+     * @param e
+     */
+    onPointerExit(e: PIXI.InteractionEvent): void
+    {
+        this.onHoverChange(e, false);
+    }
+
+    /**
+     * Handles the pointer-down event. If you override this method, you must call through to the superclass
+     * implementation.
+     */
+    onPointerPress(e: PIXI.InteractionEvent): void
+    {
+        return;
+    }
+
+    /**
+     * Handles the pointer-move event. If you override this method, you must call through to the superclass
+     * implementation.
+     */
+    onPointerMove(e: PIXI.InteractionEvent): void
+    {
+        return;
+    }
+
+    onPointerRelease(e: PIXI.InteractionEvent): void
+    {
+        if (!this.singleClickTimeout)
+        {
+            // Invoke onClick after ~300ms only if it isn't a double-click.
+            this.singleClickTimeout = setTimeout(() =>
+            {
+                this.singleClickTimeout = null;
+            }, Widget.CLICK_DELAY);
+
+            this.onClick(e);
+        }
+        else
+        {
+            clearTimeout(this.singleClickTimeout);
+
+            this.singleClickTimeout = null;
+
+            // Invoke onDoubleClick after the onPointerPress handler.
+            setTimeout(() => { this.onDoubleClick(e); }, 0);
+        }
+
+        return;
+    }
+
+    /**
+     * Event handler for change in the hover state.
+     *
+     * @param e
+     * @param hover
+     */
+    onHoverChange(e: PIXI.InteractionEvent, hover: boolean): void
+    {
+        return;
+    }
+
+    onClick(e: PIXI.InteractionEvent): void
+    {
+        return;
+    }
+
+    onDoubleClick(e: PIXI.InteractionEvent): void
+    {
+        return;
+    }
+
+    onRightClick(e: PIXI.InteractionEvent): void
+    {
+        return;
     }
 
     /**
@@ -628,6 +809,19 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
     }
 
     /**
+     * Set the style applied on this widget. To unset a style, simply pass {@code null}.
+     *
+     * @param style
+     */
+    setStyle(style?: Style): this
+    {
+        this.style = style;
+        this.styleID = -1;
+
+        return this;
+    }
+
+    /**
      * Will trigger a full layout pass next animation frame.
      */
     requestLayout(): void
@@ -757,7 +951,7 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
         const dnd: DragManager = this.eventBroker.dnd as DragManager;
         const { insetContainer } = this;
 
-        dnd.onDragStart = (e: PIXI.interaction.InteractionEvent): void =>
+        dnd.onDragStart = (e: PIXI.InteractionEvent): void =>
         {
             const added = DragDropController.add(this, e);
 
@@ -771,7 +965,7 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
             }
         };
 
-        dnd.onDragMove = (e: PIXI.interaction.InteractionEvent, offset: PIXI.Point): void =>
+        dnd.onDragMove = (e: PIXI.InteractionEvent, offset: PIXI.Point): void =>
         {
             if (this.isDragging)
             {
@@ -784,7 +978,7 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
             }
         };
 
-        dnd.onDragEnd = (e: PIXI.interaction.InteractionEvent): void =>
+        dnd.onDragEnd = (e: PIXI.InteractionEvent): void =>
         {
             if (this.isDragging)
             {

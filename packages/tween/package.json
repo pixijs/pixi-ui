@@ -58,5 +58,5 @@
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-terser": "^5.3.0"
   },
-  "gitHead": "0fe217a770423ae83441980ce2ddaea64cadea12"
+  "gitHead": "e71ae86364f7b5f7cd4411b00292ba7a3ebd73db"
 }

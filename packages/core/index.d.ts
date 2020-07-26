@@ -1,6 +1,7 @@
 /// <reference types="node" />
 /// <reference types="pixi.js" />
 import * as PIXI from 'pixi.js';
+import { Texture } from '@pixi/core';
 
 /**
  * Alignments supported by layout managers in PuxiJS core.
@@ -287,7 +288,8 @@ export declare class Button extends FocusableWidget {
      * @param [options.height=options.background.height] {Number|String} height
      */
     constructor(options: IButtonOptions);
-    private setupClick;
+    onClick(e: PIXI.InteractionEvent): void;
+    onDoubleClick(e: PIXI.InteractionEvent): void;
     update(): void;
     initialize(): void;
     /**
@@ -410,10 +412,10 @@ declare type CheckGroup = string;
  * @extends PUXI.EventManager
  */
 export declare class ClickManager extends EventManager {
-    onHover: (event: PIXI.interaction.InteractionEvent, over: boolean) => void;
-    onPress: (event: PIXI.interaction.InteractionEvent, isPressed: boolean) => void;
-    onClick: (event: PIXI.interaction.InteractionMouseEvents) => void;
-    onMove: (event: PIXI.interaction.InteractionEvent) => void;
+    onHover: (event: PIXI.InteractionEvent, over: boolean) => void;
+    onPress: (event: PIXI.InteractionEvent, isPressed: boolean) => void;
+    onClick: (event: PIXI.InteractionMouseEvents) => void;
+    onMove: (event: PIXI.InteractionEvent) => void;
     protected _rightMouseButton: boolean;
     protected _includeHover: boolean;
     protected _doubleClick: boolean;
@@ -453,8 +455,8 @@ export declare class ClickManager extends EventManager {
      * @override
      */
     stopEvent: () => void;
-    protected onMouseDownImpl: (event: PIXI.interaction.InteractionEvent) => void;
-    protected onMouseUpCommonImpl: (event: PIXI.interaction.InteractionEvent) => void;
+    protected onMouseDownImpl: (event: any) => void;
+    protected onMouseUpCommonImpl: (event: any) => void;
     protected onMouseUpImpl: (event: any) => void;
     protected onMouseUpOutsideImpl: (event: any) => void;
     protected onMouseOverImpl: (event: any) => void;
@@ -502,7 +504,7 @@ declare class DragManager extends EventManager {
     constructor(target: Widget);
     startEvent(): void;
     stopEvent(): void;
-    protected onDragStartImpl: (e: PIXI.interaction.InteractionEvent) => void;
+    protected onDragStartImpl: (e: any) => void;
     private onDragMoveImpl;
     private onDragEndImpl;
 }
@@ -781,6 +783,8 @@ declare class FocusController extends Controller<FocusableWidget> {
     onBack(): void;
 }
 
+declare type Gravity = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
+
 export declare const Helpers: {
     Lerp(start: number, stop: number, amt: number): number;
     Round(number: number, decimals: number): number;
@@ -816,7 +820,7 @@ export declare interface IBorderLayoutParams {
  * @extends PUXI.IFocusableOptions
  * @property {PUXI.TextWidget | string} text
  */
-declare interface IButtonOptions extends IFocusableOptions {
+export declare interface IButtonOptions extends IFocusableOptions {
     background?: PIXI.Container;
     text?: TextWidget | string;
     tabIndex?: number;
@@ -854,11 +858,24 @@ declare interface IFocusableOptions {
     tabGroup?: any;
 }
 
+export declare interface IImageButtonOptions extends IButtonOptions {
+    icon: string | Texture | ImageWidget;
+}
+
 export declare interface ILayoutManager extends IMeasurable {
     onAttach(host: WidgetGroup): void;
     onDetach(): void;
     onLayout(): void;
 }
+
+export declare class ImageButton extends Button {
+    iconWidget: ImageWidget;
+    constructor(options: IImageButtonOptions);
+}
+
+export declare type ImageWidget = Sprite;
+
+export declare const ImageWidget: typeof Sprite;
 
 export declare interface IMeasurable {
     onMeasure(maxWidth: number, maxHeight: number, widthMode: MeasureMode, heightMode: MeasureMode): any;
@@ -1068,6 +1085,21 @@ export declare class LayoutOptions {
      */
     setMargin(left: number, top: number, right: number, bottom: number): void;
     static parseDimen(val: number | string): number;
+}
+
+export declare class LinearLayout implements ILayoutManager {
+    private host;
+    private orientation;
+    private gravity;
+    private measuredWidth;
+    private measuredHeight;
+    constructor(orientation?: 'vertical' | 'horizontal', gravity?: Gravity);
+    onAttach(host: WidgetGroup): void;
+    onDetach(): void;
+    onLayout(): void;
+    onMeasure(widthLimit: number, heightLimit: number, widthMode: MeasureMode, heightMode: MeasureMode): void;
+    getMeasuredWidth(): number;
+    getMeasuredHeight(): number;
 }
 
 /**
@@ -1528,7 +1560,70 @@ export declare class Stage extends PIXI.Container {
     static FOCUS_CONTROLLER: typeof FocusController;
 }
 
+/**
+ * A StyleSheet provides a mechansim to style widgets in a shared fashion.
+ */
+export declare class Style extends PIXI.utils.EventEmitter {
+    dirtyID: number;
+    private data;
+    private extends;
+    private computedData;
+    private computedDirty;
+    constructor(data?: StyleData);
+    /**
+     * @param prop
+     */
+    getProperty(prop: string): any;
+    /**
+     * @param props
+     * @example
+     * style.getProperties('paddingLeft', 'paddingRight')
+     */
+    getProperties(...props: string[]): Record<string, any>;
+    /**
+     * @param prop
+     * @param value
+     */
+    setProperty(prop: string, value: any): void;
+    /**
+     * Extend the given style so that properties not set on this style are derived from it. If multiple styles
+     * are extended, the ones extended later have a higher priority.
+     *
+     * @param style
+     */
+    extend(style: Style): void;
+    /**
+     * Recomputes the style data
+     */
+    private compute;
+    private onParentSetProperty;
+    /**
+     * @param data
+     * @example
+     * Style.create({
+     *     backgroundColor: 0xabcdef,
+     *     padding: 8
+     * })
+     */
+    static create(data: StyleData): Style;
+}
+
+declare type StyleData = {
+    [id: string]: any;
+    backgroundColor?: string | number;
+    background?: PIXI.Container;
+    fontFamily?: string;
+    fontSize?: number;
+    paddingLeft?: number;
+    paddingTop?: number;
+    paddingRight?: number;
+    paddingBottom?: number;
+    padding?: number;
+};
+
 declare type TabGroup = string;
+
+export declare const TEXT_STYLE_PROPERTIES: string[];
 
 /**
  * An UI text object
@@ -1642,8 +1737,7 @@ export declare class TextInput extends FocusableWidget {
  * A static text widget. It cannot retain children.
  *
  * @memberof PUXI
- * @class
- * @extends PUXI.Widget
+ * @public
  */
 export declare class TextWidget extends Widget {
     private textDisplay;
@@ -1653,10 +1747,29 @@ export declare class TextWidget extends Widget {
      */
     constructor(text: string, textStyle: PIXI.TextStyle);
     update(): void;
+    /**
+     * @deprecated
+     */
     get value(): string;
     set value(val: string);
     get text(): string;
     set text(val: string);
+    /**
+     * Get the text style. You can set properties directly on the style.
+     */
+    getTextStyle(): PIXI.TextStyle;
+    /**
+     * Set the text style directly
+     *
+     * @param textStyle
+     * @example
+     * textWidget.setTextStyle({
+     *     fontFamily: 'Roboto',
+     *     fontSize: 14
+     * })
+     */
+    setTextStyle(textStyle: PIXI.TextStyle): this;
+    protected onStyleChange(style: Style): void;
 }
 
 /**
@@ -1729,6 +1842,10 @@ export declare class TilingSprite extends Widget {
  * @implements PUXI.IMeasurable
  */
 export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurable {
+    /**
+     * The minimum delay between two clicks to not consider them as a double-click.
+     */
+    static CLICK_DELAY: number;
     readonly insetContainer: PIXI.Container;
     readonly contentContainer: PIXI.Container;
     readonly widgetChildren: Widget[];
@@ -1761,6 +1878,9 @@ export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurab
     private _elevation;
     private _dropShadow;
     private _layoutDirty;
+    private singleClickTimeout;
+    private style;
+    private styleID;
     constructor();
     /**
      * Update method that is to be overriden. This is called before a `render()`
@@ -1836,6 +1956,50 @@ export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurab
      * @returns {Widget} this
      */
     setLayoutOptions(lopt: LayoutOptions): Widget;
+    /**
+     * This is invoked when a style is applied on the widget. If you override it, you must pass through the superclass
+     * implementation.
+     *
+     * @param style
+     */
+    protected onStyleChange(style: Style): void;
+    /**
+     * Handles the pointer-entered event.
+     *
+     * If you override this method, you must call through to the superclass implementation.
+     *
+     * @param e - the triggering interaction event
+     */
+    onPointerEnter(e: PIXI.InteractionEvent): void;
+    /**
+     * Handles the pointer-exited event.
+     *
+     * If you override this method, you must call through to the superclass implementation.
+     *
+     * @param e
+     */
+    onPointerExit(e: PIXI.InteractionEvent): void;
+    /**
+     * Handles the pointer-down event. If you override this method, you must call through to the superclass
+     * implementation.
+     */
+    onPointerPress(e: PIXI.InteractionEvent): void;
+    /**
+     * Handles the pointer-move event. If you override this method, you must call through to the superclass
+     * implementation.
+     */
+    onPointerMove(e: PIXI.InteractionEvent): void;
+    onPointerRelease(e: PIXI.InteractionEvent): void;
+    /**
+     * Event handler for change in the hover state.
+     *
+     * @param e
+     * @param hover
+     */
+    onHoverChange(e: PIXI.InteractionEvent, hover: boolean): void;
+    onClick(e: PIXI.InteractionEvent): void;
+    onDoubleClick(e: PIXI.InteractionEvent): void;
+    onRightClick(e: PIXI.InteractionEvent): void;
     /**
      * The event broker for this widget that holds all the event managers. This can
      * be used to start/stop clicks, drags, scrolls and configure how those events
@@ -1969,6 +2133,12 @@ export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurab
      * @param {number} val - elevation to use. 2px is good for most widgets.
      */
     setElevation(val: number): Widget;
+    /**
+     * Set the style applied on this widget. To unset a style, simply pass {@code null}.
+     *
+     * @param style
+     */
+    setStyle(style?: Style): this;
     /**
      * Will trigger a full layout pass next animation frame.
      */

@@ -1,4 +1,4 @@
-# `@puxi/core`
+# @puxi/core
 
 This module contains the base set UI display objects that PixiJS applications generally use.
 

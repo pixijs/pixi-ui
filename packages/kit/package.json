@@ -13,7 +13,9 @@
   "author": "Shukant Pal <shukantpal@outlook.com>",
   "homepage": "http://www.pixijs.com/bundles/kit",
   "license": "MIT",
-  "main": "lib/kit.js",
+  "main": "lib/puxi-kit.js",
+  "module": "lib/puxi-kit.mjs",
+  "bundle": "dist/puxi-kit.js",
   "directories": {
     "lib": "lib",
     "test": "__tests__"
@@ -33,5 +35,6 @@
   },
   "peerDependencies": {
     "@puxi/core": "^1.0.0"
-  }
+  },
+  "gitHead": "e71ae86364f7b5f7cd4411b00292ba7a3ebd73db"
 }

@@ -10,7 +10,7 @@ import { LayoutOptions, FastLayoutOptions } from './layout-options';
  * @extends PUXI.IFocusableOptions
  * @property {PUXI.TextWidget | string} text
  */
-interface IButtonOptions extends IFocusableOptions
+export interface IButtonOptions extends IFocusableOptions
 {
     background?: PIXI.Container;
     text?: TextWidget | string;
@@ -67,40 +67,20 @@ export class Button extends FocusableWidget
         }
 
         this.contentContainer.buttonMode = true;
-
-        this.setupClick();
     }
 
-    private setupClick(): void
+    onClick(e: PIXI.InteractionEvent): void
     {
-        const clickEvent: ClickManager = this.eventBroker.click as ClickManager;
+        super.onClick(e);
 
-        clickEvent.onHover = (e, over): void =>
-        {
-            this.isHover = over;
-            this.emit('hover', over);
-        };
+        this.emit('click', e);
+    }
 
-        clickEvent.onPress = (e, isPressed: boolean): void =>
-        {
-            if (isPressed)
-            {
-                this.focus();
-                e.data.originalEvent.preventDefault();
-            }
+    onDoubleClick(e: PIXI.InteractionEvent): void
+    {
+        super.onDoubleClick(e);
 
-            this.emit('press', isPressed);
-        };
-
-        clickEvent.onClick = (e): void =>
-        {
-            this.click();
-        };
-
-        this.click = (): void =>
-        {
-            this.emit('click');
-        };
+        this.emit('doubleclick', e);
     }
 
     update(): void
@@ -112,7 +92,6 @@ export class Button extends FocusableWidget
     initialize(): void
     {
         super.initialize();
-        this.setupClick();
 
         this.insetContainer.interactiveChildren = false;
         // lazy to make sure all children is initialized (trying to get the bedst hitArea possible)
