@@ -8,7 +8,7 @@ export class StyleSheet
     {
         const sheet = new StyleSheet();
 
-        for (const key in sheet)
+        for (const key in sheetData)
         {
             sheet[key] = Style.create(sheetData[key]);
         }

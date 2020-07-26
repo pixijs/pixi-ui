@@ -2,12 +2,14 @@ import { DragManager } from './event/DragManager';
 import { DragDropController } from './event/DragDropController';
 import * as PIXI from 'pixi.js';
 import { Insets } from './layout-options/Insets';
-import { LayoutOptions } from './layout-options';
+import { LayoutOptions, FastLayoutOptions } from './layout-options';
 import { MeasureMode, IMeasurable } from './IMeasurable';
 import { Stage } from './Stage';
 import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 import { EventBroker } from './event';
 import { Style } from './Style';
+import { Menu } from './Menu';
+import { PopupMenu } from './PopupMenu';
 
 const PADDING_PROPERTIES = ['paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom'];
 
@@ -79,6 +81,8 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
     private singleClickTimeout: NodeJS.Timeout;
     private style: Style;
     private styleID: number;
+    private contextMenu: Menu;
+    private contextPopup: PopupMenu;
 
     constructor()
     {
@@ -350,6 +354,7 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
         const styleData = style.getProperties(
             'backgroundColor',
             'background',
+            'elevation',
             'padding',
             'paddingHorizontal',
             'paddingVertical',
@@ -367,6 +372,12 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
         else if (typeof styleData.backgroundColor !== 'undefined')
         {
             this.setBackground(styleData.backgroundColor);
+        }
+
+        // Set elevation
+        if (typeof styleData.elevation !== 'undefined')
+        {
+            this.setElevation(styleData.elevation);
         }
 
         // Set _paddingLeft, _paddingTop, _paddingRight, _paddingBottom
@@ -479,6 +490,21 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
 
     onRightClick(e: PIXI.InteractionEvent): void
     {
+        console.log('RIGHT_CLICK');
+        e.data.originalEvent.preventDefault();
+
+        if (this.contextMenu)
+        {
+            if (!this.contextPopup)
+            {
+                //  this.contextPopup = new PopupMenu(this.contextMenu);
+            }
+
+            const location = e.data.getLocalPosition(this.stage);
+
+            //  this.openPopupMenu(location.x, location.y);
+        }
+
         return;
     }
 
@@ -754,6 +780,19 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
     }
 
     /**
+     * Set the context-menu to be shown on right-clicks.
+     *
+     * This feature is not released yet, i.e. does not work!
+     *
+     * @param menu
+     * @alpha
+     */
+    setContextMenu(menu: Menu): void
+    {
+        this.contextMenu = menu;
+    }
+
+    /**
      * @return {number} the elevation set on this widget
      */
     getElevation(): number
@@ -876,6 +915,22 @@ export class Widget extends PIXI.utils.EventEmitter implements IMeasurable
         }
 
         return this;
+    }
+
+    private openPopupMenu(x: number, y: number): void
+    {
+        const stage = this.stage;
+        const lopt = this.contextPopup.layoutOptions as FastLayoutOptions;
+
+        lopt.x = x;
+        lopt.y = y;
+
+        this.stage.addChild(this.contextPopup);
+    }
+
+    private closePopupMenu(): void
+    {
+        this.stage.removeChild(this.contextPopup);
     }
 
     /**

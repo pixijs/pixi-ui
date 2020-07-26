@@ -1,6 +1,6 @@
 /*!
  * puxi.js - v1.0.1
- * Compiled Sun, 26 Jul 2020 00:14:15 UTC
+ * Compiled Sun, 26 Jul 2020 02:14:25 UTC
  *
  * puxi.js is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,7 @@ import { DropShadowFilter } from '@pixi/filter-drop-shadow';
 
 /*!
  * @puxi/core - v1.0.1
- * Compiled Sun, 26 Jul 2020 00:14:15 UTC
+ * Compiled Sun, 26 Jul 2020 02:14:25 UTC
  *
  * @puxi/core is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -835,13 +835,17 @@ class Widget extends utils.EventEmitter {
      * @param style
      */
     onStyleChange(style) {
-        const styleData = style.getProperties('backgroundColor', 'background', 'padding', 'paddingHorizontal', 'paddingVertical', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom');
+        const styleData = style.getProperties('backgroundColor', 'background', 'elevation', 'padding', 'paddingHorizontal', 'paddingVertical', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom');
         // Set background of widget
         if (styleData.background) {
             this.setBackground(styleData.background);
         }
         else if (typeof styleData.backgroundColor !== 'undefined') {
             this.setBackground(styleData.backgroundColor);
+        }
+        // Set elevation
+        if (typeof styleData.elevation !== 'undefined') {
+            this.setElevation(styleData.elevation);
         }
         // Set _paddingLeft, _paddingTop, _paddingRight, _paddingBottom
         PADDING_PROPERTIES.forEach((propName, i) => {
@@ -923,6 +927,13 @@ class Widget extends utils.EventEmitter {
         return;
     }
     onRightClick(e) {
+        console.log('RIGHT_CLICK');
+        e.data.originalEvent.preventDefault();
+        if (this.contextMenu) {
+            if (!this.contextPopup) ;
+            const location = e.data.getLocalPosition(this.stage);
+            //  this.openPopupMenu(location.x, location.y);
+        }
         return;
     }
     /**
@@ -1137,6 +1148,17 @@ class Widget extends utils.EventEmitter {
         return this;
     }
     /**
+     * Set the context-menu to be shown on right-clicks.
+     *
+     * This feature is not released yet, i.e. does not work!
+     *
+     * @param menu
+     * @alpha
+     */
+    setContextMenu(menu) {
+        this.contextMenu = menu;
+    }
+    /**
      * @return {number} the elevation set on this widget
      */
     getElevation() {
@@ -1224,6 +1246,16 @@ class Widget extends utils.EventEmitter {
             }
         }
         return this;
+    }
+    openPopupMenu(x, y) {
+        const stage = this.stage;
+        const lopt = this.contextPopup.layoutOptions;
+        lopt.x = x;
+        lopt.y = y;
+        this.stage.addChild(this.contextPopup);
+    }
+    closePopupMenu() {
+        this.stage.removeChild(this.contextPopup);
     }
     /**
      * Makes this widget `draggable`.
@@ -2259,6 +2291,11 @@ class Button extends FocusableWidget {
     }
     set text(val) {
         this.value = val;
+    }
+    onStyleChange(style) {
+        // eslint-disable-next-line
+        // @ts-ignore
+        this.textWidget.onStyleChange(style);
     }
 }
 /*
@@ -21578,6 +21615,16 @@ class Style extends utils.EventEmitter {
     }
 }
 
+class StyleSheet {
+    static create(sheetData) {
+        const sheet = new StyleSheet();
+        for (const key in sheetData) {
+            sheet[key] = Style.create(sheetData[key]);
+        }
+        return sheet;
+    }
+}
+
 // Dummy <input> element created for mobile keyboards
 let mockDOMInput;
 function initMockDOMInput() {
@@ -22475,7 +22522,7 @@ Ticker$1.shared = new Ticker$1(true);
 
 /*!
  * @puxi/tween - v1.0.1
- * Compiled Sun, 26 Jul 2020 00:14:15 UTC
+ * Compiled Sun, 26 Jul 2020 02:14:25 UTC
  *
  * @puxi/tween is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -22861,5 +22908,5 @@ var puxiTween = {
   get nextTweenKey () { return nextTweenKey; }
 };
 
-export { ALIGN, AnchorLayout, AnchorLayoutOptions, BorderLayout, BorderLayoutOptions, Button, CheckBox, ClickManager, Ease, EventBroker, EventManager, FastLayout, FastLayoutOptions, Helpers, ImageButton, ImageWidget, Insets, InteractiveGroup, LayoutOptions, LinearLayout, MeasureMode, ScrollBar, ScrollManager, ScrollWidget, SliceSprite, Slider, SortableList, Sprite, Stage, Style, TEXT_STYLE_PROPERTIES, TextInput, TextWidget, Ticker$1 as Ticker, TilingSprite, Widget, WidgetGroup, create, puxiTween as tween, wrapEase };
+export { ALIGN, AnchorLayout, AnchorLayoutOptions, BorderLayout, BorderLayoutOptions, Button, CheckBox, ClickManager, Ease, EventBroker, EventManager, FastLayout, FastLayoutOptions, Helpers, ImageButton, ImageWidget, Insets, InteractiveGroup, LayoutOptions, LinearLayout, MeasureMode, ScrollBar, ScrollManager, ScrollWidget, SliceSprite, Slider, SortableList, Sprite, Stage, Style, StyleSheet, TEXT_STYLE_PROPERTIES, TextInput, TextWidget, Ticker$1 as Ticker, TilingSprite, Widget, WidgetGroup, create, puxiTween as tween, wrapEase };
 //# sourceMappingURL=puxi.mjs.map

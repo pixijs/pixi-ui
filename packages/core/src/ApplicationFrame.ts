@@ -8,7 +8,8 @@ interface IApplicationFrameOptions
 }
 
 /**
- * The application frame provides a robust interface for managing widget state.
+ * The application frame provides a robust interface for managing widget state,
+ * creating modals.
  *
  * @memberof PUXI
  */

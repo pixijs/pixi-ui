@@ -16,7 +16,7 @@ export class TextWidget extends Widget
      * @param {string} text - text content
      * @param {PIXI.TextStyle} textStyle - styled used for text
      */
-    constructor(text: string, textStyle: PIXI.TextStyle)
+    constructor(text: string, textStyle?: PIXI.TextStyle)
     {
         super();
 

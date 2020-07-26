@@ -1,7 +1,8 @@
 /// <reference types="node" />
 /// <reference types="pixi.js" />
 import * as PIXI from 'pixi.js';
-import { Texture } from '@pixi/core';
+import { Texture } from 'pixi.js';
+import { Texture as Texture_2 } from '@pixi/core';
 
 /**
  * Alignments supported by layout managers in PuxiJS core.
@@ -859,7 +860,7 @@ declare interface IFocusableOptions {
 }
 
 export declare interface IImageButtonOptions extends IButtonOptions {
-    icon: string | Texture | ImageWidget;
+    icon: string | Texture_2 | ImageWidget;
 }
 
 export declare interface ILayoutManager extends IMeasurable {
@@ -1116,6 +1117,20 @@ export declare enum MeasureMode {
     UNBOUNDED = 0,
     EXACTLY = 1,
     AT_MOST = 2
+}
+
+declare class Menu extends PIXI.Runner {
+    items: MenuItem[];
+    constructor(items: MenuItem[]);
+}
+
+declare class MenuItem {
+    icon: string | Texture;
+    label: string;
+    constructor(data: {
+        icon?: string | Texture;
+        label?: string;
+    });
 }
 
 /**
@@ -1608,7 +1623,7 @@ export declare class Style extends PIXI.utils.EventEmitter {
     static create(data: StyleData): Style;
 }
 
-declare type StyleData = {
+export declare type StyleData = {
     [id: string]: any;
     backgroundColor?: string | number;
     background?: PIXI.Container;
@@ -1620,6 +1635,13 @@ declare type StyleData = {
     paddingBottom?: number;
     padding?: number;
 };
+
+export declare class StyleSheet {
+    [id: string]: Style;
+    static create(sheetData: {
+        [id: string]: StyleData;
+    }): StyleSheet;
+}
 
 declare type TabGroup = string;
 
@@ -1745,7 +1767,7 @@ export declare class TextWidget extends Widget {
      * @param {string} text - text content
      * @param {PIXI.TextStyle} textStyle - styled used for text
      */
-    constructor(text: string, textStyle: PIXI.TextStyle);
+    constructor(text: string, textStyle?: PIXI.TextStyle);
     update(): void;
     /**
      * @deprecated
@@ -1881,6 +1903,8 @@ export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurab
     private singleClickTimeout;
     private style;
     private styleID;
+    private contextMenu;
+    private contextPopup;
     constructor();
     /**
      * Update method that is to be overriden. This is called before a `render()`
@@ -2123,6 +2147,13 @@ export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurab
      */
     setBackgroundAlpha(val: number): Widget;
     /**
+     * Set the context-menu to be shown on right-clicks.
+     *
+     * @param menu
+     * @alpha
+     */
+    setContextMenu(menu: Menu): void;
+    /**
      * @return {number} the elevation set on this widget
      */
     getElevation(): number;
@@ -2157,6 +2188,8 @@ export declare class Widget extends PIXI.utils.EventEmitter implements IMeasurab
      * @returns {Widget} - this widget
      */
     removeChild(...widgets: Widget[]): Widget;
+    private openPopupMenu;
+    private closePopupMenu;
     /**
      * Makes this widget `draggable`.
      */

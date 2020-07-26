@@ -3,6 +3,7 @@ import { FocusableWidget, IFocusableOptions } from './FocusableWidget';
 import { TextWidget } from './TextWidget';
 import * as PIXI from 'pixi.js';
 import { LayoutOptions, FastLayoutOptions } from './layout-options';
+import { Style } from './Style';
 
 /**
  * @memberof PUXI
@@ -125,6 +126,13 @@ export class Button extends FocusableWidget
     set text(val: any)
     {
         this.value = val;
+    }
+
+    onStyleChange(style: Style): void
+    {
+        // eslint-disable-next-line
+        // @ts-ignore
+        this.textWidget.onStyleChange(style);
     }
 }
 
