@@ -4,7 +4,8 @@
   "description": "PuxiJS Project Monorepo (originally pixi-ui)",
   "author": "Nicolai Mortensen",
   "contributors": [
-    "Nicolai Mortensen <njm@skiftselv.dk>"
+    "Nicolai Mortensen <njm@skiftselv.dk>",
+    "Shukant Pal <shukantpal@outlook.com>"
   ],
   "homepage": "http://www.pixijs.com/",
   "bugs": "https://github.com/pixijs/pixi-ui/issues",
