@@ -1,6 +1,6 @@
 {
   "name": "@puxi/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Default set of PuxiJS UI display objects",
   "keywords": [
     "pixi",
@@ -60,7 +60,7 @@
   "dependencies": {
     "@pixi/filter-drop-shadow": "^3.1.1",
     "@pixi/jsdoc-template": "^2.5.1",
-    "@puxi/tween": "^1.0.1"
+    "@puxi/tween": "^1.0.2"
   },
   "peerDependencies": {
     "@pixi/interaction": "^5.3.0"
