@@ -27,7 +27,9 @@
     "access": "public"
   },
   "files": [
-    "lib"
+    "lib",
+    "dist",
+    "index.d.ts"
   ],
   "repository": {
     "type": "git",

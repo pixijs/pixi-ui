@@ -21,7 +21,9 @@
     "src": "src"
   },
   "files": [
-    "lib"
+    "lib",
+    "dist",
+    "index.d.ts"
   ],
   "publishConfig": {
     "access": "public"
